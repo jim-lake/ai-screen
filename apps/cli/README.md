@@ -11,7 +11,6 @@ This project is a command-line tool that emulates the functionality of the GNU `
     - `main.ts`: Entry point for the CLI.
     - `session.ts`: Session management logic.
     - `terminal.ts`: Terminal emulation and I/O handling.
-    - `types.ts`: TypeScript type definitions.
   - `tests/`: Test files using `node:test`.
     - `session.test.ts`: Unit tests for session management.
     - `terminal.test.ts`: Unit tests for terminal handling.

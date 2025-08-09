@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { Session } from "./session";
-import { spawn } from "child_process";
+import {
+  listActiveSessions,
+  runSessionInBackground,
+  reattachToSession,
+  startNewSession,
+} from "./index";
 
-const g_program = new Command();
+const program = new Command();
 
-g_program
+program
   .description("A modern screen emulator for the ai age.")
   .usage("[-opts] [cmd [args]]")
   .addHelpText(
@@ -14,13 +18,7 @@ g_program
     "Use: ai-screen [-opts] [cmd [args]]\n or: ai-screen -r [host.tty]\n",
   );
 
-// Function to handle unsupported flags
-function unsupported(flagName: string): void {
-  console.error(`Error: Flag '${flagName}' is not yet supported in ai-screen`);
-  process.exit(1);
-}
-
-g_program
+program
   // Supported flags (basic implementation)
   .option("-ls, --list", "list running sessions")
   .option("-r [session]", "reattach to a detached screen process")
@@ -39,7 +37,7 @@ g_program
     "-d [session]",
     "detach the elsewhere running screen (and reattach here)",
   )
-  .option("-dmS <name>", "start as daemon: Screen session in detached mode")
+  .option("-dmS <n>", "start as daemon: Screen session in detached mode")
   .option("-D [session]", "detach and logout remote (and reattach here)")
   .option("-e <xy>", "change command characters")
   .option("-f", "flow control on, -fn = off, -fa = auto")
@@ -75,264 +73,112 @@ g_program
   .action((command: string[], options) => {
     // Handle custom -v flag (GNU screen compatibility)
     if (options.v || options.version) {
-      console.log("ai-screen version 0.0.1");
+      _version();
       return;
     }
 
-    // Handle unsupported flags
     if (options.a) {
-      unsupported("-a");
+      _unsupported("-a");
     }
     if (options.A) {
-      unsupported("-A");
+      _unsupported("-A");
     }
     if (options.c) {
-      unsupported("-c");
+      _unsupported("-c");
     }
     if (options.d !== undefined) {
-      unsupported("-d");
+      _unsupported("-d");
     }
     if (options.dmS) {
-      unsupported("-dmS");
+      _unsupported("-dmS");
     }
     if (options.D !== undefined) {
-      unsupported("-D");
+      _unsupported("-D");
     }
     if (options.e) {
-      unsupported("-e");
+      _unsupported("-e");
     }
     if (options.f) {
-      unsupported("-f");
+      _unsupported("-f");
     }
     if (options.fn) {
-      unsupported("-fn");
+      _unsupported("-fn");
     }
     if (options.fa) {
-      unsupported("-fa");
+      _unsupported("-fa");
     }
     if (options.h) {
-      unsupported("-h");
+      _unsupported("-h");
     }
     if (options.i) {
-      unsupported("-i");
+      _unsupported("-i");
     }
     if (options.L) {
-      unsupported("-L");
+      _unsupported("-L");
     }
     if (options.m) {
-      unsupported("-m");
+      _unsupported("-m");
     }
     if (options.O) {
-      unsupported("-O");
+      _unsupported("-O");
     }
     if (options.p) {
-      unsupported("-p");
+      _unsupported("-p");
     }
     if (options.q) {
-      unsupported("-q");
+      _unsupported("-q");
     }
     if (options.R !== undefined) {
-      unsupported("-R");
+      _unsupported("-R");
     }
     if (options.RR !== undefined) {
-      unsupported("-RR");
+      _unsupported("-RR");
     }
     if (options.s) {
-      unsupported("-s");
+      _unsupported("-s");
     }
     if (options.t) {
-      unsupported("-t");
+      _unsupported("-t");
     }
     if (options.T) {
-      unsupported("-T");
+      _unsupported("-T");
     }
     if (options.U) {
-      unsupported("-U");
+      _unsupported("-U");
     }
     if (options.wipe !== undefined) {
-      unsupported("--wipe");
+      _unsupported("--wipe");
     }
     if (options.x !== undefined) {
-      unsupported("-x");
+      _unsupported("-x");
     }
     if (options.X) {
-      unsupported("-X");
+      _unsupported("-X");
     }
 
     // Handle supported functionality
     if (options.ls || options.list) {
-      const sessions = Session.listSessions();
-      if (sessions.length === 0) {
-        console.log("No sessions found.");
-      } else {
-        console.log("Active sessions:");
-        sessions.forEach((session) => {
-          const date = new Date(session.created).toLocaleString();
-          console.log(`  ${session.name}\t(${session.pid})\t${date}`);
-        });
-      }
+      listActiveSessions();
+      return;
+    } else if (options.background) {
+      runSessionInBackground(options.background, command);
+      return;
+    } else if (options.r !== undefined) {
+      reattachToSession(options.r);
       return;
     }
 
-    if (options.background) {
-      // Background mode - keep session alive without terminal I/O
-      const sessionName = options.background;
-      const session = new Session(sessionName);
-      const window = session.createWindow(command);
-
-      // Save session info
-      session.detach();
-
-      // Keep the process alive but don't interact with terminal
-      // The session will remain in the background until the process exits
-      window.process.onExit(() => {
-        Session.cleanupSession(sessionName);
-        process.exit(0);
-      });
-
-      // Handle termination signals
-      process.on("SIGTERM", () => {
-        Session.cleanupSession(sessionName);
-        process.exit(0);
-      });
-
-      process.on("SIGINT", () => {
-        Session.cleanupSession(sessionName);
-        process.exit(0);
-      });
-
-      return;
-    }
-
-    if (options.r !== undefined) {
-      const sessionName = options.r || "default";
-      console.log(
-        `Reattaching to session '${sessionName}' is not yet implemented.`,
-      );
-      return;
-    }
-
+    // Default: create new session
     const sessionName = options.S || "default";
-    const session = new Session(sessionName);
-    const window = session.createWindow(command);
-    let isAttached = true;
-
-    // Set up timeout if specified
-    let timeoutId: NodeJS.Timeout | undefined;
-    if (options.timeout) {
-      const timeoutSeconds = parseInt(options.timeout, 10);
-      if (!isNaN(timeoutSeconds) && timeoutSeconds > 0) {
-        timeoutId = setTimeout(() => {
-          console.log(`\n[timeout after ${timeoutSeconds} seconds]`);
-          if (process.stdin.isTTY) {
-            process.stdin.setRawMode(false);
-          }
-          Session.cleanupSession(sessionName);
-          process.exit(0);
-        }, timeoutSeconds * 1000);
-      }
-    }
-
-    if (process.stdin.isTTY) {
-      process.stdin.setRawMode(true);
-    }
-
-    // Handle terminal resize
-    process.stdout.on("resize", () => {
-      if (isAttached) {
-        window.resize(process.stdout.columns, process.stdout.rows);
-      }
-    });
-
-    // Handle output from the window process
-    window.process.onData((data: string) => {
-      if (isAttached) {
-        process.stdout.write(data);
-      }
-    });
-
-    // Handle detach
-    window.onDetach(() => {
-      isAttached = false;
-      session.detach();
-
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-
-      if (process.stdin.isTTY) {
-        process.stdin.setRawMode(false);
-      }
-
-      // Detach stdin/stdout
-      process.stdin.removeAllListeners("data");
-      process.stdin.removeAllListeners("close");
-
-      // Spawn a detached background process to keep the session alive
-      const child = spawn(
-        process.execPath,
-        [__filename, "--background", sessionName],
-        {
-          detached: true,
-          stdio: "ignore",
-        },
-      );
-      child.unref();
-
-      console.log(`[detached from ${sessionName}]`);
-      process.exit(0);
-    });
-
-    // Handle input from stdin
-    process.stdin.on("data", (data: Buffer) => {
-      if (isAttached) {
-        window.handleInput(data);
-      }
-    });
-
-    // Handle stdin close (Ctrl+C, etc.)
-    process.stdin.on("close", () => {
-      if (isAttached) {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-        if (process.stdin.isTTY) {
-          process.stdin.setRawMode(false);
-        }
-        Session.cleanupSession(sessionName);
-        process.exit(0);
-      }
-    });
-
-    // Handle window process exit
-    window.process.onExit(() => {
-      if (isAttached) {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-        if (process.stdin.isTTY) {
-          process.stdin.setRawMode(false);
-        }
-        Session.cleanupSession(sessionName);
-        process.exit();
-      }
-    });
-
-    // Handle process termination signals
-    process.on("SIGTERM", () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      Session.cleanupSession(sessionName);
-      process.exit(0);
-    });
-
-    process.on("SIGINT", () => {
-      if (isAttached) {
-        // Pass Ctrl+C to the window process
-        window.process.write("\x03");
-      }
-    });
+    startNewSession(sessionName, command, options.timeout);
   });
 
-g_program.parse(process.argv);
+program.parse(process.argv);
+
+function _version(): void {
+  console.log("ai-screen version 0.0.1");
+}
+function _unsupported(flagName: string): void {
+  console.error(`Error: Flag '${flagName}' is not yet supported in ai-screen`);
+  process.exit(1);
+}
