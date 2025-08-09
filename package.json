@@ -9,7 +9,13 @@
     "pretty": "prettier -u --write \"**/*\" --log-level warn"
   },
   "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/node": "^24.2.1",
+    "@typescript-eslint/parser": "^8.39.0",
     "eslint": "^9.33.0",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.0"
   }
 }

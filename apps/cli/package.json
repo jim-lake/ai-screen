@@ -1,0 +1,26 @@
+{
+  "name": "@ai-screen/cli",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "ai-screen": "./dist/cli.js"
+  },
+  "scripts": {
+    "pretty": "prettier -u --write \"**/*\" --log-level warn",
+    "ts-check": "tsc --noEmit",
+    "dev": "tsx src/cli.ts",
+    "lint": "eslint src tests",
+    "start": "node dist/cli.js",
+    "build": "rm -rf dist && tsc",
+    "test": "tsx --experimental-test-module-mocks --test --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "node-pty": "^1.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3"
+  }
+}
