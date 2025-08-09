@@ -1,5 +1,6 @@
+import { spawn } from 'node:child_process';
+
 import { Session } from './session';
-import { spawn } from 'child_process';
 
 export { Session } from './session';
 export { Window } from './window';

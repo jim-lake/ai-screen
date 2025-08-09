@@ -3,11 +3,12 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "main": "dist/cli.js",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
     "ai-screen": "./dist/cli.js"
   },
+  "files": [ "dist" ],
   "scripts": {
     "pretty": "prettier -u --write \"**/*\" --log-level warn",
     "ts-check": "tsc --noEmit",
