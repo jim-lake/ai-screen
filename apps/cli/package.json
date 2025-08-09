@@ -11,7 +11,7 @@
     "pretty": "prettier -u --write \"**/*\" --log-level warn",
     "ts-check": "tsc --noEmit",
     "dev": "tsx src/cli.ts",
-    "lint": "eslint src tests",
+    "lint": "eslint src tests --fix",
     "start": "node dist/cli.js",
     "build": "rm -rf dist && tsc",
     "test": "tsx --experimental-test-module-mocks --test --test tests/*.test.ts"

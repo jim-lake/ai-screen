@@ -3,6 +3,8 @@ import { spawn, type IPty } from "node-pty";
 export class Window {
   public id: number;
   public process: IPty;
+  private attentionMode = false;
+  private onDetachCallback?: () => void;
 
   public constructor(id: number, command?: string[]) {
     this.id = id;
@@ -20,5 +22,52 @@ export class Window {
 
   public resize(columns: number, rows: number) {
     this.process.resize(columns, rows);
+  }
+
+  public onDetach(callback: () => void) {
+    this.onDetachCallback = callback;
+  }
+
+  public handleInput(data: Buffer): boolean {
+    const input = data.toString();
+
+    // Process each character individually
+    for (let i = 0; i < input.length; i++) {
+      const char = input[i];
+
+      // Check for Ctrl+A (attention character)
+      if (char === "\x01") {
+        this.attentionMode = true;
+        continue; // Don't pass to process
+      }
+
+      // If we're in attention mode, handle the next character
+      if (this.attentionMode) {
+        this.attentionMode = false;
+
+        switch (char) {
+          case "d":
+          case "D":
+            // Detach command
+            if (this.onDetachCallback) {
+              this.onDetachCallback();
+            }
+            return true;
+          case "\x01":
+            // Ctrl+A Ctrl+A sends literal Ctrl+A to the process
+            this.process.write("\x01");
+            break;
+          default:
+            // Unknown command, ignore
+            break;
+        }
+        continue;
+      }
+
+      // Normal character, pass to process
+      this.process.write(char);
+    }
+
+    return true;
   }
 }

@@ -3,7 +3,7 @@ import http from "node:http";
 import errorhandler from "errorhandler";
 import bodyParser from "body-parser";
 
-import routes from './routes';
+import routes from "./routes";
 
 import { log, errorLog } from "../tools/log";
 
@@ -23,13 +23,23 @@ g_app.use(_allowText);
 g_app.use(bodyParser.json());
 g_app.use(bodyParser.urlencoded({ extended: true }));
 
+g_app.get("/quit", _quit);
+
 g_app.use(routes.router);
 g_app.use(_throwHandler);
 
 http.createServer(g_app).listen(PORT, function () {
   log("cli-server listening on port:", PORT);
 });
+
+function _quit(req: Request, res: Response) {
+  res.header("Cache-Control", "no-cache, no-store, must-revalidate");
+  log("cli-server: quitting!");
+  res.sendStatus(200);
+  process.exit(0);
+}
 function _statusCheck(req: Request, res: Response) {
+  res.header("Cache-Control", "no-cache, no-store, must-revalidate");
   res.sendStatus(200);
 }
 function _allowCrossDomain(req: Request, res: Response, next: NextFunction) {
