@@ -1,9 +1,9 @@
-import { test } from "node:test";
-import assert from "node:assert";
-import pty from "node-pty";
+import { test } from 'node:test';
+import assert from 'node:assert';
+import pty from 'node-pty';
 
-void test("Window class", async (t) => {
-  t.mock.module("node-pty", {
+void test('Window class', async (t) => {
+  t.mock.module('node-pty', {
     namedExports: {
       ...pty,
       spawn() {
@@ -18,9 +18,9 @@ void test("Window class", async (t) => {
       },
     },
   });
-  const { Window } = await import("../src/window");
+  const { Window } = await import('../src/window');
 
-  await t.test("should create a new window", () => {
+  await t.test('should create a new window', () => {
     const window = new Window(0);
     assert.strictEqual(window.id, 0);
     assert.ok(window.process);

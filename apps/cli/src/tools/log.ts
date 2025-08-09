@@ -1,4 +1,4 @@
-import { format } from "node:util";
+import { format } from 'node:util';
 export default {
   setRemoteLogger,
   setDebug,

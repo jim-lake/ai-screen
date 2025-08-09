@@ -1,4 +1,4 @@
-import { spawn, type IPty } from "node-pty";
+import { spawn, type IPty } from 'node-pty';
 
 export class Window {
   public id: number;
@@ -8,11 +8,11 @@ export class Window {
 
   public constructor(id: number, command?: string[]) {
     this.id = id;
-    const shell = process.env.SHELL ?? "bash";
+    const shell = process.env.SHELL ?? 'bash';
     const cmd = command && command.length > 0 ? command[0] : shell;
     const args = command && command.length > 1 ? command.slice(1) : [];
     this.process = spawn(cmd, args, {
-      name: "xterm-color",
+      name: 'xterm-color',
       cols: process.stdout.columns,
       rows: process.stdout.rows,
       cwd: process.env.HOME,
@@ -36,7 +36,7 @@ export class Window {
       const char = input[i];
 
       // Check for Ctrl+A (attention character)
-      if (char === "\x01") {
+      if (char === '\x01') {
         this.attentionMode = true;
         continue; // Don't pass to process
       }
@@ -46,16 +46,16 @@ export class Window {
         this.attentionMode = false;
 
         switch (char) {
-          case "d":
-          case "D":
+          case 'd':
+          case 'D':
             // Detach command
             if (this.onDetachCallback) {
               this.onDetachCallback();
             }
             return true;
-          case "\x01":
+          case '\x01':
             // Ctrl+A Ctrl+A sends literal Ctrl+A to the process
-            this.process.write("\x01");
+            this.process.write('\x01');
             break;
           default:
             // Unknown command, ignore

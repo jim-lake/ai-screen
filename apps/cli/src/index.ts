@@ -1,15 +1,15 @@
-import { Session } from "./session";
-import { spawn } from "child_process";
+import { Session } from './session';
+import { spawn } from 'child_process';
 
-export { Session } from "./session";
-export { Window } from "./window";
+export { Session } from './session';
+export { Window } from './window';
 
 export function listActiveSessions(): void {
   const sessions = Session.listSessions();
   if (sessions.length === 0) {
-    console.log("No sessions found.");
+    console.log('No sessions found.');
   } else {
-    console.log("Active sessions:");
+    console.log('Active sessions:');
     sessions.forEach((session) => {
       const date = new Date(session.created).toLocaleString();
       console.log(`  ${session.name}\t(${session.pid})\t${date}`);
@@ -19,7 +19,7 @@ export function listActiveSessions(): void {
 
 export function runSessionInBackground(
   sessionName: string,
-  command: string[],
+  command: string[]
 ): void {
   // Background mode - keep session alive without terminal I/O
   const session = new Session(sessionName);
@@ -36,26 +36,26 @@ export function runSessionInBackground(
   });
 
   // Handle termination signals
-  process.on("SIGTERM", () => {
+  process.on('SIGTERM', () => {
     Session.cleanupSession(sessionName);
     process.exit(0);
   });
 
-  process.on("SIGINT", () => {
+  process.on('SIGINT', () => {
     Session.cleanupSession(sessionName);
     process.exit(0);
   });
 }
 
 export function reattachToSession(sessionName?: string): void {
-  const name = sessionName || "default";
+  const name = sessionName || 'default';
   console.log(`Reattaching to session '${name}' is not yet implemented.`);
 }
 
 export function startNewSession(
   sessionName: string,
   command: string[],
-  timeoutSeconds?: string,
+  timeoutSeconds?: string
 ): void {
   const session = new Session(sessionName);
   const window = session.createWindow(command);
@@ -82,7 +82,7 @@ export function startNewSession(
   }
 
   // Handle terminal resize
-  process.stdout.on("resize", () => {
+  process.stdout.on('resize', () => {
     if (isAttached) {
       window.resize(process.stdout.columns, process.stdout.rows);
     }
@@ -109,17 +109,14 @@ export function startNewSession(
     }
 
     // Detach stdin/stdout
-    process.stdin.removeAllListeners("data");
-    process.stdin.removeAllListeners("close");
+    process.stdin.removeAllListeners('data');
+    process.stdin.removeAllListeners('close');
 
     // Spawn a detached background process to keep the session alive
     const child = spawn(
       process.execPath,
-      [__filename, "--background", sessionName],
-      {
-        detached: true,
-        stdio: "ignore",
-      },
+      [__filename, '--background', sessionName],
+      { detached: true, stdio: 'ignore' }
     );
     child.unref();
 
@@ -128,14 +125,14 @@ export function startNewSession(
   });
 
   // Handle input from stdin
-  process.stdin.on("data", (data: Buffer) => {
+  process.stdin.on('data', (data: Buffer) => {
     if (isAttached) {
       window.handleInput(data);
     }
   });
 
   // Handle stdin close (Ctrl+C, etc.)
-  process.stdin.on("close", () => {
+  process.stdin.on('close', () => {
     if (isAttached) {
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -163,7 +160,7 @@ export function startNewSession(
   });
 
   // Handle process termination signals
-  process.on("SIGTERM", () => {
+  process.on('SIGTERM', () => {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
@@ -171,10 +168,10 @@ export function startNewSession(
     process.exit(0);
   });
 
-  process.on("SIGINT", () => {
+  process.on('SIGINT', () => {
     if (isAttached) {
       // Pass Ctrl+C to the window process
-      window.process.write("\x03");
+      window.process.write('\x03');
     }
   });
 }

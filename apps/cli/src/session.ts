@@ -1,7 +1,7 @@
-import { Window } from "./window";
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
+import { Window } from './window';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
 
 interface SessionData {
   name: string;
@@ -15,7 +15,7 @@ export class Session {
   private windowCounter = 0;
   private static readonly sessionsDir = path.join(
     os.tmpdir(),
-    "ai-screen-sessions",
+    'ai-screen-sessions'
   );
 
   public constructor(name: string) {
@@ -61,10 +61,10 @@ export class Session {
     const files = fs.readdirSync(Session.sessionsDir);
 
     for (const file of files) {
-      if (file.endsWith(".json")) {
+      if (file.endsWith('.json')) {
         try {
           const sessionFile = path.join(Session.sessionsDir, file);
-          const data = JSON.parse(fs.readFileSync(sessionFile, "utf8"));
+          const data = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
 
           // Check if process is still running
           try {
