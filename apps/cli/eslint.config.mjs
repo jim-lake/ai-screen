@@ -179,4 +179,63 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ["tests/**/*.ts"],
+    rules: {
+      "@typescript-eslint/naming-convention": [
+        "warn",
+        {
+          selector: "variable",
+          modifiers: ["destructured"],
+          format: ["camelCase", "snake_case", "UPPER_CASE"],
+          filter: { regex: "^[a-z][a-zA-Z0-9]+$", match: true },
+        },
+        {
+          selector: "variable",
+          modifiers: ["exported"],
+          format: ["camelCase", "UPPER_CASE"],
+        },
+        {
+          selector: "variable",
+          modifiers: ["const", "global"],
+          format: ["UPPER_CASE"],
+          filter: { regex: "^([A-Z0-9_]+)$", match: true },
+        },
+        {
+          selector: "variable",
+          modifiers: ["global"],
+          format: null,
+          custom: { regex: "^g_[a-z][a-zA-Z0-9]*$", match: true },
+        },
+        {
+          selector: "variable",
+          format: ["snake_case", "PascalCase"],
+          leadingUnderscore: "allow",
+        },
+        {
+          selector: "function",
+          modifiers: ["exported"],
+          format: ["camelCase"],
+          leadingUnderscore: "forbid",
+        },
+        {
+          selector: "function",
+          format: ["camelCase"],
+          leadingUnderscore: "require",
+        },
+        {
+          selector: "parameter",
+          format: ["snake_case"],
+          leadingUnderscore: "allow",
+        },
+        {
+          selector: "variable",
+          format: ["camelCase"],
+          filter: { regex: "^opts$", match: true },
+        },
+        { selector: "typeLike", format: ["PascalCase"] },
+        { selector: "interface", format: ["PascalCase"] },
+      ],
+    },
+  },
 );

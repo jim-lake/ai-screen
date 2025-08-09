@@ -3,11 +3,11 @@
 import { Command } from "commander";
 import { Session } from "./session";
 
-const program = new Command();
+const g_program = new Command();
 
-program.version("0.0.1").description("A screen emulator in TypeScript");
+g_program.version("0.0.1").description("A screen emulator in TypeScript");
 
-program.argument("[command...]").action((command: string[]) => {
+g_program.argument("[command...]").action((command: string[]) => {
   const session = new Session("default");
   const window = session.createWindow(command);
 
@@ -19,11 +19,11 @@ program.argument("[command...]").action((command: string[]) => {
     window.resize(process.stdout.columns, process.stdout.rows);
   });
 
-  window.process.onData((data: any) => {
+  window.process.onData((data: string) => {
     process.stdout.write(data);
   });
 
-  process.stdin.on("data", (data) => {
+  process.stdin.on("data", (data: string) => {
     window.process.write(data);
   });
 
@@ -42,4 +42,4 @@ program.argument("[command...]").action((command: string[]) => {
   });
 });
 
-program.parse(process.argv);
+g_program.parse(process.argv);

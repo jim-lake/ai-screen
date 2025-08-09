@@ -1,12 +1,12 @@
-import { spawn } from "node-pty";
+import { spawn, type IPty } from "node-pty";
 
 export class Window {
   public id: number;
-  public process: any;
+  public process: IPty;
 
-  constructor(id: number, command?: string[]) {
+  public constructor(id: number, command?: string[]) {
     this.id = id;
-    const shell = process.env.SHELL || "bash";
+    const shell = process.env.SHELL ?? "bash";
     const cmd = command && command.length > 0 ? command[0] : shell;
     const args = command && command.length > 1 ? command.slice(1) : [];
     this.process = spawn(cmd, args, {
@@ -14,11 +14,11 @@ export class Window {
       cols: process.stdout.columns,
       rows: process.stdout.rows,
       cwd: process.env.HOME,
-      env: process.env,
+      env: process.env as Record<string, string>,
     });
   }
 
-  public resize(cols: number, rows: number) {
-    this.process.resize(cols, rows);
+  public resize(columns: number, rows: number) {
+    this.process.resize(columns, rows);
   }
 }

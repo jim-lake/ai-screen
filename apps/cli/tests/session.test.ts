@@ -1,16 +1,20 @@
-import { test, mock } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert";
 
-const pty = await import("node-pty");
+import pty from "node-pty";
 
-test("Session class", async (t) => {
+void test("Session class", async (t) => {
   t.mock.module("node-pty", {
     namedExports: {
       ...pty,
       spawn() {
         return {
-          resize: () => {},
-          on: () => {},
+          resize() {
+            void 0;
+          },
+          on() {
+            void 0;
+          },
         };
       },
     },

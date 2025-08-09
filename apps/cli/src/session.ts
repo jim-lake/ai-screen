@@ -5,7 +5,7 @@ export class Session {
   public windows: Window[] = [];
   private windowCounter = 0;
 
-  constructor(name: string) {
+  public constructor(name: string) {
     this.name = name;
   }
 
