@@ -79,7 +79,7 @@ const addJsExtension = () => ({
 export default [
   {
     input: 'src/cli.ts',
-    output: { file: 'dist/cli.js', format: 'es', sourcemap: true },
+    output: { file: 'dist/cli.js', format: 'es', sourcemap: true, preserveModules: true, },
     external: () => true,
     plugins: [
       typescript({
