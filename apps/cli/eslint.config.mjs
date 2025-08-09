@@ -5,7 +5,7 @@ export default tseslint.config(
   { ignores: ["dist/**", "node_modules/**", "test/pulumi/**"] },
   eslint.configs.recommended,
   {
-    files: ["**/*.ts"],
+    files: ["src/**/*.ts", "tests/**/*.ts"],
     extends: [
       ...tseslint.configs.recommended,
       ...tseslint.configs.strictTypeChecked,
@@ -13,7 +13,7 @@ export default tseslint.config(
     ],
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        project: "./tsconfig.eslint.json",
         tsconfigRootDir: import.meta.dirname,
       },
     },
