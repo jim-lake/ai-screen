@@ -1,4 +1,6 @@
-import { spawn, type IPty } from 'node-pty';
+import { spawn } from 'node-pty';
+
+import type { IPty } from 'node-pty';
 
 export class Terminal {
   public id: number;
