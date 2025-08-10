@@ -24,13 +24,13 @@ void test('Session class', async (t) => {
   await t.test('should create a new session', () => {
     const session = new Session('test-session');
     assert.strictEqual(session.name, 'test-session');
-    assert.deepStrictEqual(session.windows, []);
+    assert.deepStrictEqual(session.terminals, []);
   });
 
-  await t.test('should create a new window in a session', () => {
+  await t.test('should create a new terminal in a session', () => {
     const session = new Session('test-session');
-    const window = session.createWindow();
-    assert.strictEqual(session.windows.length, 1);
-    assert.strictEqual(session.windows[0], window);
+    const terminal = session.createTerminal();
+    assert.strictEqual(session.terminals.length, 1);
+    assert.strictEqual(session.terminals[0], terminal);
   });
 });

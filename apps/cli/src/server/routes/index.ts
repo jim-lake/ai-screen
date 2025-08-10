@@ -1,10 +1,10 @@
 import express from 'express';
 
 import session from './session';
-import window from './window';
+import terminal from './terminal';
 
 export const router = express.Router();
 export default { router };
 
 router.use(session.router);
-router.use(window.router);
+router.use(terminal.router);

@@ -1,6 +1,6 @@
 import { spawn, type IPty } from 'node-pty';
 
-export class Window {
+export class Terminal {
   public id: number;
   public process: IPty;
   private attentionMode = false;

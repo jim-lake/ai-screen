@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { Session } from './session';
 
 export { Session } from './session';
-export { Window } from './window';
+export { Terminal } from './terminal';
 
 export function listActiveSessions(): void {
   const sessions = Session.listSessions();
@@ -27,14 +27,14 @@ export function runSessionInBackground(
 ): void {
   // Background mode - keep session alive without terminal I/O
   const session = new Session(session_name);
-  const window = session.createWindow(command);
+  const terminal = session.createTerminal(command);
 
   // Save session info
   session.detach();
 
   // Keep the process alive but don't interact with terminal
   // The session will remain in the background until the process exits
-  window.process.onExit(() => {
+  terminal.process.onExit(() => {
     Session.cleanupSession(session_name);
     process.exit(0);
   });
@@ -63,7 +63,7 @@ export function startNewSession(
   timeout_seconds?: string
 ): void {
   const session = new Session(session_name);
-  const window = session.createWindow(command);
+  const terminal = session.createTerminal(command);
   let is_attached = true;
 
   // Set up timeout if specified
@@ -90,19 +90,19 @@ export function startNewSession(
   // Handle terminal resize
   process.stdout.on('resize', () => {
     if (is_attached) {
-      window.resize(process.stdout.columns, process.stdout.rows);
+      terminal.resize(process.stdout.columns, process.stdout.rows);
     }
   });
 
-  // Handle output from the window process
-  window.process.onData((data: string) => {
+  // Handle output from the terminal process
+  terminal.process.onData((data: string) => {
     if (is_attached) {
       process.stdout.write(data);
     }
   });
 
   // Handle detach
-  window.onDetach(() => {
+  terminal.onDetach(() => {
     is_attached = false;
     session.detach();
 
@@ -134,7 +134,7 @@ export function startNewSession(
   // Handle input from stdin
   process.stdin.on('data', (data: Buffer) => {
     if (is_attached) {
-      window.handleInput(data);
+      terminal.handleInput(data);
     }
   });
 
@@ -152,8 +152,8 @@ export function startNewSession(
     }
   });
 
-  // Handle window process exit
-  window.process.onExit(() => {
+  // Handle terminal process exit
+  terminal.process.onExit(() => {
     if (is_attached) {
       if (timeout_id) {
         clearTimeout(timeout_id);
@@ -177,8 +177,8 @@ export function startNewSession(
 
   process.on('SIGINT', () => {
     if (is_attached) {
-      // Pass Ctrl+C to the window process
-      window.process.write('\x03');
+      // Pass Ctrl+C to the terminal process
+      terminal.process.write('\x03');
     }
   });
 }

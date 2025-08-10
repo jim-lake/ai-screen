@@ -1,4 +1,4 @@
-import { Window } from './window';
+import { Terminal } from './terminal';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -16,8 +16,8 @@ export class Session {
   );
 
   public name: string;
-  public windows: Window[] = [];
-  private windowCounter = 0;
+  public terminals: Terminal[] = [];
+  private counter = 0;
 
   public constructor(name: string) {
     this.name = name;
@@ -80,10 +80,10 @@ export class Session {
     );
   }
 
-  public createWindow(command?: string[]): Window {
-    const window = new Window(this.windowCounter++, command);
-    this.windows.push(window);
-    return window;
+  public createTerminal(command?: string[]): Terminal {
+    const terminal = new Terminal(this.counter++, command);
+    this.terminals.push(terminal);
+    return terminal;
   }
 
   public detach(): void {

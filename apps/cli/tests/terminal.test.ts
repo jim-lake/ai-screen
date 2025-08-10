@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert';
 import pty from 'node-pty';
 
-void test('Window class', async (t) => {
+void test('Terminal class', async (t) => {
   t.mock.module('node-pty', {
     namedExports: {
       ...pty,
@@ -18,11 +18,11 @@ void test('Window class', async (t) => {
       },
     },
   });
-  const { Window } = await import('../src/window');
+  const { Terminal } = await import('../src/terminal');
 
-  await t.test('should create a new window', () => {
-    const window = new Window(0);
-    assert.strictEqual(window.id, 0);
-    assert.ok(window.process);
+  await t.test('should create a new terminal', () => {
+    const terminal = new Terminal(0);
+    assert.strictEqual(terminal.id, 0);
+    assert.ok(terminal.process);
   });
 });
