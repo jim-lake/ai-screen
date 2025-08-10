@@ -8,135 +8,139 @@ import {
 } from './index';
 
 const OPTS = [
-  { flags: '-ls, --list', description: 'list running sessions', key: 'list' },
-  {
-    flags: '-r [session]',
-    description: 'reattach to a detached screen process',
-    key: 'r',
-  },
-  {
-    flags: '-S <sockname>',
-    description:
-      'name this session <pid>.sockname instead of <pid>.<tty>.<host>',
-    key: 'S',
-  },
-  {
-    flags: '--timeout <seconds>',
-    description: 'exit after N seconds (for testing)',
-    key: 'timeout',
-  },
-  {
-    flags: '--background <session>',
-    description: 'run session in background (internal use)',
-    key: 'background',
-  },
   {
     flags: '-a',
-    description: "force all capabilities into each window's termcap",
+    description: "Force all capabilities into each window's termcap.",
     key: 'a',
   },
   {
     flags: '-A',
-    description: 'adapt all windows to the new display width & height',
+    description: 'Adapt all windows to the new display width & height.',
     key: 'A',
   },
   {
     flags: '-c <file>',
-    description: "read configuration file instead of '.screenrc'",
+    description: "Read configuration file instead of '.screenrc'.",
     key: 'c',
   },
   {
     flags: '-d [session]',
-    description: 'detach the elsewhere running screen (and reattach here)',
+    description: 'Detach the elsewhere running screen (and reattach here).',
     key: 'd',
   },
   {
-    flags: '-dmS <n>',
-    description: 'start as daemon: Screen session in detached mode',
+    flags: '-dmS <name>',
+    description: 'Start as daemon: Screen session in detached mode.',
     key: 'dmS',
   },
   {
     flags: '-D [session]',
-    description: 'detach and logout remote (and reattach here)',
+    description: 'Detach and logout remote (and reattach here).',
     key: 'D',
   },
-  { flags: '-e <xy>', description: 'change command characters', key: 'e' },
+  { flags: '-e <xy>', description: 'Change command characters.', key: 'e' },
   {
     flags: '-f',
-    description: 'flow control on, -fn = off, -fa = auto',
+    description: 'Flow control on, -fn = off, -fa = auto.',
     key: 'f',
   },
-  { flags: '-fn', description: 'flow control off', key: 'fn' },
-  { flags: '-fa', description: 'flow control auto', key: 'fa' },
+  { flags: '-fn', description: 'Flow control off.', key: 'fn' },
+  { flags: '-fa', description: 'Flow control auto.', key: 'fa' },
   {
     flags: '-h <lines>',
-    description: 'set the size of the scrollback history buffer',
+    description: 'Set the size of the scrollback history buffer.',
     key: 'h',
   },
   {
     flags: '-i',
-    description: 'interrupt output sooner when flow control is on',
+    description: 'Interrupt output sooner when flow control is on.',
     key: 'i',
   },
-  { flags: '-L', description: 'turn on output logging', key: 'L' },
+  {
+    flags: '-ls, --list',
+    description: 'Do nothing, just list our SockDir.',
+    key: 'list',
+  },
+  { flags: '-L', description: 'Turn on output logging.', key: 'L' },
   {
     flags: '-m',
-    description: 'ignore $STY variable, do create a new screen session',
+    description: 'ignore $STY variable, do create a new screen session.',
     key: 'm',
   },
   {
     flags: '-O',
-    description: 'choose optimal output rather than exact vt100 emulation',
+    description: 'Choose optimal output rather than exact vt100 emulation.',
     key: 'O',
   },
   {
     flags: '-p <window>',
-    description: 'preselect the named window if it exists',
+    description: 'Preselect the named window if it exists.',
     key: 'p',
   },
   {
     flags: '-q',
     description:
-      'quiet startup. Exits with non-zero return code if unsuccessful',
+      'Quiet startup. Exits with non-zero return code if unsuccessful.',
     key: 'q',
   },
   {
+    flags: '-r [session]',
+    description: 'Reattach to a detached screen process.',
+    key: 'r',
+  },
+  {
     flags: '-R [session]',
-    description: 'reattach if possible, otherwise start a new session',
+    description: 'Reattach if possible, otherwise start a new session.',
     key: 'R',
   },
   {
     flags: '-RR [session]',
-    description: 'reattach if possible, otherwise start a new session',
+    description: 'Reattach if possible, otherwise start a new session.',
     key: 'RR',
   },
   {
     flags: '-s <shell>',
-    description: 'shell to execute rather than $SHELL',
+    description: 'Shell to execute rather than $SHELL.',
     key: 's',
   },
-  { flags: '-t <title>', description: "set title (window's name)", key: 't' },
+  {
+    flags: '-S <sockname>',
+    description:
+      'Name this session <pid>.sockname instead of <pid>.<tty>.<host>.',
+    key: 'S',
+  },
+  { flags: '-t <title>', description: "Set title. (window's name).", key: 't' },
   {
     flags: '-T <term>',
-    description: 'use term as $TERM for windows, rather than "screen"',
+    description: 'Use term as $TERM for windows, rather than "screen".',
     key: 'T',
   },
-  { flags: '-U', description: 'tell screen to use UTF-8 encoding', key: 'U' },
-  { flags: '-v, --version', description: 'print version', key: 'version' },
+  { flags: '-U', description: 'Tell screen to use UTF-8 encoding.', key: 'U' },
+  { flags: '-v, --version', description: 'Print version.', key: 'version' },
   {
     flags: '-wipe [session]',
-    description: 'do nothing, just clean up SockDir',
+    description: 'Do nothing, just clean up SockDir.',
     key: 'wipe',
   },
   {
     flags: '-x [session]',
-    description: 'attach to a not detached screen (multi display mode)',
+    description: 'Attach to a not detached screen. (Multi display mode).',
     key: 'x',
   },
   {
     flags: '-X',
-    description: 'execute <cmd> as a screen command in the specified session',
+    description: 'Execute <cmd> as a screen command in the specified session.',
     key: 'X',
+  },
+  {
+    flags: '--timeout <seconds>',
+    description: 'Exit after N seconds (for testing).',
+    key: 'timeout',
+  },
+  {
+    flags: '--background <session>',
+    description: 'Run session in background (internal use).',
+    key: 'background',
   },
 ] as const;
 
@@ -154,7 +158,7 @@ function _createProgram(): Command {
   const program = new Command();
 
   program
-    .description('A modern screen emulator for the ai age.')
+    .name('ai-screen')
     .usage('[-opts] [cmd [args]]')
     .addHelpText(
       'before',
@@ -264,16 +268,19 @@ g_program.action((command: string[], options: CliOptions) => {
   } else if (options.r !== undefined) {
     reattachToSession(options.r);
     return;
+  } else if (Object.keys(options).length === 0) {
+    const session_name = options.S ?? 'default';
+    startNewSession(session_name, command, options.timeout);
+  } else {
+    const key = Object.keys(options)[0];
+    _unsupported(key);
   }
-
-  const session_name = options.S ?? 'default';
-  startNewSession(session_name, command, options.timeout);
 });
 g_program.parse();
 
 function _version(): void {
   // eslint-disable-next-line no-console
-  console.log('ai-screen version 0.0.1');
+  console.log('ai-screen version 0.0.1 (ai-screen)');
 }
 function _unsupported(flag_name: string): void {
   // eslint-disable-next-line no-console
