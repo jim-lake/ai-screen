@@ -8,9 +8,46 @@ import {
   startNewSession,
 } from './index';
 
-const program = new Command();
+const g_program = new Command();
 
-program
+interface CliOptions {
+  v?: boolean;
+  version?: boolean;
+  a?: boolean;
+  A?: boolean;
+  c?: string;
+  d?: string;
+  dmS?: string;
+  D?: string;
+  e?: string;
+  f?: boolean;
+  fn?: boolean;
+  fa?: boolean;
+  h?: string;
+  i?: boolean;
+  L?: boolean;
+  m?: boolean;
+  O?: boolean;
+  p?: string;
+  q?: boolean;
+  R?: string;
+  RR?: string;
+  s?: string;
+  t?: string;
+  T?: string;
+  U?: boolean;
+  wipe?: string;
+  x?: string;
+  X?: boolean;
+  ls?: boolean;
+  list?: boolean;
+  background?: string;
+  r?: string;
+  S?: string;
+  timeout?: string;
+}
+
+g_program
   .description('A modern screen emulator for the ai age.')
   .usage('[-opts] [cmd [args]]')
   .addHelpText(
@@ -18,7 +55,7 @@ program
     'Use: ai-screen [-opts] [cmd [args]]\n or: ai-screen -r [host.tty]\n'
   );
 
-program
+g_program
   // Supported flags (basic implementation)
   .option('-ls, --list', 'list running sessions')
   .option('-r [session]', 'reattach to a detached screen process')
@@ -70,9 +107,9 @@ program
   )
   .option('-X', 'execute <cmd> as a screen command in the specified session')
   .argument('[command...]')
-  .action((command: string[], options) => {
+  .action((command: string[], options: CliOptions) => {
     // Handle custom -v flag (GNU screen compatibility)
-    if (options.v || options.version) {
+    if (options.v ?? options.version) {
       _version();
       return;
     }
@@ -157,7 +194,7 @@ program
     }
 
     // Handle supported functionality
-    if (options.ls || options.list) {
+    if (options.ls ?? options.list) {
       listActiveSessions();
       return;
     } else if (options.background) {
@@ -169,16 +206,18 @@ program
     }
 
     // Default: create new session
-    const sessionName = options.S || 'default';
-    startNewSession(sessionName, command, options.timeout);
+    const session_name = options.S ?? 'default';
+    startNewSession(session_name, command, options.timeout);
   });
 
-program.parse(process.argv);
+g_program.parse(process.argv);
 
 function _version(): void {
+  // eslint-disable-next-line no-console
   console.log('ai-screen version 0.0.1');
 }
-function _unsupported(flagName: string): void {
-  console.error(`Error: Flag '${flagName}' is not yet supported in ai-screen`);
+function _unsupported(flag_name: string): void {
+  // eslint-disable-next-line no-console
+  console.error(`Error: Flag '${flag_name}' is not yet supported in ai-screen`);
   process.exit(1);
 }

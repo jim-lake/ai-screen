@@ -8,7 +8,9 @@
   "bin": {
     "ai-screen": "./dist/cli.js"
   },
-  "files": [ "dist" ],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "pretty": "prettier -u --write \"**/*\" --log-level warn",
     "ts-check": "tsc --noEmit",

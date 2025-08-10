@@ -32,9 +32,7 @@ export class Window {
     const input = data.toString();
 
     // Process each character individually
-    for (let i = 0; i < input.length; i++) {
-      const char = input[i];
-
+    for (const char of input) {
       // Check for Ctrl+A (attention character)
       if (char === '\x01') {
         this.attentionMode = true;

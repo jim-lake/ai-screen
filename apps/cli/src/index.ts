@@ -8,22 +8,25 @@ export { Window } from './window';
 export function listActiveSessions(): void {
   const sessions = Session.listSessions();
   if (sessions.length === 0) {
+    // eslint-disable-next-line no-console
     console.log('No sessions found.');
   } else {
+    // eslint-disable-next-line no-console
     console.log('Active sessions:');
     sessions.forEach((session) => {
       const date = new Date(session.created).toLocaleString();
+      // eslint-disable-next-line no-console
       console.log(`  ${session.name}\t(${session.pid})\t${date}`);
     });
   }
 }
 
 export function runSessionInBackground(
-  sessionName: string,
+  session_name: string,
   command: string[]
 ): void {
   // Background mode - keep session alive without terminal I/O
-  const session = new Session(sessionName);
+  const session = new Session(session_name);
   const window = session.createWindow(command);
 
   // Save session info
@@ -32,47 +35,49 @@ export function runSessionInBackground(
   // Keep the process alive but don't interact with terminal
   // The session will remain in the background until the process exits
   window.process.onExit(() => {
-    Session.cleanupSession(sessionName);
+    Session.cleanupSession(session_name);
     process.exit(0);
   });
 
   // Handle termination signals
   process.on('SIGTERM', () => {
-    Session.cleanupSession(sessionName);
+    Session.cleanupSession(session_name);
     process.exit(0);
   });
 
   process.on('SIGINT', () => {
-    Session.cleanupSession(sessionName);
+    Session.cleanupSession(session_name);
     process.exit(0);
   });
 }
 
-export function reattachToSession(sessionName?: string): void {
-  const name = sessionName || 'default';
+export function reattachToSession(session_name?: string): void {
+  const name = session_name ?? 'default';
+  // eslint-disable-next-line no-console
   console.log(`Reattaching to session '${name}' is not yet implemented.`);
 }
 
 export function startNewSession(
-  sessionName: string,
+  session_name: string,
   command: string[],
-  timeoutSeconds?: string
+  timeout_seconds?: string
 ): void {
-  const session = new Session(sessionName);
+  const session = new Session(session_name);
   const window = session.createWindow(command);
-  let isAttached = true;
+  let is_attached = true;
 
   // Set up timeout if specified
-  let timeoutId: NodeJS.Timeout | undefined;
-  if (timeoutSeconds) {
-    const timeout = parseInt(timeoutSeconds, 10);
+  let timeout_id: NodeJS.Timeout | undefined;
+  if (timeout_seconds) {
+    const timeout = parseInt(timeout_seconds, 10);
     if (!isNaN(timeout) && timeout > 0) {
-      timeoutId = setTimeout(() => {
+      timeout_id = setTimeout(() => {
+        // eslint-disable-next-line no-console
         console.log(`\n[timeout after ${timeout} seconds]`);
         if (process.stdin.isTTY) {
           process.stdin.setRawMode(false);
         }
-        Session.cleanupSession(sessionName);
+        Session.cleanupSession(session_name);
         process.exit(0);
       }, timeout * 1000);
     }
@@ -84,25 +89,25 @@ export function startNewSession(
 
   // Handle terminal resize
   process.stdout.on('resize', () => {
-    if (isAttached) {
+    if (is_attached) {
       window.resize(process.stdout.columns, process.stdout.rows);
     }
   });
 
   // Handle output from the window process
   window.process.onData((data: string) => {
-    if (isAttached) {
+    if (is_attached) {
       process.stdout.write(data);
     }
   });
 
   // Handle detach
   window.onDetach(() => {
-    isAttached = false;
+    is_attached = false;
     session.detach();
 
-    if (timeoutId) {
-      clearTimeout(timeoutId);
+    if (timeout_id) {
+      clearTimeout(timeout_id);
     }
 
     if (process.stdin.isTTY) {
@@ -116,61 +121,62 @@ export function startNewSession(
     // Spawn a detached background process to keep the session alive
     const child = spawn(
       process.execPath,
-      [__filename, '--background', sessionName],
+      [__filename, '--background', session_name],
       { detached: true, stdio: 'ignore' }
     );
     child.unref();
 
-    console.log(`[detached from ${sessionName}]`);
+    // eslint-disable-next-line no-console
+    console.log(`[detached from ${session_name}]`);
     process.exit(0);
   });
 
   // Handle input from stdin
   process.stdin.on('data', (data: Buffer) => {
-    if (isAttached) {
+    if (is_attached) {
       window.handleInput(data);
     }
   });
 
   // Handle stdin close (Ctrl+C, etc.)
   process.stdin.on('close', () => {
-    if (isAttached) {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+    if (is_attached) {
+      if (timeout_id) {
+        clearTimeout(timeout_id);
       }
       if (process.stdin.isTTY) {
         process.stdin.setRawMode(false);
       }
-      Session.cleanupSession(sessionName);
+      Session.cleanupSession(session_name);
       process.exit(0);
     }
   });
 
   // Handle window process exit
   window.process.onExit(() => {
-    if (isAttached) {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+    if (is_attached) {
+      if (timeout_id) {
+        clearTimeout(timeout_id);
       }
       if (process.stdin.isTTY) {
         process.stdin.setRawMode(false);
       }
-      Session.cleanupSession(sessionName);
+      Session.cleanupSession(session_name);
       process.exit();
     }
   });
 
   // Handle process termination signals
   process.on('SIGTERM', () => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
+    if (timeout_id) {
+      clearTimeout(timeout_id);
     }
-    Session.cleanupSession(sessionName);
+    Session.cleanupSession(session_name);
     process.exit(0);
   });
 
   process.on('SIGINT', () => {
-    if (isAttached) {
+    if (is_attached) {
       // Pass Ctrl+C to the window process
       window.process.write('\x03');
     }
