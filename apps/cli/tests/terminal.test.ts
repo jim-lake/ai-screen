@@ -18,7 +18,7 @@ void test('Terminal class', async (t) => {
       },
     },
   });
-  const { Terminal } = await import('../src/terminal');
+  const { Terminal } = await import('../src/lib/terminal');
 
   await t.test('should create a new terminal', () => {
     const terminal = new Terminal(0);

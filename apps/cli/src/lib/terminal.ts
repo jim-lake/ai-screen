@@ -71,3 +71,4 @@ export class Terminal {
     return true;
   }
 }
+export default { Terminal };

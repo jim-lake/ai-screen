@@ -25,7 +25,8 @@
     "commander": "^12.1.0",
     "errorhandler": "^1.5.1",
     "express": "^5.1.0",
-    "node-pty": "^1.0.0"
+    "node-pty": "^1.0.0",
+    "unix-dgram": "^2.0.7"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.1",

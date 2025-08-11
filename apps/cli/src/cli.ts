@@ -1,11 +1,16 @@
 #!/usr/bin/env node
+
 import { Command } from 'commander';
 import {
-  listActiveSessions,
-  runSessionInBackground,
-  reattachToSession,
-  startNewSession,
+  listSessions,
+  startServer,
+  killServer,
+  createSession,
+  //runSessionInBackground,
+  //reattachToSession,
+  //startNewSession,
 } from './index';
+import { log, errorLog, setQuiet } from './tools/log';
 
 const OPTS = [
   {
@@ -31,7 +36,7 @@ const OPTS = [
   {
     flags: '-dmS <name>',
     description: 'Start as daemon: Screen session in detached mode.',
-    key: 'dmS',
+    key: 'DmS',
   },
   {
     flags: '-D [session]',
@@ -142,6 +147,21 @@ const OPTS = [
     description: 'Run session in background (internal use).',
     key: 'background',
   },
+  {
+    flags: '--server',
+    description: 'Just run the server, do not connect to a session.',
+    key: 'server',
+  },
+  {
+    flags: '--foreground',
+    description: 'Run the server in the foreground.',
+    key: 'foreground',
+  },
+  {
+    flags: '--kill-server',
+    description: 'Kills the running server and all sessions.',
+    key: 'killServer',
+  },
 ] as const;
 
 type InferTypeFromFlags<T extends string> = T extends `${string}<${string}>`
@@ -174,10 +194,13 @@ function _createProgram(): Command {
 }
 
 const g_program = _createProgram();
-g_program.action((command: string[], options: CliOptions) => {
+g_program.action(async (command: string[], options: CliOptions) => {
   if (options.version) {
     _version();
     return;
+  }
+  if (options.q) {
+    setQuiet(true);
   }
 
   if (options.a) {
@@ -191,9 +214,6 @@ g_program.action((command: string[], options: CliOptions) => {
   }
   if (options.d !== undefined) {
     _unsupported('-d');
-  }
-  if (options.dmS) {
-    _unsupported('-dmS');
   }
   if (options.D !== undefined) {
     _unsupported('-D');
@@ -228,9 +248,6 @@ g_program.action((command: string[], options: CliOptions) => {
   if (options.p) {
     _unsupported('-p');
   }
-  if (options.q) {
-    _unsupported('-q');
-  }
   if (options.R !== undefined) {
     _unsupported('-R');
   }
@@ -258,11 +275,18 @@ g_program.action((command: string[], options: CliOptions) => {
   if (options.X) {
     _unsupported('-X');
   }
-
-  if (options.list) {
-    listActiveSessions();
+  if (options.DmS) {
+    await createSession(options.DmS);
+  } else if (options.server) {
+    await startServer(options.foreground ?? false);
     return;
-  } else if (options.background) {
+  } else if (options.killServer) {
+    await killServer();
+    return;
+  } else if (options.list) {
+    await listSessions();
+    return;
+    /*  } else if (options.background) {
     runSessionInBackground(options.background, command);
     return;
   } else if (options.r !== undefined) {
@@ -271,6 +295,7 @@ g_program.action((command: string[], options: CliOptions) => {
   } else if (Object.keys(options).length === 0) {
     const session_name = options.S ?? 'default';
     startNewSession(session_name, command, options.timeout);
+*/
   } else {
     const key = Object.keys(options)[0];
     _unsupported(key);
@@ -279,11 +304,9 @@ g_program.action((command: string[], options: CliOptions) => {
 g_program.parse();
 
 function _version(): void {
-  // eslint-disable-next-line no-console
-  console.log('ai-screen version 0.0.1 (ai-screen)');
+  log('ai-screen version 0.0.1 (ai-screen)');
 }
 function _unsupported(flag_name: string): void {
-  // eslint-disable-next-line no-console
-  console.error(`Error: Flag '${flag_name}' is not yet supported in ai-screen`);
+  errorLog(`Error: Flag '${flag_name}' is not yet supported in ai-screen`);
   process.exit(1);
 }

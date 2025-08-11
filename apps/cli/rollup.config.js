@@ -55,27 +55,6 @@ const isExternal = (id) => {
     id.startsWith('node:')
   );
 };
-
-const isExternalForCli = (id) => {
-  // For cli.js, also treat local index module as external
-  return isExternal(id) || id === './index';
-};
-
-// Simple plugin to ensure .js extension in import paths
-const addJsExtension = () => ({
-  name: 'add-js-extension',
-  generateBundle(options, bundle) {
-    Object.values(bundle).forEach((chunk) => {
-      if (chunk.type === 'chunk') {
-        chunk.code = chunk.code.replace(
-          /from ['"]\.\/index['"]/g,
-          "from './index.js'"
-        );
-      }
-    });
-  },
-});
-
 export default [
   {
     input: 'src/cli.ts',

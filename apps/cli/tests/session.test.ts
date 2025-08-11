@@ -19,7 +19,7 @@ void test('Session class', async (t) => {
       },
     },
   });
-  const { Session } = await import('../src/session');
+  const { Session } = await import('../src/lib/session');
 
   await t.test('should create a new session', () => {
     const session = new Session('test-session');
@@ -28,7 +28,7 @@ void test('Session class', async (t) => {
   });
 
   await t.test('should create a new terminal in a session', () => {
-    const session = new Session('test-session');
+    const session = new Session('test-session2');
     const terminal = session.createTerminal();
     assert.strictEqual(session.terminals.length, 1);
     assert.strictEqual(session.terminals[0], terminal);

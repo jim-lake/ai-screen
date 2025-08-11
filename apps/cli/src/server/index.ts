@@ -1,82 +1,21 @@
-import express from 'express';
-import http from 'node:http';
-import errorhandler from 'errorhandler';
-import bodyParser from 'body-parser';
+import PipeServer from './pipe_server';
+import WebServer from './web_server';
 
-import routes from './routes';
+import { setShowTime } from '../tools/log';
 
-import { log, errorLog } from '../tools/log';
+import type { SystemError } from './web_server';
 
-import type { Request, Response, NextFunction } from 'express';
+export default { start };
 
-const PORT = process.env.PORT ?? 6847;
-
-const g_app = express();
-
-g_app.enable('trust proxy');
-g_app.set('port', PORT);
-
-g_app.get('/status_check', _statusCheck);
-
-g_app.use(_allowCrossDomain);
-g_app.use(_allowText);
-g_app.use(bodyParser.json());
-g_app.use(bodyParser.urlencoded({ extended: true }));
-
-g_app.get('/quit', _quit);
-
-g_app.use(routes.router);
-g_app.use(_throwHandler);
-
-http.createServer(g_app).listen(PORT, function () {
-  log('cli-server listening on port:', PORT);
-});
-
-function _quit(req: Request, res: Response) {
-  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  log('cli-server: quitting!');
-  res.sendStatus(200);
-  process.exit(0);
-}
-function _statusCheck(req: Request, res: Response) {
-  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.sendStatus(200);
-}
-function _allowCrossDomain(req: Request, res: Response, next: NextFunction) {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'content-type,accept');
-  res.header('Access-Control-Max-Age', '3600');
-  if (req.method === 'OPTIONS') {
-    res.header('Cache-Control', 'no-cache,no-store,must-revalidate');
-    res.sendStatus(204);
-  } else {
-    next();
+type StartResult =
+  | { err: SystemError }
+  | { err: null; port: number; sock_path: string };
+export async function start(): Promise<StartResult> {
+  setShowTime(true);
+  const web_result = await WebServer.start();
+  if (web_result.err) {
+    return { err: web_result.err };
   }
-}
-function _allowText(req: Request, res: Response, next: NextFunction) {
-  if (req.is('text/plain')) {
-    req.headers['content-type'] = 'application/json';
-  }
-  next();
-}
-
-interface HttpError extends Error {
-  code?: number;
-  body?: string;
-}
-function _throwHandler(
-  err: HttpError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  if (err.code && err.body && typeof err.code === 'number') {
-    res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.status(err.code).send(err.body);
-  } else {
-    errorLog('cli-server._throwHandler: err:', err);
-    res.header('Cache-control', 'no-cache, no-store, must-revalidate');
-    errorhandler()(err, req, res, next);
-  }
+  const sock_path = PipeServer.start();
+  return { err: null, port: web_result.port, sock_path };
 }
