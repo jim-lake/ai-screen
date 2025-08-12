@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'node:http';
 import errorhandler from 'errorhandler';
 import bodyParser from 'body-parser';
+import onFinished from 'on-finished';
 
 import routes from './routes';
 
@@ -27,8 +28,8 @@ export async function start(arg_port?: number): Promise<number> {
     app.enable('trust proxy');
     app.set('port', port);
 
+    app.use(_logHandler);
     app.get('/status', _status);
-
     app.use(_allowCrossDomain);
     app.use(_allowText);
     app.use(bodyParser.json());
@@ -103,4 +104,21 @@ function _throwHandler(
     res.header('Cache-control', 'no-cache, no-store, must-revalidate');
     errorhandler()(err, req, res, next);
   }
+}
+function _logHandler(req: Request, res: Response, next: NextFunction) {
+  const start_time = Date.now();
+  onFinished(res, () => {
+    const ms = Date.now() - start_time;
+    //const bytes = res.getHeader('content-length') || 0;
+    const date = new Date();
+    const referrer = req.get('referrer') ?? '';
+    const ua = req.get('user-agent') ?? '';
+    // eslint-disable-next-line no-console
+    console.log(
+      `${req.ip} - - [${date.toUTCString()}] "${req.method} ${req.originalUrl} HTTP/${req.httpVersionMajor}.${
+        req.httpVersionMinor
+      }" ${res.statusCode} ${ms}(ms) "${referrer}" "${ua}"`
+    );
+  });
+  next();
 }
