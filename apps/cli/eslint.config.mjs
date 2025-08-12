@@ -18,6 +18,14 @@ export default tseslint.config(
       },
     },
     rules: {
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'Buffer',
+          message:
+            'Use \'import { Buffer } from "buffer"\' instead of global Buffer',
+        },
+      ],
       '@typescript-eslint/naming-convention': [
         'warn',
         {

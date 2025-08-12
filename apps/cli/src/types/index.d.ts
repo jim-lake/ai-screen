@@ -1,7 +1,5 @@
+/* eslint-disable @typescript-eslint/method-signature-style */
 declare module 'unix-dgram' {
-  import type { EventEmitter } from 'events';
-  import type { Buffer } from 'buffer';
-
   export interface RInfo {
     address: string;
     size?: number;
@@ -13,7 +11,7 @@ declare module 'unix-dgram' {
   export type ListeningListener = (path: string) => void;
   export type ConnectListener = (path: string) => void;
 
-  export interface Socket extends EventEmitter {
+  export interface Socket {
     bind(path: string): void;
     connect(path: string): void;
     send(
@@ -31,13 +29,12 @@ declare module 'unix-dgram' {
       callback?: (err: Error | null) => void
     ): void;
     close(): void;
+
     on(event: 'message', listener: MessageListener): this;
     on(event: 'listening', listener: ListeningListener): this;
     on(event: 'connect', listener: ConnectListener): this;
     on(event: 'error', listener: ErrorListener): this;
-    on(event: 'congestion', listener: () => void): this;
-    on(event: 'writable', listener: () => void): this;
-    on(event: string | symbol, listener: (...args: any[]) => void): this;
+    on(event: 'congestion' | 'writable', listener: () => void): this;
   }
 
   export interface UnixDgram {
@@ -45,5 +42,5 @@ declare module 'unix-dgram' {
   }
 
   const unix: UnixDgram;
-  export = unix;
+  export default unix;
 }

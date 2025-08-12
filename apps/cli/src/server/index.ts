@@ -3,19 +3,16 @@ import WebServer from './web_server';
 
 import { setShowTime } from '../tools/log';
 
-import type { SystemError } from './web_server';
-
 export default { start };
 
-type StartResult =
-  | { err: SystemError }
-  | { err: null; port: number; sock_path: string };
-export async function start(): Promise<StartResult> {
+export interface ServerStartResult {
+  port: number;
+  sock_path: string;
+  pid: number;
+}
+export async function start(): Promise<ServerStartResult> {
   setShowTime(true);
-  const web_result = await WebServer.start();
-  if (web_result.err) {
-    return { err: web_result.err };
-  }
+  const port = await WebServer.start();
   const sock_path = PipeServer.start();
-  return { err: null, port: web_result.port, sock_path };
+  return { port, sock_path, pid: process.pid };
 }

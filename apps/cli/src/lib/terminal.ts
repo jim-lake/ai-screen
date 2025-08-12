@@ -2,23 +2,33 @@ import { spawn } from 'node-pty';
 
 import type { IPty } from 'node-pty';
 
+let g_terminalNumber = 1;
+
+export interface TerminalParams {
+  shell: string;
+  command?: string[];
+  cwd: string;
+  rows: number;
+  columns: number;
+  env: Record<string, string>;
+}
 export class Terminal {
   public id: number;
   public process: IPty;
   private attentionMode = false;
   private onDetachCallback?: () => void;
 
-  public constructor(id: number, command?: string[]) {
-    this.id = id;
-    const shell = process.env.SHELL ?? 'bash';
+  public constructor(params: TerminalParams) {
+    this.id = g_terminalNumber++;
+    const { shell, command } = params;
     const cmd = command && command.length > 0 ? command[0] : shell;
     const args = command && command.length > 1 ? command.slice(1) : [];
     this.process = spawn(cmd, args, {
       name: 'xterm-color',
-      cols: process.stdout.columns,
-      rows: process.stdout.rows,
-      cwd: process.env.HOME,
-      env: process.env as Record<string, string>,
+      cols: params.columns,
+      rows: params.rows,
+      cwd: params.cwd,
+      env: params.env,
     });
   }
 

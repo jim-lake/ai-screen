@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { getSession } from '../lib/session';
-import { log } from '../tools/log';
+import { log, errorLog } from '../tools/log';
 import { jsonParse } from '../tools/util';
 
 import type { RInfo } from 'unix-dgram';
@@ -17,9 +17,11 @@ export function start() {
   g_socket = unix.createSocket('unix_dgram');
   g_socket.bind(SOCK_PATH);
   g_socket.on('message', _onMessage);
+  g_socket.on('error', _onError);
+  log('pipe_server.start:', SOCK_PATH);
   return SOCK_PATH;
 }
-function _onMessage(msg: Buffer, rinfo: RInfo) {
+function _onMessage(msg: Buffer, rinfo?: RInfo) {
   log('received:', msg.toString(), rinfo);
   const obj = jsonParse(msg.toString());
   if (typeof obj?.session_name === 'string') {
@@ -27,8 +29,11 @@ function _onMessage(msg: Buffer, rinfo: RInfo) {
     log('session:', session);
   }
 
-  if (rinfo.ancillary) {
+  if (rinfo?.ancillary) {
     log('received hex:', rinfo.ancillary.toString('hex'));
     log('received utf8:', rinfo.ancillary.toString('utf8'));
   }
+}
+function _onError(err: Error) {
+  errorLog('pipe_server._onError:', err);
 }

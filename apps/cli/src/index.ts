@@ -1,110 +1,78 @@
 import { fork } from 'node:child_process';
-import { getSessions, quitServer } from './client';
+import { createSession, getSessions, killServer } from './client';
 import server from './server';
 
-import { log, errorLog, debugLog } from './tools/log';
+import { isCode } from './tools/util';
+import { errorLog, debugLog, setShowTime } from './tools/log';
 
-export default { listSessions, startServer };
+import type { ServerStartResult } from './server';
+import { CliExitCode } from './cli_exit_code';
+
+export { createSession, getSessions, killServer } from './client';
+export type { SessionParams } from './lib/session';
+
+export default { getSessions, startServer, killServer, createSession };
 
 const START_TIMEOUT = 10 * 1000;
 
-export async function listSessions() {
-  const result = await getSessions();
-  if (result.err?.code === 'NO_SERVER') {
-    errorLog('server not running.');
-  } else if (result.err) {
-    errorLog('failed to get sessions:', result.err);
-  } else if (result.session_list.length === 0) {
-    log('No sessions found.');
-  } else {
-    log('Active sessions:');
-    for (const session of result.session_list) {
-      const date = new Date(session.created).toLocaleString();
-      log(`  ${session.name}\t${date}`);
-    }
-  }
-}
-export async function startServer(foreground: boolean) {
+export async function startServer(
+  foreground: boolean
+): Promise<ServerStartResult> {
   if (foreground) {
-    const result = await server.start();
-    if (result.err?.code === 'EADDRINUSE') {
-      errorLog('failed to start server, already running.');
-    } else if (result.err) {
-      errorLog('failed to start server:', result.err);
-    } else {
-      try {
-        process.on('error', _ignoreError);
-        process.send?.({
-          event: 'started',
-          port: result.port,
-          sock_path: result.sock_path,
-        });
-        //process.off('error', _ignoreError);
-      } catch (e) {
-        errorLog('process.send threw:', e);
+    try {
+      const result = await server.start();
+      process.send?.({ event: 'started', ...result });
+      return result;
+    } catch (e) {
+      setShowTime(false);
+      if (isCode(e, 'EADDRINUSE')) {
+        throw new Error('ALREADY_RUNNING', { cause: e });
       }
-      log(
-        'started server on port:',
-        result.port,
-        'sock_path:',
-        result.sock_path
-      );
+      throw e;
     }
   } else {
-    try {
-      await _startBackground();
-    } catch (e) {
-      errorLog('failed to start server:', e);
-    }
+    return await _startBackground();
   }
 }
-async function _startBackground(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const opts: Parameters<typeof fork>[2] = {
-      cwd: process.cwd(),
-      detached: true,
-      stdio: 'ignore',
-    };
-    const child = fork(process.argv[1], ['--server', '--foreground'], opts);
-    child.on('spawn', () => {
-      log('server forked:', child.pid);
+async function _startBackground(): Promise<ServerStartResult> {
+  let child: ReturnType<typeof fork> | undefined;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await new Promise((resolve, reject) => {
+      const opts = {
+        cwd: process.cwd(),
+        detached: true,
+        stdio: 'ignore' as const,
+      };
+      child = fork(process.argv[1], ['--server', '--foreground'], opts);
+      child.on('spawn', () => {
+        debugLog('server forked:', child?.pid);
+      });
+      child.once('message', (msg: ServerStartResult) => {
+        debugLog('server message:', msg);
+        resolve(msg);
+      });
+      child.once('error', (e) => {
+        errorLog('failed to fork server:', e);
+        reject(new Error('error'));
+      });
+      child.once('exit', (code: number, reason) => {
+        debugLog('server exit:', code, reason);
+        reject(new Error(CliExitCode[code]));
+      });
+      timeout = setTimeout(() => {
+        timeout = undefined;
+        reject(new Error('timeout'));
+      }, START_TIMEOUT);
     });
-    child.once('message', (msg) => {
-      log('server message:', msg);
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    if (child) {
       child.channel?.unref();
       child.unref();
-      resolve();
-    });
-    child.once('error', (e) => {
-      errorLog('failed to fork server:', e);
-      reject(new Error('exit'));
-    });
-    child.once('exit', () => {
-      reject(new Error('exit'));
-    });
-    setTimeout(() => {
-      reject(new Error('timeout'));
-    }, START_TIMEOUT);
-  });
-}
-export async function killServer() {
-  const err = await quitServer();
-  if (err?.code === 'NO_SERVER') {
-    log('server not running.');
-  } else if (err) {
-    errorLog('failed to kill server:', err);
-  } else {
-    log('server killed.');
-  }
-}
-export async function createSession(name: string) {
-  const result = await getSessions();
-  if (result.err?.code === 'NO_SERVER') {
-    errorLog('server not running.');
-  } else if (result.err) {
-    errorLog('failed to get current sessions');
-  } else if (result.session_list.find((s) => s.name === name)) {
-    log('session exists');
+    }
   }
 }
 

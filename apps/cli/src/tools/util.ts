@@ -1,23 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
-export default { jsonParse };
+export default { jsonParse, hasCode, isCode };
 
-type Jsonify<T> = {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  [K in keyof T]: T[K] extends Function
+type Jsonify<T> = T extends Date
+  ? string
+  : T extends Function
     ? never
-    : T[K] extends object
-      ? Jsonify<T[K]>
-      : T[K];
-};
-
+    : T extends object
+      ? { [K in keyof T]: Jsonify<T[K]> }
+      : T;
 type RemoveNever<T> = {
   [K in keyof T as T[K] extends never ? never : K]: T[K];
 };
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type JsonClass<T extends abstract new (...args: any) => any> =
   RemoveNever<Jsonify<InstanceType<T>>>;
-
 
 export type JSONValue =
   | string
@@ -32,10 +29,23 @@ export interface JSONObject {
 export type JSONArray = JSONValue[];
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
-export function jsonParse<T extends JSONValue = JSONObject>(json_obj: string): T|undefined {
+export function jsonParse<T extends JSONValue = JSONObject>(
+  json_obj: string
+): T | undefined {
   try {
     return JSON.parse(json_obj) as T;
   } catch {
     return undefined;
   }
+}
+export interface SystemError extends Error {
+  code: string;
+}
+export function hasCode(e: unknown): e is SystemError {
+  return (
+    e instanceof Error && typeof (e as { code?: unknown }).code === 'string'
+  );
+}
+export function isCode(e: unknown, code: string) {
+  return hasCode(e) && e.code === code;
 }

@@ -5,22 +5,22 @@ import bodyParser from 'body-parser';
 
 import routes from './routes';
 
+import type { HttpError } from '../tools/http';
 import { log, errorLog } from '../tools/log';
 
 import type { Request, Response, NextFunction } from 'express';
 
 export default { start, stop };
 
-let g_server: ReturnType<typeof http.createServer> | null = null;
-
 const DEFAULT_PORT = parseInt(process.env.PORT ?? '6847');
+
+let g_server: ReturnType<typeof http.createServer> | null = null;
 
 export interface SystemError extends Error {
   code: string;
 }
-type StartResult = { err: SystemError } | { err: null; port: number };
-export async function start(arg_port?: number): Promise<StartResult> {
-  return new Promise((resolve) => {
+export async function start(arg_port?: number): Promise<number> {
+  return new Promise((resolve, reject) => {
     const port = arg_port ?? DEFAULT_PORT;
     const app = express();
 
@@ -40,12 +40,12 @@ export async function start(arg_port?: number): Promise<StartResult> {
     app.use(_throwHandler);
 
     g_server = http.createServer(app);
-    g_server.on('error', (err: SystemError) => {
-      resolve({ err });
+    g_server.on('error', (err) => {
+      reject(err);
     });
     g_server.listen(port, 'localhost', function () {
-      log('ai-screen: cli-web-server: listening on port:', port);
-      resolve({ err: null, port });
+      log('web_server.start: listening on port:', port);
+      resolve(port);
     });
   });
 }
@@ -61,7 +61,6 @@ export async function stop(): Promise<void> {
     }
   });
 }
-
 function _quit(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   log('ai-screen: cli-web-server: quitting!');
@@ -90,11 +89,6 @@ function _allowText(req: Request, res: Response, next: NextFunction) {
   }
   next();
 }
-
-interface HttpError extends Error {
-  code?: number;
-  body?: string;
-}
 function _throwHandler(
   err: HttpError,
   req: Request,
@@ -105,7 +99,7 @@ function _throwHandler(
     res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.status(err.code).send(err.body);
   } else {
-    errorLog('ai-screen: cli-web-server._throwHandler: err:', err);
+    errorLog('web_server._throwHandler: err:', err);
     res.header('Cache-control', 'no-cache, no-store, must-revalidate');
     errorhandler()(err, req, res, next);
   }

@@ -1,4 +1,9 @@
 import { Terminal } from './terminal';
+import type { TerminalParams } from './terminal';
+
+export interface SessionParams extends TerminalParams {
+  name: string;
+}
 
 const g_sessionMap = new Map<string, Session>();
 
@@ -12,18 +17,21 @@ export class Session {
   public name: string;
   public created: Date;
   public terminals: Terminal[] = [];
-  private counter = 0;
+  public terminalParams: TerminalParams;
 
-  public constructor(name: string) {
+  public constructor(params: SessionParams) {
+    const { name, ...other } = params;
     if (g_sessionMap.has(name)) {
       throw new Error('conflict');
     }
-    this.name = name;
     this.created = new Date();
+    this.name = name;
+    this.terminalParams = other;
     g_sessionMap.set(name, this);
   }
-  public createTerminal(command?: string[]): Terminal {
-    const terminal = new Terminal(this.counter++, command);
+  public createTerminal(params?: Partial<TerminalParams>): Terminal {
+    const opts = Object.assign({}, this.terminalParams, params);
+    const terminal = new Terminal(opts);
     this.terminals.push(terminal);
     return terminal;
   }

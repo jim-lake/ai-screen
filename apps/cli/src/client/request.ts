@@ -50,10 +50,11 @@ export async function request<T, U = T>(
     ? params.url
     : g_baseUrl + params.url;
   let post_body: Buffer | string | undefined;
-  const headers = params.headers ?? {};
+  const request_headers: Record<string, string | string[]> =
+    params.headers ?? {};
   if (typeof params.body === 'object') {
-    if (!headers['Content-Type']) {
-      headers['Content-Type'] = 'application/json';
+    if (!request_headers['Content-Type']) {
+      request_headers['Content-Type'] = 'application/json';
     }
     post_body = JSON.stringify(params.body);
   } else if (params.body !== undefined) {
@@ -63,20 +64,20 @@ export async function request<T, U = T>(
     let text = '';
     let status = 0;
     const err_body: U | null = null;
-    const headers: Record<string, string | undefined> = {};
     try {
       const opts: Parameters<typeof https.request>[1] = {
-        headers,
+        headers: request_headers,
         timeout: params.timeout ?? REQUEST_TIMEOUT,
       };
       if (params.method) {
         opts.method = params.method;
       }
       const runner = url.startsWith('https') ? https : http;
+      const response_headers: Record<string, string | undefined> = {};
       const req = runner.request(url, opts, (res) => {
         status = res.statusCode ?? 0;
         for (const key of Object.keys(res.headersDistinct)) {
-          headers[key] = res.headersDistinct[key]?.[0];
+          response_headers[key] = res.headersDistinct[key]?.[0];
         }
         res.on('data', (chunk: string) => {
           text += chunk;
@@ -95,15 +96,33 @@ export async function request<T, U = T>(
             err = new RequestError(status);
           }
           if (err) {
-            resolve({ err, status, text, body: success_body as U, headers });
+            resolve({
+              err,
+              status,
+              text,
+              body: success_body as U,
+              headers: response_headers,
+            });
           } else {
-            resolve({ err, status, text, body: success_body, headers });
+            resolve({
+              err,
+              status,
+              text,
+              body: success_body,
+              headers: response_headers,
+            });
           }
         });
       });
       req.on('error', (e: RequestError) => {
         const err = e.code ? e : new RequestError('REQUEST_ERROR', e);
-        resolve({ err, status, text, body: err_body, headers });
+        resolve({
+          err,
+          status,
+          text,
+          body: err_body,
+          headers: response_headers,
+        });
       });
       if (post_body) {
         req.write(post_body);
