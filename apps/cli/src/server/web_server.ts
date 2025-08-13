@@ -5,6 +5,7 @@ import bodyParser from 'body-parser';
 import onFinished from 'on-finished';
 
 import routes from './routes';
+import { SOCK_PATH } from './pipe_server';
 
 import type { HttpError } from '../tools/http';
 import { log, errorLog } from '../tools/log';
@@ -29,14 +30,14 @@ export async function start(arg_port?: number): Promise<number> {
     app.set('port', port);
 
     app.use(_logHandler);
-    app.get('/status', _status);
     app.use(_allowCrossDomain);
     app.use(_allowText);
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: true }));
 
+    app.get('/status', _status);
+    app.get('/api/1/status', _status);
     app.get('/quit', _quit);
-
     app.use(routes.router);
     app.use(_throwHandler);
 
@@ -70,7 +71,7 @@ function _quit(req: Request, res: Response) {
 }
 function _status(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.send({ pid: process.pid });
+  res.send({ pid: process.pid, sock_path: SOCK_PATH });
 }
 function _allowCrossDomain(req: Request, res: Response, next: NextFunction) {
   res.header('Access-Control-Allow-Origin', '*');
@@ -110,12 +111,10 @@ function _logHandler(req: Request, res: Response, next: NextFunction) {
   onFinished(res, () => {
     const ms = Date.now() - start_time;
     //const bytes = res.getHeader('content-length') || 0;
-    const date = new Date();
     const referrer = req.get('referrer') ?? '';
     const ua = req.get('user-agent') ?? '';
-    // eslint-disable-next-line no-console
-    console.log(
-      `${req.ip} - - [${date.toUTCString()}] "${req.method} ${req.originalUrl} HTTP/${req.httpVersionMajor}.${
+    log(
+      `${req.ip} "${req.method} ${req.originalUrl} HTTP/${req.httpVersionMajor}.${
         req.httpVersionMinor
       }" ${res.statusCode} ${ms}(ms) "${referrer}" "${ua}"`
     );

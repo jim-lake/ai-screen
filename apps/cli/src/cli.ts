@@ -11,8 +11,7 @@ import {
   startServer,
   killServer,
   createSession,
-  //runSessionInBackground,
-  //reattachToSession,
+  attachToSession,
   //startNewSession,
 } from './index';
 
@@ -42,7 +41,7 @@ g_program.action(async (command: string[], options: CliOptions) => {
   let error_prefix: string | undefined;
   try {
     if (options.version) {
-      log('ai-screen version 0.0.1 (ai-screen)');
+      log(`ai-screen version ${globalThis.__VERSION__ ?? 'dev'} (ai-screen)`);
       return;
     }
     if (options.q) {
@@ -147,16 +146,15 @@ g_program.action(async (command: string[], options: CliOptions) => {
           log(`\t${session.name}-${session.created}`);
         }
       }
-      /*  } else if (options.background) {
-      runSessionInBackground(options.background, command);
-      return;
     } else if (options.r !== undefined) {
-      reattachToSession(options.r);
+      const name = typeof options.r === 'string' ? options.r : undefined;
+      await attachToSession({
+        name,
+        stdin: process.stdin,
+        stdout: process.stdout,
+        exclusive: true,
+      });
       return;
-    } else if (Object.keys(options).length === 0) {
-      const session_name = options.S ?? 'default';
-      startNewSession(session_name, command, options.timeout);
-  */
     } else {
       const flag_name = Object.keys(options)[0];
       errorLog(`Error: Flag '${flag_name}' is not yet supported in ai-screen`);
@@ -166,13 +164,15 @@ g_program.action(async (command: string[], options: CliOptions) => {
   } catch (e) {
     if (e instanceof Error) {
       if (e.message === 'ALREADY_RUNNING') {
-        errorLog('server already running.');
+        errorLog('Server already running.');
       } else if (e.message === 'NO_SERVER') {
-        errorLog('server not running.');
+        errorLog('Server not running.');
       } else if (e.message === 'SESSION_CONFLICT') {
-        errorLog('session with that name already exists.');
+        errorLog('Session with that name already exists.');
+      } else if (e.message === 'NO_DETATCHED_SESSION') {
+        errorLog('There is no screen to be resumed.');
       } else {
-        errorLog(error_prefix ?? 'unknown error:', 'err:', e);
+        errorLog(error_prefix ?? 'Unknown error:', 'err:', e);
       }
       if (e.message in CliExitCode) {
         return process.exit(CliExitCode[e.message as keyof typeof CliExitCode]);

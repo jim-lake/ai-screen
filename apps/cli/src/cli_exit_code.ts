@@ -2,6 +2,7 @@ export enum CliExitCode {
   ALREADY_RUNNING = 1,
   NO_SERVER = 2,
   SESSION_CONFLICT = 3,
+  NO_DETATCHED_SESSION = 4,
   UNKNOWN_ERROR = 255,
 }
 

@@ -1,4 +1,5 @@
 import typescript from '@rollup/plugin-typescript';
+import replace from '@rollup/plugin-replace';
 import dts from 'rollup-plugin-dts';
 import { readFileSync } from 'fs';
 
@@ -55,32 +56,30 @@ const isExternal = (id) => {
     id.startsWith('node:')
   );
 };
+const plugins = [
+  replace({
+    'globalThis.__VERSION__': JSON.stringify(pkg.version),
+    preventAssignment: true,
+  }),
+  typescript({
+    tsconfig: './tsconfig.json',
+    declaration: false,
+    rootDir: './src',
+    exclude: ['tests/**/*', 'node_modules/**/*'],
+  }),
+];
 export default [
   {
     input: 'src/cli.ts',
     output: { file: 'dist/cli.js', format: 'es', sourcemap: true },
     external: isExternal,
-    plugins: [
-      typescript({
-        tsconfig: './tsconfig.json',
-        declaration: false,
-        rootDir: './src',
-        exclude: ['tests/**/*', 'node_modules/**/*'],
-      }),
-    ],
+    plugins,
   },
   {
     input: 'src/index.ts',
     output: { file: 'dist/index.js', format: 'es', sourcemap: true },
     external: isExternal,
-    plugins: [
-      typescript({
-        tsconfig: './tsconfig.json',
-        declaration: false,
-        rootDir: './src',
-        exclude: ['tests/**/*', 'node_modules/**/*'],
-      }),
-    ],
+    plugins,
   },
   {
     input: 'src/index.ts',

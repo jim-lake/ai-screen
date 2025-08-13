@@ -15,6 +15,7 @@
     "strictFunctionTypes": true,
     "isolatedModules": true,
     "noEmit": false,
+    "noUncheckedIndexedAccess": true,
     "emitDeclarationOnly": false
   },
   "include": ["src/**/*.ts"],

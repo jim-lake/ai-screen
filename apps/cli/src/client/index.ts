@@ -1,11 +1,20 @@
 import { RequestError, request } from './request';
+import { connectSession } from './connect';
 
 import type { Session, SessionParams } from '../lib/session';
 import type { JsonClass } from '../tools/util';
 
 export { RequestError } from './request';
+export { connectSession } from './connect';
+export type { ConnectParams } from './connect';
 
-export default { RequestError, getSessions, killServer, createSession };
+export default {
+  RequestError,
+  getSessions,
+  killServer,
+  createSession,
+  connectSession,
+};
 
 export async function getSessions() {
   const opts = { url: '/api/1/session' };

@@ -4,7 +4,7 @@ import * as https from 'node:https';
 export default { request, setBaseUrl };
 
 const REQUEST_TIMEOUT = 2 * 1000;
-const UAS = `ai-screen-cli/1.0.0`;
+const UAS = `ai-screen-cli/${globalThis.__VERSION__ ?? 'dev'}`;
 
 let g_baseUrl = 'http://localhost:6847';
 
@@ -53,9 +53,7 @@ export async function request<T, U = T>(
   let post_body: Buffer | string | undefined;
   const request_headers = Object.assign({ 'User-Agent': UAS }, params.headers);
   if (typeof params.body === 'object') {
-    if (!request_headers['Content-Type']) {
-      request_headers['Content-Type'] = 'application/json';
-    }
+    request_headers['Content-Type'] ??= 'application/json';
     post_body = JSON.stringify(params.body);
   } else if (params.body !== undefined) {
     post_body = params.body;

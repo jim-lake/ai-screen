@@ -1,17 +1,39 @@
 import { fork } from 'node:child_process';
-import { createSession, getSessions, killServer } from './client';
+import { fileURLToPath } from 'node:url';
+import {
+  connectSession,
+  createSession,
+  getSessions,
+  killServer,
+} from './client';
 import server from './server';
 
 import { isCode } from './tools/util';
 import { errorLog, debugLog, setShowTime } from './tools/log';
 
-import type { ServerStartResult } from './server';
 import { CliExitCode } from './cli_exit_code';
 
-export { createSession, getSessions, killServer } from './client';
+import type { ConnectParams } from './client';
+import type { ServerStartResult } from './server';
+
+export {
+  createSession,
+  getSessions,
+  killServer,
+  connectSession,
+} from './client';
+export type { ConnectParams } from './client';
 export type { SessionParams } from './lib/session';
 
-export default { getSessions, startServer, killServer, createSession };
+export const VERSION = '__VERSION__';
+export default {
+  getSessions,
+  startServer,
+  killServer,
+  connectSession,
+  createSession,
+  VERSION,
+};
 
 const START_TIMEOUT = 10 * 1000;
 
@@ -34,46 +56,16 @@ export async function startServer(
     return await _startBackground();
   }
 }
-async function _startBackground(): Promise<ServerStartResult> {
-  let child: ReturnType<typeof fork> | undefined;
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await new Promise((resolve, reject) => {
-      const opts = {
-        cwd: process.cwd(),
-        detached: true,
-        stdio: 'ignore' as const,
-      };
-      child = fork(process.argv[1], ['--server', '--foreground'], opts);
-      child.on('spawn', () => {
-        debugLog('server forked:', child?.pid);
-      });
-      child.once('message', (msg: ServerStartResult) => {
-        debugLog('server message:', msg);
-        resolve(msg);
-      });
-      child.once('error', (e) => {
-        errorLog('failed to fork server:', e);
-        reject(new Error('error'));
-      });
-      child.once('exit', (code: number, reason) => {
-        debugLog('server exit:', code, reason);
-        reject(new Error(CliExitCode[code]));
-      });
-      timeout = setTimeout(() => {
-        timeout = undefined;
-        reject(new Error('timeout'));
-      }, START_TIMEOUT);
-    });
-  } finally {
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-    if (child) {
-      child.channel?.unref();
-      child.unref();
-    }
+export type AttachParams = Omit<ConnectParams, 'name'> & { name?: string };
+export async function attachToSession(params: AttachParams) {
+  const name =
+    params.name ??
+    (await getSessions()).find((s) => s.clients.length === 0)?.name;
+
+  if (!name) {
+    throw new Error('NO_DETATCHED_SESSION');
   }
+  await connectSession({ ...params, name });
 }
 
 /*
@@ -241,6 +233,48 @@ export function startNewSession(
   });
 }
 */
+async function _startBackground(): Promise<ServerStartResult> {
+  let child: ReturnType<typeof fork> | undefined;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await new Promise((resolve, reject) => {
+      const opts = {
+        cwd: process.cwd(),
+        detached: true,
+        stdio: 'ignore' as const,
+      };
+      const script = process.argv[1] ?? fileURLToPath(import.meta.url);
+      child = fork(script, ['--server', '--foreground'], opts);
+      child.on('spawn', () => {
+        debugLog('server forked:', child?.pid);
+      });
+      child.once('message', (msg: ServerStartResult) => {
+        debugLog('server message:', msg);
+        resolve(msg);
+      });
+      child.once('error', (e) => {
+        errorLog('failed to fork server:', e);
+        reject(new Error('error'));
+      });
+      child.once('exit', (code: number, reason) => {
+        debugLog('server exit:', code, reason);
+        reject(new Error(CliExitCode[code]));
+      });
+      timeout = setTimeout(() => {
+        timeout = undefined;
+        reject(new Error('timeout'));
+      }, START_TIMEOUT);
+    });
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    if (child) {
+      child.channel?.unref();
+      child.unref();
+    }
+  }
+}
 function _ignoreError(e: Error) {
   debugLog('_ignoreError: e:', e);
 }
