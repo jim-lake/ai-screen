@@ -65,7 +65,7 @@ export async function attachToSession(params: AttachParams) {
   if (!name) {
     throw new Error('NO_DETATCHED_SESSION');
   }
-  await connectSession({ ...params, name });
+  return await connectSession({ ...params, name });
 }
 
 /*
@@ -235,7 +235,7 @@ export function startNewSession(
 */
 async function _startBackground(): Promise<ServerStartResult> {
   let child: ReturnType<typeof fork> | undefined;
-  let timeout: ReturnType<typeof setTimeout> | undefined;
+  let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
   try {
     return await new Promise((resolve, reject) => {
       const opts = {
@@ -261,14 +261,11 @@ async function _startBackground(): Promise<ServerStartResult> {
         reject(new Error(CliExitCode[code]));
       });
       timeout = setTimeout(() => {
-        timeout = undefined;
         reject(new Error('timeout'));
       }, START_TIMEOUT);
     });
   } finally {
-    if (timeout) {
-      clearTimeout(timeout);
-    }
+    clearTimeout(timeout);
     if (child) {
       child.channel?.unref();
       child.unref();

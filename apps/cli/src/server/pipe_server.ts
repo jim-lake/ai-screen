@@ -9,7 +9,7 @@ import { log, errorLog } from '../tools/log';
 import { jsonParse } from '../tools/util';
 
 import type { RInfo } from 'unix-dgram';
-import type { PipeMessage } from '../lib/pipe';
+import type { PipeClientMessage, PipeServerMessage } from '../lib/pipe';
 
 export const SOCK_PATH = join(tmpdir(), randomUUID() + '.sock');
 export default { start, SOCK_PATH };
@@ -25,28 +25,26 @@ export function start() {
   return SOCK_PATH;
 }
 function _onMessage(msg: Buffer, rinfo?: RInfo) {
-  log('received:', msg.toString('utf8'), rinfo);
   const path = rinfo?.path;
   const fd = rinfo?.fds?.[0];
   try {
-    const obj = jsonParse<PipeMessage>(msg.toString('utf8'));
-    if (obj?.type === 'connect') {
+    const obj = jsonParse<PipeClientMessage>(msg.toString('utf8'));
+    const session = obj?.name ? getSession(obj.name) : null;
+    if (obj === undefined) {
+      _send(path, { type: 'error', err: 'BAD_MESSAGE' });
+    } else if (!session) {
+      _send(path, { type: 'error', err: 'SESSION_NOT_FOUND' });
+    } else if (obj.type === 'connect') {
       const { exclusive, rows, columns } = obj;
-      const session = getSession(obj.name);
-      if (!session) {
-        _send(path, { type: 'connect_error', err: 'SESSION_NOT_FOUND' });
-      } else if (exclusive && session.clients.length > 0) {
+      if (exclusive && session.clients.length > 0) {
         _send(path, {
-          type: 'connect_error' as const,
+          type: 'error' as const,
           err: 'SESSION_ALREADY_CONNECTED',
         });
       } else if (!path) {
-        _send(path, {
-          type: 'connect_error' as const,
-          err: 'BAD_CONNECT_PATH',
-        });
+        _send(path, { type: 'error' as const, err: 'BAD_CONNECT_PATH' });
       } else if (!fd) {
-        _send(path, { type: 'connect_error' as const, err: 'BAD_CONNECT_FD' });
+        _send(path, { type: 'error' as const, err: 'BAD_CONNECT_FD' });
       } else {
         const client = session.connectClient({ path, fd, rows, columns });
         client.on('disconnect', (reason) => {
@@ -54,12 +52,20 @@ function _onMessage(msg: Buffer, rinfo?: RInfo) {
         });
         _send(path, { type: 'connect_success' as const });
       }
+    } else if (obj.type === 'write') {
+      session.write(obj.data);
+    } else if (obj.type === 'resize') {
+      session.resize({ columns: obj.columns, rows: obj.rows });
+    } else if (obj.type === 'detach') {
+      if (path) {
+        session.detach(path);
+      }
     }
   } catch (e) {
     errorLog('pipe_server._onMessage: threw:', e);
   }
 }
-function _send(path: string | undefined, msg: PipeMessage) {
+function _send(path: string | undefined, msg: PipeServerMessage) {
   if (g_socket && path) {
     const buf = Buffer.from(JSON.stringify(msg));
     g_socket.sendto(buf, 0, buf.length, path);

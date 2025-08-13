@@ -5,14 +5,14 @@ import { randomUUID } from 'node:crypto';
 import unix from 'unix-dgram';
 
 import { request } from './request';
-import { log, errorLog } from '../tools/log';
+import { errorLog } from '../tools/log';
 import { jsonParse } from '../tools/util';
 
 import type {
   ReadStream as TTYReadStream,
   WriteStream as TTYWriteStream,
 } from 'node:tty';
-import type { PipeMessage } from '../lib/pipe';
+import type { PipeClientMessage, PipeServerMessage } from '../lib/pipe';
 
 export default { connectSession };
 
@@ -24,7 +24,7 @@ export interface ConnectParams {
   stdout: TTYWriteStream & { fd?: number };
   exclusive?: boolean;
 }
-export async function connectSession(params: ConnectParams) {
+export async function connectSession(params: ConnectParams): Promise<string> {
   if (!params.stdout.fd) {
     throw new Error('NO_STDOUT');
   }
@@ -43,7 +43,11 @@ export async function connectSession(params: ConnectParams) {
   }
   const sock = unix.createSocket('unix_dgram');
   try {
-    await _runConnection({ sock, sock_path: result.body.sock_path, ...params });
+    return await _runConnection({
+      sock,
+      sock_path: result.body.sock_path,
+      ...params,
+    });
   } finally {
     sock.close();
   }
@@ -52,7 +56,7 @@ type RunParams = ConnectParams & {
   sock: ReturnType<typeof unix.createSocket>;
   sock_path: string;
 };
-async function _runConnection(params: RunParams) {
+async function _runConnection(params: RunParams): Promise<string> {
   const { sock, sock_path, name, stdout, stdin } = params;
   const exclusive = params.exclusive ?? false;
   const stdout_fd = stdout.fd;
@@ -60,7 +64,7 @@ async function _runConnection(params: RunParams) {
     throw new Error('BAD_CONSOLE');
   }
 
-  let connect_timeout: ReturnType<typeof setTimeout> | null = null;
+  let connect_timeout: ReturnType<typeof setTimeout> | undefined = undefined;
   let attention_mode = false;
 
   function _onResize() {
@@ -103,7 +107,7 @@ async function _runConnection(params: RunParams) {
   }
 
   try {
-    await new Promise<void>((resolve, reject) => {
+    return await new Promise<string>((resolve, reject) => {
       connect_timeout = setTimeout(() => {
         errorLog('connect timeout');
         reject(new Error('timeout'));
@@ -117,27 +121,27 @@ async function _runConnection(params: RunParams) {
           columns: stdout.columns,
         };
         _send(sock, msg, [stdout_fd]);
-        log('fd sent');
       });
       sock.on('error', (err) => {
-        errorLog('connectSession: sock err:', err);
+        if (err.errno === -39) {
+          reject(new Error('SERVER_DISCONNECTED'));
+        } else {
+          errorLog('connectSession: sock err:', err);
+        }
       });
-      sock.on('message', (msg, rinfo) => {
-        log('connect msg:', msg.toString('utf8'), rinfo);
-        const obj = jsonParse<PipeMessage>(msg.toString('utf8'));
+      sock.on('message', (msg) => {
+        const obj = jsonParse<PipeServerMessage>(msg.toString('utf8'));
         if (obj) {
-          const { type } = obj;
-          if (type === 'connect_success') {
-            if (connect_timeout) {
-              clearTimeout(connect_timeout);
-              connect_timeout = null;
+          if (obj.type === 'connect_success') {
+            clearTimeout(connect_timeout);
+            if (stdin.isTTY) {
+              stdin.setRawMode(true);
             }
-            stdin.setRawMode(true);
             stdin.on('data', _onData);
             stdin.on('resize', _onResize);
-          } else if (type === 'disconnect') {
-            resolve();
-          } else if (type === 'connect_error') {
+          } else if (obj.type === 'disconnect') {
+            resolve(obj.reason);
+          } else if (obj.type === 'error') {
             reject(new Error(obj.err));
           }
         }
@@ -147,18 +151,18 @@ async function _runConnection(params: RunParams) {
       sock.connect(sock_path);
     });
   } finally {
-    if (connect_timeout !== null) {
-      clearTimeout(connect_timeout);
-      connect_timeout = null;
+    clearTimeout(connect_timeout);
+    if (stdin.isTTY) {
+      stdin.setRawMode(false);
     }
-    stdin.setRawMode(false);
-    stdin.off('data', _onData);
-    stdin.off('resize', _onResize);
+    stdin.removeAllListeners('data');
+    stdin.removeAllListeners('resize');
+    stdin.unref();
   }
 }
 function _send(
   sock: ReturnType<typeof unix.createSocket>,
-  msg: PipeMessage,
+  msg: PipeClientMessage,
   fds?: number[]
 ) {
   const buf = Buffer.from(JSON.stringify(msg));

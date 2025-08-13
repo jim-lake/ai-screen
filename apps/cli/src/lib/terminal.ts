@@ -40,7 +40,9 @@ export class Terminal extends EventEmitter {
     this._dataDispose = this.pty.onData(this._onData);
     this._exitDispose = this.pty.onExit(this._onExit);
   }
-
+  public write(data: string) {
+    this.pty.write(data);
+  }
   public resize(params: { rows: number; columns: number }) {
     this.pty.resize(params.columns, params.rows);
   }

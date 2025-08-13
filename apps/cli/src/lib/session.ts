@@ -1,4 +1,4 @@
-import { Client } from './client';
+import { Client, getClient } from './client';
 import { Terminal } from './terminal';
 import type { ClientParams } from './client';
 import type { TerminalParams } from './terminal';
@@ -61,6 +61,19 @@ export class Session {
   public resize(params: { rows: number; columns: number }) {
     for (const terminal of this.terminals) {
       terminal.resize(params);
+    }
+  }
+  public write(data: string) {
+    this.activeTerminal?.write(data);
+  }
+  public detach(path: string) {
+    const client = getClient(path);
+    if (client) {
+      const index = this.clients.indexOf(client);
+      if (index !== -1) {
+        this.clients.splice(index, 1);
+      }
+      client.disconnect('detach');
     }
   }
   public activateTerminal(index: number) {

@@ -143,17 +143,26 @@ g_program.action(async (command: string[], options: CliOptions) => {
       } else {
         log('Sessions found:');
         for (const session of session_list) {
-          log(`\t${session.name}-${session.created}`);
+          log(
+            `  ${session.name}-${session.created} (${session.terminals.length > 0 ? 'Attached' : 'Detached'})`
+          );
         }
       }
     } else if (options.r !== undefined) {
       const name = typeof options.r === 'string' ? options.r : undefined;
-      await attachToSession({
+      const reason = await attachToSession({
         name,
         stdin: process.stdin,
         stdout: process.stdout,
         exclusive: true,
       });
+      if (reason === 'close') {
+        log('\n[session is terminating]');
+      } else if (reason === 'detach') {
+        log('\n[detached]');
+      } else {
+        log('\nfinished for reason:', reason);
+      }
       return;
     } else {
       const flag_name = Object.keys(options)[0];
@@ -170,7 +179,11 @@ g_program.action(async (command: string[], options: CliOptions) => {
       } else if (e.message === 'SESSION_CONFLICT') {
         errorLog('Session with that name already exists.');
       } else if (e.message === 'NO_DETATCHED_SESSION') {
-        errorLog('There is no screen to be resumed.');
+        errorLog('There is no detached screen to be resumed.');
+      } else if (e.message === 'SESSION_NOT_FOUND') {
+        errorLog('There is no screen to be resumed matching that name.');
+      } else if (e.message === 'SESSION_ALREADY_CONNECTED') {
+        errorLog('There is no detached screen to be resumed.');
       } else {
         errorLog(error_prefix ?? 'Unknown error:', 'err:', e);
       }

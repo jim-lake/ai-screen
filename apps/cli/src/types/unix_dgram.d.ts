@@ -6,9 +6,14 @@ declare module 'unix-dgram' {
     size?: number;
     fds?: number[];
   }
+  interface SyscallError extends Error {
+    errno: number;
+    code: number;
+    syscall: string;
+  }
 
   export type MessageListener = (msg: Buffer, rinfo?: RInfo) => void;
-  export type ErrorListener = (err: Error) => void;
+  export type ErrorListener = (err: SyscallError) => void;
   export type ListeningListener = (path: string) => void;
   export type ConnectListener = (path: string) => void;
 
