@@ -24,6 +24,9 @@ function _getSessionList(req: Request, res: Response) {
 function _createSession(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   const { name } = req.params;
+  if (!name) {
+    throw new HttpError(400, 'session name required');
+  }
   const shell = requiredProp(req, 'shell', 'string');
   const cwd = requiredProp(req, 'cwd', 'string');
   const rows = requiredProp(req, 'rows', 'number');
