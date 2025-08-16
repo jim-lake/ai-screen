@@ -1,10 +1,12 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
+import importPlugin from 'eslint-plugin-import';
 
 export default tseslint.config(
   { ignores: ['dist/**', 'node_modules/**', 'test/pulumi/**'] },
   eslint.configs.recommended,
   {
+    plugins: { import: importPlugin },
     files: ['src/**/*.ts', 'tests/**/*.ts'],
     extends: [
       ...tseslint.configs.recommended,
@@ -18,6 +20,7 @@ export default tseslint.config(
       },
     },
     rules: {
+      'import/enforce-node-protocol-usage': ['error', 'always'],
       'no-restricted-globals': [
         'error',
         {
@@ -26,8 +29,8 @@ export default tseslint.config(
             'Use \'import { Buffer } from "buffer"\' instead of global Buffer',
         },
         {
-          "name": "setTimeout",
-          "message": "Use setTimeout from 'timers/promises' instead."
+          name: 'setTimeout',
+          message: "Use setTimeout from 'timers/promises' instead.",
         },
       ],
       '@typescript-eslint/naming-convention': [

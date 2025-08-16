@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { setTimeout } from 'node:timers';
 import unix from 'unix-dgram';
 
 import { getStatus } from './common';

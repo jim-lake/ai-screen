@@ -1,5 +1,6 @@
 import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { setTimeout } from 'node:timers';
 import {
   getStatus,
   connectSession,
