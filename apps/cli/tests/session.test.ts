@@ -31,8 +31,6 @@ void test('Session class', async (t) => {
     },
   });
 
-
-
   const { Session } = await import('../src/lib/session');
 
   await t.test('should create a new session', () => {

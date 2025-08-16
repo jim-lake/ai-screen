@@ -37,7 +37,10 @@ export class Terminal extends EventEmitter {
     this.id = g_terminalNumber++;
 
     // Initialize xterm headless terminal
-    this._xterm = new Headless.Terminal({ cols: params.columns, rows: params.rows });
+    this._xterm = new Headless.Terminal({
+      cols: params.columns,
+      rows: params.rows,
+    });
 
     const { shell, command } = params;
     const cmd = command?.[0] ?? shell;
