@@ -20,6 +20,15 @@ export default tseslint.config(
       },
     },
     rules: {
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'globalThis',
+          property: 'setTimeout',
+          message:
+            "Use 'timers/promises' or 'timers' instead of globalThis.setTimeout",
+        },
+      ],
       'import/enforce-node-protocol-usage': ['error', 'always'],
       'no-restricted-globals': [
         'error',
