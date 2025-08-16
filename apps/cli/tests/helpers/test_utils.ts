@@ -4,6 +4,8 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
+import { log } from './log_utils';
+
 interface ApiResponse {
   status: number;
   data: Record<string, unknown>;
@@ -22,7 +24,6 @@ export function getServerInfo(): { port: number; pid: number } {
   return { port: g_serverPort, pid: g_serverPid };
 }
 
-// Helper function to make HTTP requests
 export async function makeRequest(
   method: string,
   path: string,
@@ -60,19 +61,14 @@ export async function makeRequest(
 
   return { status: response.status, data };
 }
-
-// Helper function to check if a process is running
 function _isProcessRunning(pid: number): boolean {
   try {
-    // On Unix systems, sending signal 0 checks if process exists without killing it
     process.kill(pid, 0);
     return true;
   } catch {
     return false;
   }
 }
-
-// Helper function to wait for server to be ready
 export async function waitForServer(
   port: number,
   max_attempts = 30
@@ -90,45 +86,31 @@ export async function waitForServer(
   }
   throw new Error('Server failed to start within timeout');
 }
-
-// Helper function to start server for tests using spawn with tsx
 export async function startTestServer(): Promise<{
   port: number;
   pid: number;
 }> {
-  // Get the path to the test server entry point
   const current_file = fileURLToPath(import.meta.url);
   const current_dir = dirname(current_file);
   const test_server_path = join(current_dir, 'test_server.ts');
 
   return new Promise((resolve, reject) => {
-    // Spawn the test server process using tsx
     const child = spawn('tsx', [test_server_path], {
       stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
       env: { ...process.env, NODE_ENV: 'test' },
     });
-
     g_serverProcess = child;
-
     let server_output = '';
-
-    // Set up timeout for server startup
     const startup_timeout = setTimeoutCallback(() => {
       child.kill('SIGTERM');
       reject(new Error(`Server startup timeout\nOutput: ${server_output}`));
-    }, 10000); // 10 second timeout
-
-    // Capture stdout for debugging
+    }, 10000);
     child.stdout?.on('data', (data: Buffer) => {
       server_output += data.toString();
     });
-
-    // Capture stderr for debugging
     child.stderr?.on('data', (data: Buffer) => {
       server_output += data.toString();
     });
-
-    // Listen for server startup message
     child.on('message', (message: unknown) => {
       if (
         typeof message === 'object' &&
@@ -138,9 +120,8 @@ export async function startTestServer(): Promise<{
         const msg = message as { event: string; port?: number; pid?: number };
         if (msg.event === 'server-started' && msg.port && msg.pid) {
           clearTimeout(startup_timeout);
+          log(`startTestServer: pid: ${msg.pid} port: ${msg.port}`);
           setServerInfo(msg.port, msg.pid);
-
-          // Wait for server to be ready to accept requests
           waitForServer(msg.port)
             .then(() => {
               if (msg.port && msg.pid) {
@@ -153,8 +134,6 @@ export async function startTestServer(): Promise<{
         }
       }
     });
-
-    // Handle child process errors
     child.on('error', (error) => {
       clearTimeout(startup_timeout);
       reject(
@@ -163,8 +142,6 @@ export async function startTestServer(): Promise<{
         )
       );
     });
-
-    // Handle child process exit
     child.on('exit', (code, signal) => {
       clearTimeout(startup_timeout);
       if (code !== 0 && code !== null) {
@@ -177,63 +154,50 @@ export async function startTestServer(): Promise<{
     });
   });
 }
-
-// Helper function to stop server and wait for it to actually quit
 export async function stopTestServer(): Promise<void> {
   const server_pid = g_serverPid;
   const server_process = g_serverProcess;
 
   try {
-    // Send quit request to server
     await makeRequest('GET', '/quit');
   } catch {
     // Server might already be down or not responding
   }
 
-  // Wait for the process to actually terminate
   if (server_process && server_pid) {
-    const max_wait_time = 5000; // 5 seconds max wait
-    const check_interval = 50; // Check every 50ms
+    const max_wait_time = 5000;
+    const check_interval = 50;
     const max_attempts = max_wait_time / check_interval;
 
     for (let i = 0; i < max_attempts; i++) {
       if (!_isProcessRunning(server_pid)) {
         g_serverProcess = undefined;
-        return; // Process has terminated
+        return;
       }
       await setTimeout(check_interval);
     }
-
-    // If process is still running after timeout, force kill it
     try {
       server_process.kill('SIGTERM');
       await setTimeout(100);
-
-      // Check if SIGTERM worked
       if (_isProcessRunning(server_pid)) {
         server_process.kill('SIGKILL');
       }
-
       g_serverProcess = undefined;
     } catch {
-      // Process might have already terminated
       g_serverProcess = undefined;
     }
   }
 }
-
-// Helper function to create a test session
 export async function createTestSession(
   session_name: string
 ): Promise<Record<string, unknown>> {
   const session_data = {
     shell: '/bin/bash',
-    cwd: process.cwd(), // Use current working directory instead of /tmp
+    cwd: process.cwd(),
     rows: 24,
     columns: 80,
-    env: { ...process.env, PS1: '$ ' }, // Use current environment instead of hardcoded paths
+    env: { ...process.env, PS1: '$ ' },
   };
-
   const result = await makeRequest(
     'POST',
     `/api/1/session/${session_name}`,
@@ -244,8 +208,6 @@ export async function createTestSession(
   }
   return result.data;
 }
-
-// Helper function to create a terminal in a session
 export async function createTerminalInSession(
   session_name: string
 ): Promise<Record<string, unknown>> {
@@ -259,8 +221,6 @@ export async function createTerminalInSession(
   }
   return result.data;
 }
-
-// Helper function to get terminal state
 export async function getTerminalState(
   session_name: string
 ): Promise<{
@@ -286,8 +246,6 @@ export async function getTerminalState(
     terminal_count: result.data.terminal_count as number,
   };
 }
-
-// Helper function to write to session
 export async function writeToSession(
   session_name: string,
   data: string
@@ -301,8 +259,6 @@ export async function writeToSession(
     throw new Error(`Failed to write to session: ${result.status}`);
   }
 }
-
-// Helper function to wait for terminal output to settle
 export async function waitForTerminalOutput(delay_ms = 100): Promise<void> {
   await setTimeout(delay_ms);
 }

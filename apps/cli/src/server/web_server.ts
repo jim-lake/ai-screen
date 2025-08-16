@@ -48,7 +48,7 @@ export async function start(params: StartParams): Promise<number> {
     });
     g_server.listen(params.port, params.host ?? 'localhost', function () {
       const addr = g_server?.address();
-      const listen_port = typeof addr == 'object' ? addr?.port ?? 0 : 0;
+      const listen_port = typeof addr == 'object' ? (addr?.port ?? 0) : 0;
       log('web_server.start: listening on port:', listen_port);
       resolve(listen_port);
     });
