@@ -30,10 +30,10 @@ void test('HTTP Endpoints', async (t) => {
   await t.test('create session', async () => {
     const session_data = {
       shell: '/bin/bash',
-      cwd: '/tmp',
+      cwd: process.cwd(),
       rows: 24,
       columns: 80,
-      env: { HOME: '/tmp', PATH: '/bin:/usr/bin' },
+      env: { ...process.env },
     };
 
     const result = await makeRequest(
@@ -128,7 +128,7 @@ void test('HTTP Endpoints', async (t) => {
   await t.test('create terminal in session', async () => {
     const terminal_data = {
       shell: '/bin/sh',
-      cwd: '/home',
+      cwd: process.cwd(),
       env: { TEST: 'value' },
     };
 
@@ -173,7 +173,7 @@ void test('HTTP Endpoints', async (t) => {
   await t.test('create another terminal in session', async () => {
     const terminal_data = {
       shell: '/bin/sh',
-      cwd: '/home',
+      cwd: process.cwd(),
       env: { TEST: 'value' },
     };
 
@@ -211,7 +211,7 @@ void test('HTTP Endpoints', async (t) => {
   });
 
   await t.test('create terminal with command array', async () => {
-    const terminal_data = { command: ['ls', '-la'], cwd: '/tmp' };
+    const terminal_data = { command: ['ls', '-la'], cwd: process.cwd() };
 
     const result = await makeRequest(
       'POST',
@@ -234,10 +234,10 @@ void test('HTTP Endpoints', async (t) => {
   await t.test('create session with duplicate name should fail', async () => {
     const session_data = {
       shell: '/bin/bash',
-      cwd: '/tmp',
+      cwd: process.cwd(),
       rows: 24,
       columns: 80,
-      env: { HOME: '/tmp' },
+      env: { ...process.env },
     };
 
     const result = await makeRequest(

@@ -103,10 +103,10 @@ export async function createTestSession(
 ): Promise<Record<string, unknown>> {
   const session_data = {
     shell: '/bin/bash',
-    cwd: '/tmp',
+    cwd: process.cwd(), // Use current working directory instead of /tmp
     rows: 24,
     columns: 80,
-    env: { HOME: '/tmp', PATH: '/bin:/usr/bin', PS1: '$ ' },
+    env: { ...process.env, PS1: '$ ' }, // Use current environment instead of hardcoded paths
   };
 
   const result = await makeRequest(
