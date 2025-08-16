@@ -6,7 +6,7 @@ export default { request, setBaseUrl };
 const REQUEST_TIMEOUT = 2 * 1000;
 const UAS = `ai-screen-cli/${globalThis.__VERSION__ ?? 'dev'}`;
 
-let g_baseUrl = 'http://localhost:6847';
+let g_baseUrl = '';
 
 export class RequestError extends Error {
   public constructor(

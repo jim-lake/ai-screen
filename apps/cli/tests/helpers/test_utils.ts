@@ -110,13 +110,13 @@ export async function startTestServer(): Promise<{
 
     g_serverProcess = child;
 
+    let server_output = '';
+
     // Set up timeout for server startup
     const startup_timeout = setTimeoutCallback(() => {
       child.kill('SIGTERM');
-      reject(new Error('Server startup timeout'));
+      reject(new Error(`Server startup timeout\nOutput: ${server_output}`));
     }, 10000); // 10 second timeout
-
-    let server_output = '';
 
     // Capture stdout for debugging
     child.stdout?.on('data', (data: Buffer) => {

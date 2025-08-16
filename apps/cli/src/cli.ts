@@ -7,6 +7,7 @@ import { CLI_OPTIONS } from './cli_options';
 import { CliExitCode } from './cli_exit_code';
 
 import {
+  setupClient,
   getSessions,
   ensureServer,
   startServer,
@@ -19,6 +20,7 @@ import {
 import type { CliOptions } from './cli_options';
 import type { AttachParams, SessionParams } from './index';
 
+const DEFAULT_PORT = 6847;
 const DEFAULT_SHELL = 'bash';
 
 function _createProgram(): Command {
@@ -40,6 +42,8 @@ function _createProgram(): Command {
 const g_program = _createProgram();
 g_program.action(async (command: string[], options: CliOptions) => {
   let error_prefix: string | undefined;
+  let port = DEFAULT_PORT;
+
   try {
     if (options.version) {
       log(`ai-screen version ${globalThis.__VERSION__ ?? 'dev'} (ai-screen)`);
@@ -48,6 +52,10 @@ g_program.action(async (command: string[], options: CliOptions) => {
     if (options.q) {
       setQuiet(true);
     }
+    if (options.serverPort) {
+      port = parseInt(options.serverPort);
+    }
+    setupClient({ port });
 
     if (options.a) {
       _unsupported('-a');
@@ -128,7 +136,10 @@ g_program.action(async (command: string[], options: CliOptions) => {
       return;
     } else if (options.server) {
       error_prefix = 'start server';
-      const result = await startServer(options.foreground ?? false);
+      const result = await startServer({
+        foreground: options.foreground ?? false,
+        port,
+      });
       log('server launched on pid:', result.pid, 'port:', result.port);
       return;
     } else if (options.killServer) {
@@ -161,7 +172,7 @@ g_program.action(async (command: string[], options: CliOptions) => {
     } else if (Object.keys(options).length === 0) {
       error_prefix = 'create and attach session';
       const name = `default-${process.pid}`;
-      await ensureServer();
+      await ensureServer({ port });
       await createSession(_sessionParams({ name }));
       await _attach({
         name,

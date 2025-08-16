@@ -1,17 +1,18 @@
 import { getStatus } from './common';
 import { connectSession } from './connect';
-import { RequestError, request } from './request';
+import { RequestError, request, setBaseUrl } from './request';
 
 import type { Session, SessionParams } from '../lib/session';
 import type { JsonClass } from '../tools/util';
 
 export { getStatus } from './common';
 export { connectSession } from './connect';
-export { RequestError } from './request';
+export { RequestError, setBaseUrl } from './request';
 
 export type { ConnectParams } from './connect';
 
 export default {
+  setBaseUrl,
   getStatus,
   getSessions,
   killServer,

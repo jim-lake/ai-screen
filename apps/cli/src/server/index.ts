@@ -3,6 +3,8 @@ import WebServer from './web_server';
 
 import { setShowTime } from '../tools/log';
 
+import type { StartParams } from './web_server';
+export type { StartParams } from './web_server';
 export default { start };
 
 export interface ServerStartResult {
@@ -10,9 +12,9 @@ export interface ServerStartResult {
   sock_path: string;
   pid: number;
 }
-export async function start(): Promise<ServerStartResult> {
+export async function start(params: StartParams): Promise<ServerStartResult> {
   setShowTime(true);
-  const port = await WebServer.start();
+  const port = await WebServer.start(params);
   const sock_path = PipeServer.start();
   return { port, sock_path, pid: process.pid };
 }

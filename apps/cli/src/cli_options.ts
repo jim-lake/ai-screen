@@ -139,6 +139,11 @@ export const CLI_OPTIONS = [
     key: 'server',
   },
   {
+    flags: '--server-port <port>',
+    description: 'Specify the port the server should run on',
+    key: 'serverPort',
+  },
+  {
     flags: '--foreground',
     description: 'Run the server in the foreground.',
     key: 'foreground',

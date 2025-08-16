@@ -2,6 +2,7 @@ import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { setTimeout } from 'node:timers';
 import {
+  setBaseUrl,
   getStatus,
   connectSession,
   createSession,
@@ -39,23 +40,37 @@ export default {
 
 const START_TIMEOUT = 10 * 1000;
 
-export async function ensureServer() {
+export interface SetupClientParams {
+  port: number;
+}
+export function setupClient(params: SetupClientParams) {
+  setBaseUrl(`http://localhost:${params.port}`);
+}
+export interface EnsureServerParams {
+  port: number;
+}
+export async function ensureServer(params: EnsureServerParams) {
   try {
+    setupClient(params);
     return await getStatus();
   } catch (e) {
     if (e instanceof Error && e.message === 'NO_SERVER') {
-      await startServer(false);
+      await startServer({ foreground: false, port: params.port });
     } else {
       throw e;
     }
   }
 }
+export interface StartServerParams {
+  foreground: boolean;
+  port: number;
+}
 export async function startServer(
-  foreground: boolean
+  params: StartServerParams
 ): Promise<ServerStartResult> {
-  if (foreground) {
+  if (params.foreground) {
     try {
-      const result = await server.start();
+      const result = await server.start({ port: params.port });
       process.send?.({ event: 'started', ...result });
       return result;
     } catch (e) {
@@ -66,7 +81,7 @@ export async function startServer(
       throw e;
     }
   } else {
-    return await _startBackground();
+    return await _startBackground(params);
   }
 }
 export type AttachParams = Omit<ConnectParams, 'name'> & { name?: string };
@@ -80,7 +95,9 @@ export async function attachToSession(params: AttachParams) {
   }
   return await connectSession({ ...params, name });
 }
-async function _startBackground(): Promise<ServerStartResult> {
+async function _startBackground(
+  params: StartServerParams
+): Promise<ServerStartResult> {
   let child: ReturnType<typeof fork> | undefined;
   let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
   try {
@@ -91,7 +108,13 @@ async function _startBackground(): Promise<ServerStartResult> {
         stdio: 'ignore' as const,
       };
       const script = process.argv[1] ?? fileURLToPath(import.meta.url);
-      child = fork(script, ['--server', '--foreground'], opts);
+      const args = [
+        '--server',
+        '--foreground',
+        '--server-port',
+        String(params.port),
+      ];
+      child = fork(script, args, opts);
       child.on('spawn', () => {
         debugLog('server forked:', child?.pid);
       });

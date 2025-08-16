@@ -6,7 +6,7 @@ import { errorLog } from './log_utils.js';
 
 async function _main() {
   try {
-    const result = await startServer(true);
+    const result = await startServer({ foreground: true, port: 6847 });
 
     // Send IPC message to parent process if we're a child process
     if (process.send) {

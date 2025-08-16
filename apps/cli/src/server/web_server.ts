@@ -14,20 +14,21 @@ import type { Request, Response, NextFunction } from 'express';
 
 export default { start, stop };
 
-const DEFAULT_PORT = parseInt(process.env.PORT ?? '6847');
-
 let g_server: ReturnType<typeof http.createServer> | null = null;
 
 export interface SystemError extends Error {
   code: string;
 }
-export async function start(arg_port?: number): Promise<number> {
+export interface StartParams {
+  port: number;
+  host?: string;
+}
+export async function start(params: StartParams): Promise<number> {
   return new Promise((resolve, reject) => {
-    const port = arg_port ?? DEFAULT_PORT;
     const app = express();
 
     app.enable('trust proxy');
-    app.set('port', port);
+    app.set('port', params.port);
 
     app.use(_logHandler);
     app.use(_allowCrossDomain);
@@ -45,9 +46,10 @@ export async function start(arg_port?: number): Promise<number> {
     g_server.on('error', (err) => {
       reject(err);
     });
-    g_server.listen(port, 'localhost', function () {
-      log('web_server.start: listening on port:', port);
-      resolve(port);
+    g_server.listen(params.port, params.host ?? 'localhost', function () {
+      const listen_port = g_server.address().port;
+      log('web_server.start: listening on port:', listen_port);
+      resolve(listen_port);
     });
   });
 }
