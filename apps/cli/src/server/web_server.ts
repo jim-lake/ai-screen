@@ -67,7 +67,10 @@ function _quit(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   log('ai-screen: cli-web-server: quitting!');
   res.sendStatus(200);
-  process.exit(0);
+  g_server?.close(() => {
+    log('ai-screen: cli-web-server: closed.');
+    process.exit(0);
+  });
 }
 function _status(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');

@@ -6,6 +6,17 @@ export default tseslint.config(
   { ignores: ['dist/**', 'node_modules/**', 'test/pulumi/**'] },
   eslint.configs.recommended,
   {
+    files: ['src/**/*.ts', 'tests/**/*.ts'],
+    plugins: { import: importPlugin },
+    rules: {
+      'import/extensions': [
+        'error',
+        'never',
+        { ignorePackages: true, checkTypeImports: true },
+      ],
+    },
+  },
+  {
     plugins: { import: importPlugin },
     files: ['src/**/*.ts', 'tests/**/*.ts'],
     extends: [
