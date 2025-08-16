@@ -9,7 +9,7 @@ import {
   getTerminalState,
   writeToSession,
   waitForTerminalOutput,
-} from './helpers/test_utils.js';
+} from './helpers/test_utils';
 
 const SESSION_NAME = 'cursor-test-session';
 

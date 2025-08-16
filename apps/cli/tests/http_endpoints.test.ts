@@ -6,7 +6,7 @@ import {
   stopTestServer,
   makeRequest,
   getServerInfo,
-} from './helpers/test_utils.js';
+} from './helpers/test_utils';
 
 before(async () => {
   await startTestServer();
