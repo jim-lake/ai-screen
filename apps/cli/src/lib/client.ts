@@ -61,7 +61,6 @@ export class Client extends EventEmitter {
   }
   public changeTerminal(new_term: Terminal) {
     log('client.changeTerminal:', new_term.id);
-    // Send current screen state when switching to a different terminal
     const screen_state = new_term.getScreenState();
     this.write(screen_state.content);
   }
