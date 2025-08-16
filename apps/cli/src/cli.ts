@@ -8,6 +8,7 @@ import { CliExitCode } from './cli_exit_code';
 
 import {
   getSessions,
+  ensureServer,
   startServer,
   killServer,
   createSession,
@@ -16,7 +17,7 @@ import {
 } from './index';
 
 import type { CliOptions } from './cli_options';
-import type { SessionParams } from './index';
+import type { AttachParams, SessionParams } from './index';
 
 const DEFAULT_SHELL = 'bash';
 
@@ -150,19 +151,24 @@ g_program.action(async (command: string[], options: CliOptions) => {
       }
     } else if (options.r !== undefined) {
       const name = typeof options.r === 'string' ? options.r : undefined;
-      const reason = await attachToSession({
+      await _attach({
         name,
         stdin: process.stdin,
         stdout: process.stdout,
         exclusive: true,
       });
-      if (reason === 'close') {
-        log('\n[session is terminating]');
-      } else if (reason === 'detach') {
-        log('\n[detached]');
-      } else {
-        log('\nfinished for reason:', reason);
-      }
+      return;
+    } else if (Object.keys(options).length === 0) {
+      error_prefix = 'create and attach session';
+      const name = `default-${process.pid}`;
+      await ensureServer();
+      await createSession(_sessionParams({ name }));
+      await _attach({
+        name,
+        stdin: process.stdin,
+        stdout: process.stdout,
+        exclusive: true,
+      });
       return;
     } else {
       const flag_name = Object.keys(options)[0];
@@ -198,6 +204,16 @@ g_program.action(async (command: string[], options: CliOptions) => {
 });
 g_program.parse();
 
+async function _attach(params: AttachParams) {
+  const reason = await attachToSession(params);
+  if (reason === 'close') {
+    log('\n[session is terminating]');
+  } else if (reason === 'detach') {
+    log('\n[detached]');
+  } else {
+    log('\nfinished for reason:', reason);
+  }
+}
 function _sessionParams(params: Partial<SessionParams>): SessionParams {
   return Object.assign(
     {

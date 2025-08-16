@@ -56,11 +56,8 @@ export class Session {
       this.createTerminal();
     } else {
       this.resize({ rows, columns });
-      // Send current screen state to new client if terminal already exists
       if (this.activeTerminal) {
-        const screen_state = this.activeTerminal.getScreenState();
-        // Send the serialized screen content to sync the client
-        client.write(screen_state.content);
+        client.changeTerminal(this.activeTerminal);
       }
     }
     return client;

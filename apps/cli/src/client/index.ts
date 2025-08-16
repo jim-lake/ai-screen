@@ -1,19 +1,23 @@
-import { RequestError, request } from './request';
+import { getStatus } from './common';
 import { connectSession } from './connect';
+import { RequestError, request } from './request';
 
 import type { Session, SessionParams } from '../lib/session';
 import type { JsonClass } from '../tools/util';
 
-export { RequestError } from './request';
+export { getStatus } from './common';
 export { connectSession } from './connect';
+export { RequestError } from './request';
+
 export type { ConnectParams } from './connect';
 
 export default {
-  RequestError,
+  getStatus,
   getSessions,
   killServer,
   createSession,
   connectSession,
+  RequestError,
 };
 
 export async function getSessions() {

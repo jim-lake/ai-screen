@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import unix from 'unix-dgram';
 
-import { request } from './request';
+import { getStatus } from './common';
+
 import { errorLog } from '../tools/log';
 import { jsonParse } from '../tools/util';
 
@@ -29,25 +30,10 @@ export async function connectSession(params: ConnectParams): Promise<string> {
     throw new Error('NO_STDOUT');
   }
 
-  const opts = { url: '/api/1/status' };
-  interface StatusBody {
-    sock_path: string;
-  }
-  const result = await request<StatusBody>(opts);
-  if (result.err?.code === 'ECONNREFUSED') {
-    throw new Error('NO_SERVER', { cause: result.err });
-  } else if (result.err) {
-    throw result.err;
-  } else if (!result.body) {
-    throw new Error('NO_SERVER');
-  }
+  const { sock_path } = await getStatus();
   const sock = unix.createSocket('unix_dgram');
   try {
-    return await _runConnection({
-      sock,
-      sock_path: result.body.sock_path,
-      ...params,
-    });
+    return await _runConnection({ sock, sock_path, ...params });
   } finally {
     sock.close();
   }

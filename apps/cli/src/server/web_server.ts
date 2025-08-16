@@ -111,7 +111,6 @@ function _logHandler(req: Request, res: Response, next: NextFunction) {
   const start_time = Date.now();
   onFinished(res, () => {
     const ms = Date.now() - start_time;
-    //const bytes = res.getHeader('content-length') || 0;
     const referrer = req.get('referrer') ?? '';
     const ua = req.get('user-agent') ?? '';
     log(

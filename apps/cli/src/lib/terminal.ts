@@ -35,8 +35,6 @@ export class Terminal extends EventEmitter {
   public constructor(params: TerminalParams) {
     super();
     this.id = g_terminalNumber++;
-
-    // Initialize xterm headless terminal
     this._xterm = new Headless.Terminal({
       cols: params.columns,
       rows: params.rows,
@@ -66,8 +64,6 @@ export class Terminal extends EventEmitter {
   public getScreenState(): TerminalScreenState {
     const buffer = this._xterm.buffer.active;
     const lines: string[] = [];
-
-    // Serialize all lines in the buffer
     for (let i = 0; i < buffer.length; i++) {
       const line = buffer.getLine(i);
       if (line) {
@@ -76,7 +72,6 @@ export class Terminal extends EventEmitter {
         lines.push('');
       }
     }
-
     return {
       content: lines.join('\n'),
       cursorX: buffer.cursorX,
@@ -102,7 +97,6 @@ export class Terminal extends EventEmitter {
     return super.emit(event, ...args);
   }
   private readonly _onData = (data: string) => {
-    // Write data to xterm terminal to maintain screen state
     this._xterm.write(data);
     this.emit('data', data);
   };
