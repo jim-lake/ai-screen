@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 
 // Test server entry point - runs the server in test mode
-import { startServer } from '../../src/index.js';
-import { errorLog } from './log_utils.js';
+import { startServer } from '../../src/index';
+import { errorLog } from './log_utils';
 
 async function _main() {
   try {
