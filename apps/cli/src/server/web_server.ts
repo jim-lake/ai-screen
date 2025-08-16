@@ -71,7 +71,8 @@ function _quit(req: Request, res: Response) {
 }
 function _status(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.send({ pid: process.pid, sock_path: SOCK_PATH });
+  const port = req.app.get('port') as number;
+  res.send({ pid: process.pid, sock_path: SOCK_PATH, port });
 }
 function _allowCrossDomain(req: Request, res: Response, next: NextFunction) {
   res.header('Access-Control-Allow-Origin', '*');

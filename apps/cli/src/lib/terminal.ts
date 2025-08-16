@@ -40,6 +40,7 @@ export class Terminal extends EventEmitter {
     this._xterm = new Headless.Terminal({
       cols: params.columns,
       rows: params.rows,
+      allowProposedApi: true,
     });
 
     const { shell, command } = params;
