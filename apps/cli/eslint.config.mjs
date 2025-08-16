@@ -25,6 +25,10 @@ export default tseslint.config(
           message:
             'Use \'import { Buffer } from "buffer"\' instead of global Buffer',
         },
+        {
+          "name": "setTimeout",
+          "message": "Use setTimeout from 'timers/promises' instead."
+        },
       ],
       '@typescript-eslint/naming-convention': [
         'warn',
