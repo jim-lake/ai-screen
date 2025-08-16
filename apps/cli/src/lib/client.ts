@@ -60,7 +60,10 @@ export class Client extends EventEmitter {
     this.emit('disconnect', reason);
   }
   public changeTerminal(new_term: Terminal) {
-    log('client.changeTerminal:', new_term);
+    log('client.changeTerminal:', new_term.id);
+    // Send current screen state when switching to a different terminal
+    const screen_state = new_term.getScreenState();
+    this.write(screen_state.content);
   }
   public on<E extends keyof ClientEvents>(
     event: E,

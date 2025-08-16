@@ -9,20 +9,40 @@ void test('Terminal class', async (t) => {
       spawn() {
         return {
           resize() {
-            void 0;
+            // Mock implementation
           },
-          on() {
-            void 0;
+          onData() {
+            return {
+              dispose() {
+                // Mock implementation
+              },
+            };
+          },
+          onExit() {
+            return {
+              dispose() {
+                // Mock implementation
+              },
+            };
           },
         };
       },
     },
   });
+
+
   const { Terminal } = await import('../src/lib/terminal');
 
   await t.test('should create a new terminal', () => {
-    const terminal = new Terminal(0);
-    assert.strictEqual(terminal.id, 0);
-    assert.ok(terminal.process);
+    const TerminalParams = {
+      shell: '/bin/bash',
+      cwd: '/tmp',
+      rows: 24,
+      columns: 80,
+      env: {},
+    };
+    const terminal = new Terminal(TerminalParams);
+    assert.strictEqual(terminal.id, 1);
+    assert.ok(terminal.pty);
   });
 });
