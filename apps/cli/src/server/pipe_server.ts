@@ -35,8 +35,7 @@ function _onMessage(msg: Buffer, rinfo?: RInfo) {
     } else if (!session) {
       _send(path, { type: 'error', err: 'SESSION_NOT_FOUND' });
     } else if (obj.type === 'connect') {
-      const { exclusive, rows, columns } = obj;
-      if (exclusive && session.clients.length > 0) {
+      if (obj.exclusive && session.clients.length > 0) {
         _send(path, {
           type: 'error' as const,
           err: 'SESSION_ALREADY_CONNECTED',
@@ -46,7 +45,7 @@ function _onMessage(msg: Buffer, rinfo?: RInfo) {
       } else if (!fd) {
         _send(path, { type: 'error' as const, err: 'BAD_CONNECT_FD' });
       } else {
-        const client = session.connectClient({ path, fd, rows, columns });
+        const client = session.connectClient({ ...obj, path, fd });
         client.on('disconnect', (reason) => {
           _send(path, { type: 'disconnect' as const, reason });
         });

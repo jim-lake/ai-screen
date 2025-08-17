@@ -107,9 +107,11 @@ export async function startTestServer(): Promise<{
     }, 10000);
     child.stdout?.on('data', (data: Buffer) => {
       server_output += data.toString();
+      process.stdout.write(data);
     });
     child.stderr?.on('data', (data: Buffer) => {
       server_output += data.toString();
+      process.stderr.write(data);
     });
     child.on('message', (message: unknown) => {
       if (
@@ -225,7 +227,7 @@ export async function getTerminalState(
   session_name: string
 ): Promise<{
   terminal_id: number;
-  screen_state: { content: string; cursorX: number; cursorY: number };
+  screen_state: { content: string; cursor: { x: number; y: number } };
   terminal_count: number;
 }> {
   const result = await makeRequest(
@@ -240,8 +242,7 @@ export async function getTerminalState(
     terminal_id: result.data.terminal_id as number,
     screen_state: result.data.screen_state as {
       content: string;
-      cursorX: number;
-      cursorY: number;
+      cursor: { x: number; y: number };
     },
     terminal_count: result.data.terminal_count as number,
   };

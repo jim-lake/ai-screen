@@ -156,8 +156,8 @@ void test('HTTP Endpoints', async (t) => {
 
     const screen_state = result.data.screen_state as Record<string, unknown>;
     assert.strictEqual(typeof screen_state.content, 'string');
-    assert.strictEqual(typeof screen_state.cursorX, 'number');
-    assert.strictEqual(typeof screen_state.cursorY, 'number');
+    assert.strictEqual(typeof screen_state.cursor.x, 'number');
+    assert.strictEqual(typeof screen_state.cursor.y, 'number');
     assert.strictEqual(typeof result.data.terminal_count, 'number');
     assert.strictEqual((result.data.terminal_count as number) >= 1, true);
   });

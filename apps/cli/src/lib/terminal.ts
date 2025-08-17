@@ -2,29 +2,29 @@ import { EventEmitter } from 'node:events';
 import { spawn } from 'node-pty';
 import Headless from '@xterm/headless';
 
+import { displayStateToAnsi } from '../tools/ansi';
+
 import type { IPty } from 'node-pty';
+import type { AnsiDisplayState } from '../tools/ansi';
 
 let g_terminalNumber = 1;
 
-export interface TerminalScreenState {
-  content: string;
-  cursorX: number;
-  cursorY: number;
-}
+export type TerminalScreenState = { content: string } & AnsiDisplayState;
 
 export interface TerminalEvents {
   data: (data: string) => void;
   error: (err: Error) => void;
   exit: (event: { code: number; signal: number | undefined }) => void;
 }
-export interface TerminalParams {
+export type TerminalParams = {
   shell: string;
   command?: string[];
   cwd: string;
   rows: number;
   columns: number;
   env: Record<string, string>;
-}
+} & AnsiDisplayState;
+
 export class Terminal extends EventEmitter {
   public id: number;
   public pty: IPty;
@@ -35,12 +35,6 @@ export class Terminal extends EventEmitter {
   public constructor(params: TerminalParams) {
     super();
     this.id = g_terminalNumber++;
-    this._xterm = new Headless.Terminal({
-      cols: params.columns,
-      rows: params.rows,
-      allowProposedApi: true,
-    });
-
     const { shell, command } = params;
     const cmd = command?.[0] ?? shell;
     const args = command?.slice(1) ?? [];
@@ -53,6 +47,16 @@ export class Terminal extends EventEmitter {
     });
     this._dataDispose = this.pty.onData(this._onData);
     this._exitDispose = this.pty.onExit(this._onExit);
+
+    this._xterm = new Headless.Terminal({
+      cols: params.columns,
+      rows: params.rows,
+      allowProposedApi: true,
+    });
+    if (params.cursor || params.altScreen) {
+      const s = displayStateToAnsi(params);
+      this._xterm.write(s);
+    }
   }
   public write(data: string) {
     this.pty.write(data);
@@ -74,8 +78,13 @@ export class Terminal extends EventEmitter {
     }
     return {
       content: lines.join('\n'),
-      cursorX: buffer.cursorX,
-      cursorY: buffer.cursorY,
+      cursor: {
+        x: buffer.cursorX,
+        y: buffer.cursorY,
+        blinking: this._xterm.options.cursorBlink,
+        visible: !this._xterm._core.coreService.isCursorHidden,
+      },
+      altScreen: buffer.type === 'alternate',
     };
   }
 

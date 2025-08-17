@@ -155,9 +155,8 @@ g_program.action(async (command: string[], options: CliOptions) => {
       } else {
         log('Sessions found:');
         for (const session of session_list) {
-          log(
-            `  ${session.name}-${session.created} (${session.terminals.length > 0 ? 'Attached' : 'Detached'})`
-          );
+          const att = session.terminals.length > 0 ? 'Attached' : 'Detached';
+          log(`  ${session.name}-${session.created} (${att})`);
         }
       }
     } else if (options.r !== undefined) {
