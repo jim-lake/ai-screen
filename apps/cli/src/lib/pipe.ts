@@ -3,7 +3,7 @@ import type { AnsiDisplayState } from '../tools/ansi';
 export type PipeServerMessage =
   | { type: 'connect_success' }
   | { type: 'error'; err: string }
-  | { type: 'disconnect'; reason: string }
+  | ({ type: 'disconnect'; reason: string } & AnsiDisplayState)
   | { type: 'pong' };
 export type PipeClientMessage =
   | ({

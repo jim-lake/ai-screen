@@ -46,8 +46,8 @@ function _onMessage(msg: Buffer, rinfo?: RInfo) {
         _send(path, { type: 'error' as const, err: 'BAD_CONNECT_FD' });
       } else {
         const client = session.connectClient({ ...obj, path, fd });
-        client.on('disconnect', (reason) => {
-          _send(path, { type: 'disconnect' as const, reason });
+        client.on('disconnect', (args) => {
+          _send(path, { type: 'disconnect' as const, ...args });
         });
         _send(path, { type: 'connect_success' as const });
       }

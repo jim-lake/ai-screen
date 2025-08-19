@@ -3,18 +3,31 @@ import { spawn } from 'node-pty';
 import Headless from '@xterm/headless';
 
 import { displayStateToAnsi } from '../tools/ansi';
+import { errorLog } from '../tools/log';
 
 import type { IPty } from 'node-pty';
-import type { AnsiDisplayState } from '../tools/ansi';
+import type { IBuffer } from '@xterm/headless';
+import type { AnsiDisplayState, CursorState } from '../tools/ansi';
 
 let g_terminalNumber = 1;
 
-export type TerminalScreenState = { content: string } & AnsiDisplayState;
-
+export interface BufferState {
+  cursor: CursorState;
+  buffer: string[];
+}
+export interface TerminalScreenState {
+  normal: BufferState;
+  alternate?: BufferState;
+  startY: number;
+}
+export interface TerminalExitEvent extends AnsiDisplayState {
+  code: number;
+  signal: number | undefined;
+}
 export interface TerminalEvents {
   data: (data: string) => void;
   error: (err: Error) => void;
-  exit: (event: { code: number; signal: number | undefined }) => void;
+  exit: (event: TerminalExitEvent) => void;
 }
 export type TerminalParams = {
   shell: string;
@@ -31,6 +44,7 @@ export class Terminal extends EventEmitter {
   private readonly _xterm: Headless.Terminal;
   private readonly _dataDispose: ReturnType<IPty['onData']> | null = null;
   private readonly _exitDispose: ReturnType<IPty['onExit']> | null = null;
+  private readonly _startY: number;
 
   public constructor(params: TerminalParams) {
     super();
@@ -54,9 +68,9 @@ export class Terminal extends EventEmitter {
       allowProposedApi: true,
     });
     if (params.cursor || params.altScreen) {
-      const s = displayStateToAnsi(params);
-      this._xterm.write(s);
+      this._xterm.write(displayStateToAnsi(params));
     }
+    this._startY = params.cursor?.y ?? 1;
   }
   public write(data: string) {
     this.pty.write(data);
@@ -66,28 +80,19 @@ export class Terminal extends EventEmitter {
     this._xterm.resize(params.columns, params.rows);
   }
   public getScreenState(): TerminalScreenState {
-    const buffer = this._xterm.buffer.active;
-    const lines: string[] = [];
-    for (let i = 0; i < buffer.length; i++) {
-      const line = buffer.getLine(i);
-      if (line) {
-        lines.push(line.translateToString());
-      } else {
-        lines.push('');
-      }
-    }
+    const normal = this._bufferState(this._xterm.buffer.normal);
+    const alternate =
+      this._xterm.buffer.active.type === 'alternate'
+        ? this._bufferState(this._xterm.buffer.active)
+        : undefined;
+    return { normal, alternate, startY: this._startY };
+  }
+  public getAnsiDisplayState() {
     return {
-      content: lines.join('\n'),
-      cursor: {
-        x: buffer.cursorX,
-        y: buffer.cursorY,
-        blinking: this._xterm.options.cursorBlink,
-        visible: !this._xterm._core.coreService.isCursorHidden,
-      },
-      altScreen: buffer.type === 'alternate',
+      cursor: this._getCursorState(this._xterm.buffer.normal),
+      altScreen: this._xterm.buffer.active.type === 'alternate',
     };
   }
-
   public destroy() {
     this._dataDispose?.dispose();
     this._exitDispose?.dispose();
@@ -105,12 +110,41 @@ export class Terminal extends EventEmitter {
   ): boolean {
     return super.emit(event, ...args);
   }
+  public toJSON() {
+    return { id: this.id };
+  }
+  private _bufferState(buffer: IBuffer): BufferState {
+    const ret: BufferState = {
+      buffer: [],
+      cursor: this._getCursorState(buffer),
+    };
+    let i = Math.max(0, buffer.length - this._xterm.cols);
+    for (; i < buffer.length; i++) {
+      const line = buffer.getLine(i);
+      if (line) {
+        ret.buffer.push(line.translateToString());
+      } else {
+        errorLog('terminal._bufferState: bad line:', line);
+        ret.buffer.push('');
+      }
+    }
+    return ret;
+  }
+  private _getCursorState(buffer: IBuffer) {
+    return {
+      x: buffer.cursorX + 1,
+      y: buffer.cursorY + 1,
+      blinking: this._xterm.options.cursorBlink,
+      visible: !this._xterm._core.coreService.isCursorHidden,
+    };
+  }
   private readonly _onData = (data: string) => {
     this._xterm.write(data);
     this.emit('data', data);
   };
   private readonly _onExit = (event: { exitCode: number; signal?: number }) => {
-    this.emit('exit', { code: event.exitCode, signal: event.signal });
+    const state = this.getAnsiDisplayState();
+    this.emit('exit', { code: event.exitCode, signal: event.signal, ...state });
   };
 }
 export default { Terminal };

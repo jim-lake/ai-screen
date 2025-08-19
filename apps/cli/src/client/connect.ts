@@ -7,6 +7,7 @@ import unix from 'unix-dgram';
 
 import { getStatus } from './common';
 
+import { queryDisplay, displayStateToAnsi } from '../tools/ansi';
 import { errorLog } from '../tools/log';
 import { jsonParse } from '../tools/util';
 
@@ -14,36 +15,52 @@ import type {
   ReadStream as TTYReadStream,
   WriteStream as TTYWriteStream,
 } from 'node:tty';
+import type { ConnectResult } from '../lib/client';
 import type { PipeClientMessage, PipeServerMessage } from '../lib/pipe';
+import type { AnsiDisplayState } from '../tools/ansi';
+
+export type { ConnectResult } from '../lib/client';
 
 export default { connectSession };
 
 const CONNECT_MS = 10 * 1000;
 
-export interface ConnectParams {
+export interface ConnectParams extends AnsiDisplayState {
   name: string;
   stdin: TTYReadStream;
   stdout: TTYWriteStream & { fd?: number };
   exclusive?: boolean;
 }
-export async function connectSession(params: ConnectParams): Promise<string> {
+export async function connectSession(
+  params: ConnectParams
+): Promise<ConnectResult> {
   if (!params.stdout.fd) {
     throw new Error('NO_STDOUT');
   }
-
-  const { sock_path } = await getStatus();
+  const [{ sock_path }, display] = await Promise.all([
+    getStatus(),
+    queryDisplay(),
+  ]);
   const sock = unix.createSocket('unix_dgram');
+  let result: ConnectResult | undefined;
   try {
-    return await _runConnection({ sock, sock_path, ...params });
+    result = await _runConnection({ sock, sock_path, ...display, ...params });
+    return result;
   } finally {
     sock.close();
+    if (result?.altScreen) {
+      result.altScreen = false;
+      process.stdout.write(displayStateToAnsi(result));
+    } else {
+      process.stdout.write(displayStateToAnsi({ cursor: { visible: true } }));
+    }
   }
 }
 type RunParams = ConnectParams & {
   sock: ReturnType<typeof unix.createSocket>;
   sock_path: string;
 };
-async function _runConnection(params: RunParams): Promise<string> {
+async function _runConnection(params: RunParams): Promise<ConnectResult> {
   const { sock, sock_path, name, stdout, stdin } = params;
   const exclusive = params.exclusive ?? false;
   const stdout_fd = stdout.fd;
@@ -94,7 +111,7 @@ async function _runConnection(params: RunParams): Promise<string> {
   }
 
   try {
-    return await new Promise<string>((resolve, reject) => {
+    return await new Promise<ConnectResult>((resolve, reject) => {
       connect_timeout = setTimeout(() => {
         errorLog('connect timeout');
         reject(new Error('timeout'));
@@ -106,6 +123,8 @@ async function _runConnection(params: RunParams): Promise<string> {
           exclusive,
           rows: stdout.rows,
           columns: stdout.columns,
+          cursor: params.cursor,
+          altScreen: params.altScreen,
         };
         _send(sock, msg, [stdout_fd]);
       });
@@ -126,8 +145,9 @@ async function _runConnection(params: RunParams): Promise<string> {
             }
             stdin.on('data', _onData);
             stdin.on('resize', _onResize);
+            stdin.resume();
           } else if (obj.type === 'disconnect') {
-            resolve(obj.reason);
+            resolve(obj);
           } else if (obj.type === 'error') {
             reject(new Error(obj.err));
           }

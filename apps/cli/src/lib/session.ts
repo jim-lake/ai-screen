@@ -1,9 +1,11 @@
 import { Client, getClient } from './client';
 import { Terminal } from './terminal';
-import type { ClientParams } from './client';
-import type { TerminalParams } from './terminal';
 
 import { errorLog } from '../tools/log';
+
+import type { ClientParams } from './client';
+import type { TerminalParams, TerminalExitEvent } from './terminal';
+import type { AnsiDisplayState } from '../tools/ansi';
 
 export interface SessionParams extends TerminalParams {
   name: string;
@@ -53,11 +55,12 @@ export class Session {
     this.terminalParams.columns = columns;
 
     if (this.terminals.length === 0) {
-      this.createTerminal();
+      this.createTerminal(params);
     } else {
       this.resize({ rows, columns });
       if (this.activeTerminal) {
-        client.changeTerminal(this.activeTerminal);
+        const state = this.activeTerminal.getScreenState();
+        client.changeTerminal(state);
       }
     }
     return client;
@@ -77,23 +80,26 @@ export class Session {
       if (index !== -1) {
         this.clients.splice(index, 1);
       }
-      client.disconnect('detach');
+      const state = this.activeTerminal?.getAnsiDisplayState();
+      client.disconnect({ reason: 'detach', ...state });
     }
   }
   public activateTerminal(index: number) {
     const new_term = this.terminals[index];
     if (new_term) {
       this.activeTerminal = new_term;
+      const state = this.activeTerminal.getScreenState();
       for (const client of this.clients) {
-        client.changeTerminal(new_term);
+        client.changeTerminal(state);
       }
     } else {
       errorLog('Session.activeTerminal:  unknown terminal index:', index);
     }
   }
-  public close() {
+  public close(state?: AnsiDisplayState) {
+    state ??= this.activeTerminal?.getAnsiDisplayState();
     for (const client of this.clients) {
-      client.disconnect('close');
+      client.disconnect({ reason: 'close', ...state });
     }
     this.clients = [];
     for (const term of this.terminals) {
@@ -110,18 +116,21 @@ export class Session {
       }
     }
   }
-  private _onTerminalExit(term: Terminal) {
+  private _onTerminalExit(term: Terminal, event: TerminalExitEvent) {
     const index = this.terminals.indexOf(term);
     if (index !== -1) {
       this.terminals.splice(index, 1);
       if (this.terminals.length === 0) {
-        this.close();
+        this.close(event);
       } else if (this.activeTerminal === term) {
-        const new_index = index >= this.terminals.length ? 0 : index;
-        this.activateTerminal(new_index);
+        if (this.terminals.length > 0) {
+          const new_index = index >= this.terminals.length ? 0 : index;
+          this.activateTerminal(new_index);
+        }
       }
     }
     term.removeAllListeners();
+    term.destroy();
   }
 }
 export default { listSessions, getSession, Session };

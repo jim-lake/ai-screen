@@ -1,11 +1,8 @@
 #!/usr/bin/env node
-
 import { Command } from 'commander';
-import { log, errorLog, setQuiet } from './tools/log';
 
 import { CLI_OPTIONS } from './cli_options';
 import { CliExitCode } from './cli_exit_code';
-
 import {
   setupClient,
   getSessions,
@@ -13,12 +10,14 @@ import {
   startServer,
   killServer,
   createSession,
-  attachToSession,
+  connectSession,
   //startNewSession,
 } from './index';
 
+import { log, errorLog, setQuiet } from './tools/log';
+
 import type { CliOptions } from './cli_options';
-import type { AttachParams, SessionParams } from './index';
+import type { ConnectParams, SessionParams } from './index';
 
 const DEFAULT_PORT = 6847;
 const DEFAULT_SHELL = 'bash';
@@ -102,9 +101,6 @@ g_program.action(async (command: string[], options: CliOptions) => {
     if (options.p) {
       _unsupported('-p');
     }
-    if (options.R !== undefined) {
-      _unsupported('-R');
-    }
     if (options.RR !== undefined) {
       _unsupported('-RR');
     }
@@ -129,6 +125,7 @@ g_program.action(async (command: string[], options: CliOptions) => {
     if (options.X) {
       _unsupported('-X');
     }
+
     if (options.DmS) {
       error_prefix = 'create session';
       await createSession(_sessionParams({ name: options.DmS }));
@@ -153,15 +150,45 @@ g_program.action(async (command: string[], options: CliOptions) => {
       if (session_list.length === 0) {
         log('No sessions found');
       } else {
-        log('Sessions found:');
-        for (const session of session_list) {
-          const att = session.terminals.length > 0 ? 'Attached' : 'Detached';
-          log(`  ${session.name}-${session.created} (${att})`);
+        _printSessions(session_list);
+      }
+      return;
+    } else if (options.r !== undefined || options.R !== undefined) {
+      let name = '';
+      if (typeof options.R === 'string') {
+        name = options.R;
+        const session_list = await getSessions();
+        const found = session_list.find((s) => s.name === options.R);
+        if (!found) {
+          await createSession(_sessionParams({ name }));
+        }
+      } else if (typeof options.r === 'string') {
+        name = options.r;
+      }
+
+      if (!name) {
+        const session_list = await getSessions();
+        const detached = session_list.filter((s) => s.clients.length === 0);
+        if (detached.length === 1 && detached[0]) {
+          name = detached[0].name;
+        } else if (detached.length === 0 && options.R !== undefined) {
+          name = _defaultSessionName();
+          await createSession(_sessionParams({ name }));
+        } else {
+          if (session_list.length > 0) {
+            _printSessions(session_list);
+          }
+          if (detached.length === 0) {
+            log('There is no screen to be resumed.');
+            process.exit(CliExitCode.NO_DETATCHED_SESSION);
+          } else {
+            log('Type "ai-screen [-d] -r <name> to resume one of them.');
+            process.exit(CliExitCode.MULTIPLE_CANDIDATE_SESSIONS);
+          }
+          return;
         }
       }
-    } else if (options.r !== undefined) {
-      const name = typeof options.r === 'string' ? options.r : undefined;
-      await _attach({
+      await _connect({
         name,
         stdin: process.stdin,
         stdout: process.stdout,
@@ -170,10 +197,10 @@ g_program.action(async (command: string[], options: CliOptions) => {
       return;
     } else if (Object.keys(options).length === 0) {
       error_prefix = 'create and attach session';
-      const name = `default-${process.pid}`;
+      const name = _defaultSessionName();
       await ensureServer({ port });
       await createSession(_sessionParams({ name }));
-      await _attach({
+      await _connect({
         name,
         stdin: process.stdin,
         stdout: process.stdout,
@@ -214,8 +241,26 @@ g_program.action(async (command: string[], options: CliOptions) => {
 });
 g_program.parse();
 
-async function _attach(params: AttachParams) {
-  const reason = await attachToSession(params);
+const FORMATTER = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'long',
+  timeStyle: 'long',
+});
+type Unpromised<T extends (...args: unknown[]) => Promise<unknown>> =
+  ReturnType<T> extends Promise<infer U> ? U : never;
+function _printSessions(list: Unpromised<typeof getSessions>) {
+  log('Sessions found:');
+  for (const session of list) {
+    const att = session.terminals.length > 0 ? 'Attached' : 'Detached';
+    log(
+      `  ${session.name} (${FORMATTER.format(new Date(session.created))}) (${att})`
+    );
+  }
+}
+function _defaultSessionName() {
+  return `default-${process.pid}`;
+}
+async function _connect(params: ConnectParams) {
+  const { reason } = await connectSession(params);
   if (reason === 'close') {
     log('\n[session is terminating]');
   } else if (reason === 'detach') {

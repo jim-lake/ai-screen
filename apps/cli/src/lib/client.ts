@@ -2,17 +2,22 @@ import * as fs from 'node:fs';
 import * as tty from 'node:tty';
 import { EventEmitter } from 'node:events';
 
-import type { Terminal } from './terminal';
+import { displayStateToAnsi } from '../tools/ansi';
 import { log, errorLog } from '../tools/log';
 
 import type { Writable } from 'node:stream';
+import type { TerminalScreenState } from './terminal';
+import type { AnsiDisplayState } from '../tools/ansi';
 
 export interface ClientParams {
   path: string;
   fd?: number;
 }
+export interface ConnectResult extends AnsiDisplayState {
+  reason: string;
+}
 export interface ClientEvents {
-  disconnect: (reason: string) => void;
+  disconnect: (result: ConnectResult) => void;
 }
 
 const g_clientMap = new Map<string, Client>();
@@ -54,15 +59,19 @@ export class Client extends EventEmitter {
   public write(data: string) {
     this.stream?.write(data);
   }
-  public disconnect(reason: string) {
+  public disconnect(result: ConnectResult) {
     this.stream?.removeAllListeners();
     this.stream?.destroy();
-    this.emit('disconnect', reason);
+    this.emit('disconnect', result);
   }
-  public changeTerminal(new_term: Terminal) {
-    log('client.changeTerminal:', new_term.id);
-    const screen_state = new_term.getScreenState();
-    this.write(screen_state.content);
+  public changeTerminal(state: TerminalScreenState) {
+    this.write(state.normal.buffer.join('\n'));
+    this.write(displayStateToAnsi({ cursor: state.normal.cursor }));
+    if (state.alternate) {
+      this.write(displayStateToAnsi({ altScreen: true }));
+      this.write(state.alternate.buffer.join('\n'));
+      this.write(displayStateToAnsi({ cursor: state.alternate.cursor }));
+    }
   }
   public on<E extends keyof ClientEvents>(
     event: E,
@@ -75,6 +84,9 @@ export class Client extends EventEmitter {
     ...args: Parameters<ClientEvents[E]>
   ): boolean {
     return super.emit(event, ...args);
+  }
+  public toJSON() {
+    return { path: this.path, created: this.created, fd: this.fd };
   }
   private readonly _onClose = (e: unknown) => {
     log(`client(${this.path})._onClose:`, e);

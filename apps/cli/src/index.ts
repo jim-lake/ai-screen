@@ -14,7 +14,6 @@ import { CliExitCode } from './cli_exit_code';
 import { isCode } from './tools/util';
 import { errorLog, debugLog, setShowTime } from './tools/log';
 
-import type { ConnectParams } from './client';
 import type { ServerStartResult } from './server';
 
 export {
@@ -83,17 +82,6 @@ export async function startServer(
   } else {
     return await _startBackground(params);
   }
-}
-export type AttachParams = Omit<ConnectParams, 'name'> & { name?: string };
-export async function attachToSession(params: AttachParams) {
-  const name =
-    params.name ??
-    (await getSessions()).find((s) => s.clients.length === 0)?.name;
-
-  if (!name) {
-    throw new Error('NO_DETATCHED_SESSION');
-  }
-  return await connectSession({ ...params, name });
 }
 async function _startBackground(
   params: StartServerParams
