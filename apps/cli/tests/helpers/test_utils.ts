@@ -227,7 +227,17 @@ export async function getTerminalState(
   session_name: string
 ): Promise<{
   terminal_id: number;
-  screen_state: { content: string; cursor: { x: number; y: number } };
+  screen_state: {
+    normal: {
+      cursor: { x: number; y: number; blinking: boolean; visible: boolean };
+      buffer: string[];
+    };
+    alternate?: {
+      cursor: { x: number; y: number; blinking: boolean; visible: boolean };
+      buffer: string[];
+    };
+    startY: number;
+  };
   terminal_count: number;
 }> {
   const result = await makeRequest(
@@ -241,8 +251,15 @@ export async function getTerminalState(
   return {
     terminal_id: result.data.terminal_id as number,
     screen_state: result.data.screen_state as {
-      content: string;
-      cursor: { x: number; y: number };
+      normal: {
+        cursor: { x: number; y: number; blinking: boolean; visible: boolean };
+        buffer: string[];
+      };
+      alternate?: {
+        cursor: { x: number; y: number; blinking: boolean; visible: boolean };
+        buffer: string[];
+      };
+      startY: number;
     },
     terminal_count: result.data.terminal_count as number,
   };

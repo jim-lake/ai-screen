@@ -155,9 +155,19 @@ void test('HTTP Endpoints', async (t) => {
     assert.strictEqual(typeof result.data.screen_state, 'object');
 
     const screen_state = result.data.screen_state as Record<string, unknown>;
-    assert.strictEqual(typeof screen_state.content, 'string');
-    assert.strictEqual(typeof screen_state.cursor.x, 'number');
-    assert.strictEqual(typeof screen_state.cursor.y, 'number');
+    assert.strictEqual(typeof screen_state.normal, 'object');
+    assert.strictEqual(typeof screen_state.startY, 'number');
+
+    const normal = screen_state.normal as Record<string, unknown>;
+    assert.strictEqual(typeof normal.cursor, 'object');
+    assert.strictEqual(Array.isArray(normal.buffer), true);
+
+    const cursor = normal.cursor as Record<string, unknown>;
+    assert.strictEqual(typeof cursor.x, 'number');
+    assert.strictEqual(typeof cursor.y, 'number');
+    assert.strictEqual(typeof cursor.blinking, 'boolean');
+    assert.strictEqual(typeof cursor.visible, 'boolean');
+
     assert.strictEqual(typeof result.data.terminal_count, 'number');
     assert.strictEqual((result.data.terminal_count as number) >= 1, true);
   });
