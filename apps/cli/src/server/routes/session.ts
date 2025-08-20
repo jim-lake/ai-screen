@@ -29,7 +29,6 @@ function _getSessionList(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.send({ session_list: listSessions() });
 }
-
 function _createSession(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   const { name } = req.params;
@@ -55,41 +54,35 @@ function _createSession(req: Request, res: Response) {
     throw e;
   }
 }
-
 function _resizeSession(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   const { name } = req.params;
   if (!name) {
     throw new HttpError(400, 'session name required');
   }
-
+  const rows = requiredProp(req, 'rows', 'number');
+  const columns = requiredProp(req, 'columns', 'number');
   const session = getSession(name);
   if (!session) {
     throw new HttpError(404, 'session not found');
   }
-
-  const rows = requiredProp(req, 'rows', 'number');
-  const columns = requiredProp(req, 'columns', 'number');
-
   session.resize({ rows, columns });
   log(
     `server.session._resizeSession: resized session: ${name} ${columns}x${rows}`
   );
   res.send({ success: true, rows, columns });
 }
-
 function _writeToSession(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   const { name } = req.params;
   if (!name) {
     throw new HttpError(400, 'session name required');
   }
+  const data = requiredProp(req, 'data', 'string');
   const session = getSession(name);
   if (!session) {
     throw new HttpError(404, 'session not found');
   }
-  const data = requiredProp(req, 'data', 'string');
-
   session.write(data);
   log(
     `server.session._writeToSession: wrote to session: ${name} ${data.length} bytes`
@@ -109,7 +102,6 @@ function _getTerminalState(req: Request, res: Response) {
   if (!session.activeTerminal) {
     throw new HttpError(404, 'no active terminal in session');
   }
-
   const screen_state = session.activeTerminal.getScreenState();
   log(
     'server.session._getTerminalState: got terminal state for session:',

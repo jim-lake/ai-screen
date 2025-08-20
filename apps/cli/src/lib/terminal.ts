@@ -11,6 +11,9 @@ import type { AnsiDisplayState, CursorState } from '../tools/ansi';
 
 let g_terminalNumber = 1;
 
+export interface TerminalJson {
+  id: number;
+}
 export interface BufferState {
   cursor: CursorState;
   buffer: string[];
@@ -110,7 +113,7 @@ export class Terminal extends EventEmitter {
   ): boolean {
     return super.emit(event, ...args);
   }
-  public toJSON() {
+  public toJSON(): TerminalJson {
     return { id: this.id };
   }
   private _bufferState(buffer: IBuffer): BufferState {

@@ -168,7 +168,7 @@ g_program.action(async (command: string[], options: CliOptions) => {
 
       if (!name) {
         const session_list = await getSessions();
-        const detached = session_list.filter((s) => s.clients.length === 0);
+        const detached = session_list.filter((s) => s.client_list.length === 0);
         if (detached.length === 1 && detached[0]) {
           name = detached[0].name;
         } else if (detached.length === 0 && options.R !== undefined) {
@@ -250,7 +250,7 @@ type Unpromised<T extends (...args: unknown[]) => Promise<unknown>> =
 function _printSessions(list: Unpromised<typeof getSessions>) {
   log('Sessions found:');
   for (const session of list) {
-    const att = session.terminals.length > 0 ? 'Attached' : 'Detached';
+    const att = session.client_list.length > 0 ? 'Attached' : 'Detached';
     log(
       `  ${session.name} (${FORMATTER.format(new Date(session.created))}) (${att})`
     );

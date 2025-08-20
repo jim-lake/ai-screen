@@ -2,8 +2,7 @@ import { getStatus } from './common';
 import { connectSession } from './connect';
 import { RequestError, request, setBaseUrl } from './request';
 
-import type { Session, SessionParams } from '../lib/session';
-import type { JsonClass } from '../tools/util';
+import type { SessionJson, SessionParams } from '../lib/session';
 
 export { getStatus } from './common';
 export { connectSession } from './connect';
@@ -24,7 +23,7 @@ export default {
 export async function getSessions() {
   const opts = { url: '/api/1/session' };
   interface SessionListBody {
-    session_list: JsonClass<typeof Session>[];
+    session_list: SessionJson[];
   }
   const result = await request<SessionListBody>(opts);
   if (result.err?.code === 'ECONNREFUSED') {
@@ -52,7 +51,7 @@ export async function createSession(params: SessionParams) {
     url: `/api/1/session/${encodeURIComponent(name)}`,
     body,
   };
-  const result = await request<JsonClass<typeof Session>>(opts);
+  const result = await request<SessionJson>(opts);
   if (result.err?.code === 'ECONNREFUSED') {
     throw new Error('NO_SERVER', { cause: result.err });
   } else if (result.status === 409) {

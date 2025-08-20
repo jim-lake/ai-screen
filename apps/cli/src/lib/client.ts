@@ -9,6 +9,11 @@ import type { Writable } from 'node:stream';
 import type { TerminalScreenState } from './terminal';
 import type { AnsiDisplayState } from '../tools/ansi';
 
+export interface ClientJson {
+  path: string;
+  created: string;
+  fd: number | null;
+}
 export interface ClientParams {
   path: string;
   fd?: number;
@@ -85,8 +90,12 @@ export class Client extends EventEmitter {
   ): boolean {
     return super.emit(event, ...args);
   }
-  public toJSON() {
-    return { path: this.path, created: this.created, fd: this.fd };
+  public toJSON(): ClientJson {
+    return {
+      path: this.path,
+      created: this.created.toISOString(),
+      fd: this.fd,
+    };
   }
   private readonly _onClose = (e: unknown) => {
     log(`client(${this.path})._onClose:`, e);

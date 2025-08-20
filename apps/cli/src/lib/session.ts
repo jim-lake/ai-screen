@@ -3,10 +3,22 @@ import { Terminal } from './terminal';
 
 import { errorLog } from '../tools/log';
 
-import type { ClientParams } from './client';
-import type { TerminalParams, TerminalExitEvent } from './terminal';
+import type { ClientParams, ClientJson } from './client';
+import type {
+  TerminalExitEvent,
+  TerminalParams,
+  TerminalJson,
+} from './terminal';
 import type { AnsiDisplayState } from '../tools/ansi';
 
+export interface SessionJson {
+  name: string;
+  created: string;
+  client_list: ClientJson[];
+  terminal_params: { rows: number; columns: number };
+  terminal_list: TerminalJson[];
+  active_terminal: TerminalJson | null;
+}
 export interface SessionParams extends TerminalParams {
   name: string;
 }
@@ -108,6 +120,20 @@ export class Session {
     this.terminals = [];
     this.activeTerminal = null;
     g_sessionMap.delete(this.name);
+  }
+  public toJSON(): SessionJson {
+    return {
+      name: this.name,
+      created: this.created.toISOString(),
+      client_list: this.clients.map((c) => c.toJSON()),
+      terminal_params: {
+        rows: this.terminalParams.rows,
+        columns: this.terminalParams.columns,
+      },
+      terminal_list: this.terminals.map((t) => t.toJSON()),
+      active_terminal:
+        this.activeTerminal === null ? null : this.activeTerminal.toJSON(),
+    };
   }
   private _onTerminalData(term: Terminal, data: string) {
     if (term === this.activeTerminal) {

@@ -43,7 +43,7 @@ void test('HTTP Endpoints', async (t) => {
     );
     assert.strictEqual(result.status, 200);
     assert.strictEqual(result.data.name, 'test-session');
-    assert.strictEqual(Array.isArray(result.data.terminals), true);
+    assert.strictEqual(Array.isArray(result.data.terminal_list), true);
   });
 
   await t.test('list sessions', async () => {
