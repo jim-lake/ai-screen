@@ -1,0 +1,99 @@
+:root {
+  --icon-white: invert(100%) sepia(100%) saturate(0%) hue-rotate(207deg)
+    brightness(105%) contrast(102%);
+  --icon-grey: invert(35%) sepia(7%) saturate(679%) hue-rotate(174deg)
+    brightness(99%) contrast(96%);
+  --icon-dark-grey: invert(32%) sepia(0%) saturate(1211%) hue-rotate(135deg)
+    brightness(98%) contrast(88%);
+  --icon-header-grey: invert(100%) sepia(26%) saturate(84%) hue-rotate(180deg)
+    brightness(112%) contrast(89%);
+  --icon-login-dialog: invert(41%) sepia(0%) saturate(965%) hue-rotate(188deg)
+    brightness(102%) contrast(84%);
+  --error-text-color: #fa0240;
+  --link-text-color: #1a7cdf;
+  --box-border-color: #d9dadb;
+  --box-inner-line-color: #ddd;
+  --box-header-bg-color: #fafafa;
+  --box-title-text-color: #181d27;
+  --input-bg-color: #f9f9f9;
+  --input-border-color: #ccc;
+  --input-disabled-bg-color: #eee;
+  --input-disabled-border-color: #ccc;
+  --input-text-color: #555;
+  --input-disabled-color: #999;
+  --input-placeholder: #999;
+  --prop-list-value-color: #333;
+  --prop-list-label-color: #545b64;
+  --prop-list-detail-color: #677078;
+  --prop-list-border-color: #eee;
+  --sidebar-bg-color: #f0f0f0;
+  --sidebar-border-color: #d5d7da;
+  --sidebar-text-color: #414651;
+  --sidebar-username-color: #181d27;
+  --sidebar-email-color: #535862;
+  --sidebar-account-border: #ccc;
+  --topbar-bg-color: #f0f0f0;
+  --topbar-border-color: #d5d7da;
+  --sidebar-scroll-color: #ccc;
+  --org-select-text: #181d27;
+  --org-select-bg: white;
+  --org-select-border: #ccc;
+  --tabbar-text: #575757;
+  --tabbar-selected-text: #676767;
+  --tabbar-line-color: #e5e5e5;
+  --tabbar-selected-bg: #0023ff;
+  --standard-screen-bg: white;
+  --standard-text: #181d27;
+  --login-bg-color: #f0f0f0;
+  --login-title-text: #181d27;
+  --login-subtitle-text: #535862;
+  --login-text: #535862;
+  --login-input-border: #d5d7da;
+  --login-input-bg: white;
+  --login-input-text: #717680;
+  --login-circle-color: invert(100%) sepia(1%) saturate(2636%)
+    hue-rotate(277deg) brightness(118%) contrast(87%);
+  --login-left-text: #535862;
+  --login-left-color: invert(3%) sepia(4%) saturate(5181%) hue-rotate(242deg)
+    brightness(89%) contrast(97%);
+  --login-resend-text: #adb0b5;
+  --signup-bg-color: #f0f0f0;
+  --signup-dialog-border: #e8e8e8;
+  --signup-dialog-bg: white;
+  --signup-title-text: #181d27;
+  --signup-subtitle-text: #717680;
+  --signup-icon-color: invert(27%) sepia(97%) saturate(1451%) hue-rotate(220deg)
+    brightness(107%) contrast(109%);
+  --signup-input-placeholder: #a4a7ae;
+  --signup-input-border: #d4d7da;
+  --signup-input-text: #717680;
+  --signup-input-bg: white;
+  --plan-check-icon: invert(93%) sepia(15%) saturate(40%) hue-rotate(177deg)
+    brightness(89%) contrast(99%);
+  --button-bg: white;
+  --button-text: #262626;
+  --button-default-bg: white;
+  --button-default-border: #999;
+  --button-default-text: #414651;
+  --button-disabled-bg: white;
+  --button-disabled-border: #bfbfbf;
+  --button-disabled-text: #bfbfbf;
+  --button-danger-bg: #fef3f2;
+  --button-danger-border: #fda29b;
+  --button-danger-text: #912018;
+  --button-ghost-bg: transparent;
+  --button-ghost-border: #262626;
+  --button-ghost-text: #262626;
+  --button-ghost-inverted-bg: transparent;
+  --button-ghost-inverted-border: white;
+  --button-ghost-inverted-text: white;
+  --button-inverted-bg: black;
+  --button-inverted-border: transparent;
+  --button-inverted-text: white;
+  --button-empty-bg: transparent;
+  --button-empty-border: black;
+  --button-empty-text: black;
+  --button-blue-bg: #0023ff;
+  --button-blue-border: #0023ff;
+  --button-blue-text: white;
+}
