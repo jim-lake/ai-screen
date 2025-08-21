@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router';
 
 import Loading from './loading';
 import Home from './home';
+import Session from './session';
 
 import Api from './tools/api';
 import { herdOnce, getVersion } from './tools/util';
@@ -22,7 +23,10 @@ export const routes: RouteObject[] = [
     path: '/',
     loader: _globalLoader,
     HydrateFallback: Loading,
-    children: [{ index: true, Component: Home }],
+    children: [
+      { index: true, Component: Home },
+      { path: '/session/:session_name', Component: Session },
+    ],
   },
   { path: '*', lazy: () => import('./not_found.tsx') },
 ];
