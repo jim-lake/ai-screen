@@ -15,17 +15,19 @@ import type {
   ReadStream as TTYReadStream,
   WriteStream as TTYWriteStream,
 } from 'node:tty';
-import type { ConnectResult } from '../lib/client';
-import type { PipeClientMessage, PipeServerMessage } from '../lib/pipe';
+import type {
+  DisconnectMessage,
+  PipeClientMessage,
+  PipeServerMessage,
+} from '@ai-screen/shared';
 import type { AnsiDisplayState } from '../tools/ansi';
-
-export type { ConnectResult } from '../lib/client';
+import type { DeepPartial } from '../tools/util';
 
 export default { connectSession };
 
 const CONNECT_MS = 10 * 1000;
 
-export interface ConnectParams extends AnsiDisplayState {
+export interface ConnectParams extends DeepPartial<AnsiDisplayState> {
   name: string;
   stdin: TTYReadStream;
   stdout: TTYWriteStream & { fd?: number };
@@ -33,7 +35,7 @@ export interface ConnectParams extends AnsiDisplayState {
 }
 export async function connectSession(
   params: ConnectParams
-): Promise<ConnectResult> {
+): Promise<DisconnectMessage> {
   if (!params.stdout.fd) {
     throw new Error('NO_STDOUT');
   }
@@ -42,15 +44,16 @@ export async function connectSession(
     queryDisplay(),
   ]);
   const sock = unix.createSocket('unix_dgram');
-  let result: ConnectResult | undefined;
+  let result: DisconnectMessage | undefined;
   try {
     result = await _runConnection({ sock, sock_path, ...display, ...params });
     return result;
   } finally {
     sock.close();
-    if (result?.altScreen) {
-      result.altScreen = false;
-      process.stdout.write(displayStateToAnsi(result));
+    if (result?.alt_screen) {
+      process.stdout.write(
+        displayStateToAnsi({ altScreen: false, cursor: result.cursor })
+      );
     } else {
       process.stdout.write(displayStateToAnsi({ cursor: { visible: true } }));
     }
@@ -60,7 +63,7 @@ type RunParams = ConnectParams & {
   sock: ReturnType<typeof unix.createSocket>;
   sock_path: string;
 };
-async function _runConnection(params: RunParams): Promise<ConnectResult> {
+async function _runConnection(params: RunParams): Promise<DisconnectMessage> {
   const { sock, sock_path, name, stdout, stdin } = params;
   const exclusive = params.exclusive ?? false;
   const stdout_fd = stdout.fd;
@@ -111,7 +114,7 @@ async function _runConnection(params: RunParams): Promise<ConnectResult> {
   }
 
   try {
-    return await new Promise<ConnectResult>((resolve, reject) => {
+    return await new Promise<DisconnectMessage>((resolve, reject) => {
       connect_timeout = setTimeout(() => {
         errorLog('connect timeout');
         reject(new Error('timeout'));
@@ -124,7 +127,7 @@ async function _runConnection(params: RunParams): Promise<ConnectResult> {
           rows: stdout.rows,
           columns: stdout.columns,
           cursor: params.cursor,
-          altScreen: params.altScreen,
+          alt_screen: params.altScreen,
         };
         _send(sock, msg, [stdout_fd]);
       });

@@ -9,7 +9,7 @@ import { log, errorLog } from '../tools/log';
 import { jsonParse } from '../tools/util';
 
 import type { RInfo } from 'unix-dgram';
-import type { PipeClientMessage, PipeServerMessage } from '../lib/pipe';
+import type { PipeClientMessage, PipeServerMessage } from '@ai-screen/shared';
 
 export const SOCK_PATH = join(tmpdir(), randomUUID() + '.sock');
 export default { start, SOCK_PATH };
@@ -46,8 +46,13 @@ function _onMessage(msg: Buffer, rinfo?: RInfo) {
         _send(path, { type: 'error' as const, err: 'BAD_CONNECT_FD' });
       } else {
         const client = session.connectClient({ ...obj, path, fd });
-        client.on('disconnect', (args) => {
-          _send(path, { type: 'disconnect' as const, ...args });
+        client.on('disconnect', (result) => {
+          _send(path, {
+            type: 'disconnect' as const,
+            reason: result.reason,
+            cursor: result.cursor,
+            alt_screen: result.altScreen,
+          });
         });
         _send(path, { type: 'connect_success' as const });
       }

@@ -1,24 +1,25 @@
 /* eslint-disable no-control-regex */
 import { setTimeout, clearTimeout } from 'node:timers';
 
+import type { DeepPartial, Require } from './util';
+
 export default { queryDisplay, displayStateToAnsi };
 
 const TIMEOUT = 1000;
 
-type Require<T, K extends keyof T> = T & { [P in K]-?: T[P] };
-
 export interface CursorState {
-  x?: number;
-  y?: number;
-  visible?: boolean;
-  blinking?: boolean;
+  x: number;
+  y: number;
+  visible: boolean;
+  blinking: boolean;
 }
 export interface AnsiDisplayState {
-  cursor?: CursorState;
-  altScreen?: boolean;
+  cursor: CursorState;
+  altScreen: boolean;
 }
-export async function queryDisplay(): Promise<AnsiDisplayState> {
-  const ret: Require<AnsiDisplayState, 'cursor'> = {
+
+export async function queryDisplay(): Promise<DeepPartial<AnsiDisplayState>> {
+  const ret: Require<DeepPartial<AnsiDisplayState>, 'cursor'> = {
     cursor: {
       x: undefined,
       y: undefined,
@@ -71,7 +72,9 @@ export async function queryDisplay(): Promise<AnsiDisplayState> {
     process.stdin.unref();
   }
 }
-export function displayStateToAnsi(state: AnsiDisplayState): string {
+export function displayStateToAnsi(
+  state: DeepPartial<AnsiDisplayState>
+): string {
   const codes: string[] = [];
   if (state.altScreen !== undefined) {
     codes.push(state.altScreen ? '\x1b[?1049h' : '\x1b[?1049l');

@@ -82,7 +82,9 @@ export class Session {
         this.clients.splice(index, 1);
       }
       const state = this.activeTerminal?.getAnsiDisplayState();
-      client.disconnect({ reason: 'detach', ...state });
+      if (state) {
+        client.disconnect({ reason: 'detach', ...state });
+      }
     }
   }
   public activateTerminal(index: number) {
@@ -99,8 +101,10 @@ export class Session {
   }
   public close(state?: AnsiDisplayState) {
     state ??= this.activeTerminal?.getAnsiDisplayState();
-    for (const client of this.clients) {
-      client.disconnect({ reason: 'close', ...state });
+    if (state) {
+      for (const client of this.clients) {
+        client.disconnect({ reason: 'close', ...state });
+      }
     }
     this.clients = [];
     for (const term of this.terminals) {

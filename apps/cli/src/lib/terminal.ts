@@ -9,6 +9,7 @@ import type { TerminalJson } from '@ai-screen/shared';
 import type { IPty } from 'node-pty';
 import type { IBuffer } from '@xterm/headless';
 import type { AnsiDisplayState, CursorState } from '../tools/ansi';
+import type { DeepPartial } from '../tools/util';
 
 let g_terminalNumber = 1;
 
@@ -30,6 +31,7 @@ export interface TerminalEvents {
   error: (err: Error) => void;
   exit: (event: TerminalExitEvent) => void;
 }
+
 export type TerminalParams = {
   shell: string;
   command?: string[];
@@ -37,7 +39,7 @@ export type TerminalParams = {
   rows: number;
   columns: number;
   env: Record<string, string>;
-} & AnsiDisplayState;
+} & DeepPartial<AnsiDisplayState>;
 
 export class Terminal extends EventEmitter {
   public id: number;
@@ -50,6 +52,16 @@ export class Terminal extends EventEmitter {
   public constructor(params: TerminalParams) {
     super();
     this.id = g_terminalNumber++;
+    this._xterm = new Headless.Terminal({
+      cols: params.columns,
+      rows: params.rows,
+      allowProposedApi: true,
+    });
+    if (params.cursor || params.altScreen) {
+      this._xterm.write(displayStateToAnsi(params));
+    }
+    this._startY = params.cursor?.y ?? 1;
+
     const { shell, command } = params;
     const cmd = command?.[0] ?? shell;
     const args = command?.slice(1) ?? [];
@@ -62,16 +74,6 @@ export class Terminal extends EventEmitter {
     });
     this._dataDispose = this.pty.onData(this._onData);
     this._exitDispose = this.pty.onExit(this._onExit);
-
-    this._xterm = new Headless.Terminal({
-      cols: params.columns,
-      rows: params.rows,
-      allowProposedApi: true,
-    });
-    if (params.cursor || params.altScreen) {
-      this._xterm.write(displayStateToAnsi(params));
-    }
-    this._startY = params.cursor?.y ?? 1;
   }
   public write(data: string) {
     this.pty.write(data);
@@ -88,7 +90,7 @@ export class Terminal extends EventEmitter {
         : undefined;
     return { normal, alternate, startY: this._startY };
   }
-  public getAnsiDisplayState() {
+  public getAnsiDisplayState(): AnsiDisplayState {
     return {
       cursor: this._getCursorState(this._xterm.buffer.normal),
       altScreen: this._xterm.buffer.active.type === 'alternate',
@@ -131,11 +133,11 @@ export class Terminal extends EventEmitter {
     }
     return ret;
   }
-  private _getCursorState(buffer: IBuffer) {
+  private _getCursorState(buffer: IBuffer): CursorState {
     return {
       x: buffer.cursorX + 1,
       y: buffer.cursorY + 1,
-      blinking: this._xterm.options.cursorBlink,
+      blinking: this._xterm.options.cursorBlink ?? false,
       visible: !this._xterm._core.coreService.isCursorHidden,
     };
   }

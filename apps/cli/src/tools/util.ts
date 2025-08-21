@@ -2,6 +2,15 @@
 
 export default { jsonParse, hasCode, isCode };
 
+export type Require<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+export type DeepPartial<T> = T extends Function
+  ? T
+  : T extends (infer U)[]
+    ? DeepPartial<U>[]
+    : T extends object
+      ? { [K in keyof T]?: DeepPartial<T[K]> }
+      : T;
+
 type Jsonify<T> = T extends Date
   ? string
   : T extends Function
