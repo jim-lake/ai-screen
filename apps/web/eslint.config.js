@@ -31,6 +31,7 @@ export default tseslint.config([
       },
     },
     rules: {
+      '@typescript-eslint/prefer-readonly': 'error',
       '@typescript-eslint/naming-convention': [
         'warn',
         { selector: 'typeLike', format: ['PascalCase'] },

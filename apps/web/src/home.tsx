@@ -7,10 +7,7 @@ import SessionStore from './stores/session_store';
 export const Component = Home;
 
 const styles = StyleSheet.create({
-  home: {
-    margin: '2rem',
-    flexDirection: 'column',
-  },
+  home: { margin: '2rem', flexDirection: 'column' },
   text: { fontSize: '1.5rem' },
 });
 
@@ -23,7 +20,14 @@ export default function Home() {
   return (
     <View style={styles.home}>
       <Text style={styles.text}>Home</Text>
-      {list?.map(s => <LinkText key={s.session_name} style={styles.text} url={`/session/${s.session_name}`} text={s.session_name} />) ?? null}
+      {list?.map((s) => (
+        <LinkText
+          key={s.session_name}
+          style={styles.text}
+          url={`/session/${s.session_name}`}
+          text={s.session_name}
+        />
+      )) ?? null}
     </View>
   );
 }

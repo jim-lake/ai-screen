@@ -35,26 +35,32 @@ function _onMessage(msg: Buffer, rinfo?: RInfo) {
     } else if (!session) {
       _send(path, { type: 'error', err: 'SESSION_NOT_FOUND' });
     } else if (obj.type === 'connect') {
-      if (obj.exclusive && session.clients.length > 0) {
-        _send(path, {
-          type: 'error' as const,
-          err: 'SESSION_ALREADY_CONNECTED',
-        });
-      } else if (!path) {
+      if (!path) {
         _send(path, { type: 'error' as const, err: 'BAD_CONNECT_PATH' });
       } else if (!fd) {
         _send(path, { type: 'error' as const, err: 'BAD_CONNECT_FD' });
       } else {
-        const client = session.connectClient({ ...obj, path, fd });
-        client.on('disconnect', (result) => {
-          _send(path, {
-            type: 'disconnect' as const,
-            reason: result.reason,
-            cursor: result.cursor,
-            altScreen: result.altScreen,
+        try {
+          const client = session.connectClient({ ...obj, path, fd });
+          client.on('disconnect', (result) => {
+            _send(path, {
+              type: 'disconnect' as const,
+              reason: result.reason,
+              cursor: result.cursor,
+              altScreen: result.altScreen,
+            });
           });
-        });
-        _send(path, { type: 'connect_success' as const });
+          _send(path, { type: 'connect_success' as const });
+        } catch (e) {
+          if (e instanceof Error && e.message === 'conflict') {
+            _send(path, {
+              type: 'error' as const,
+              err: 'SESSION_ALREADY_CONNECTED',
+            });
+          } else {
+            throw e;
+          }
+        }
       }
     } else if (obj.type === 'write') {
       session.write(obj.data);

@@ -12,6 +12,7 @@ import type { AnsiDisplayState } from '../tools/ansi';
 
 export interface ClientParams {
   path: string;
+  exclusive: boolean;
   fd?: number;
 }
 export interface ConnectResult extends AnsiDisplayState {
@@ -30,10 +31,11 @@ export function getClient(name: string): Client | undefined {
   return g_clientMap.get(name);
 }
 export class Client extends EventEmitter {
-  public path: string;
-  public created: Date;
-  public fd: number | null;
-  public stream: Writable | null;
+  public readonly path: string;
+  public readonly created: Date;
+  public readonly exclusive: boolean;
+  public readonly fd: number | null;
+  public readonly stream: Writable | null;
 
   public constructor(params: ClientParams) {
     super();
@@ -43,6 +45,7 @@ export class Client extends EventEmitter {
     }
     this.created = new Date();
     this.path = path;
+    this.exclusive = params.exclusive;
     this.fd = params.fd ?? null;
     if (this.fd && tty.isatty(this.fd)) {
       log('Client: connect tty:', this.fd);
@@ -91,6 +94,7 @@ export class Client extends EventEmitter {
       clientPath: this.path,
       created: this.created.toISOString(),
       fd: this.fd,
+      exclusive: this.exclusive,
     };
   }
   private readonly _onClose = (e: unknown) => {

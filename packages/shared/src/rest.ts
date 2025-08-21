@@ -4,6 +4,7 @@ export interface ClientJson {
   clientPath: string;
   created: string;
   fd: number | null;
+  exclusive: boolean;
 }
 export interface SessionJson {
   sessionName: string;

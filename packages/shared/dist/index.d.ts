@@ -54,6 +54,7 @@ interface ClientJson {
     clientPath: string;
     created: string;
     fd: number | null;
+    exclusive: boolean;
 }
 interface SessionJson {
     sessionName: string;

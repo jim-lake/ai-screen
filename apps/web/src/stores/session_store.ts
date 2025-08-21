@@ -26,22 +26,21 @@ function _getList() {
 export function useList() {
   return React.useSyncExternalStore(_subscribe, _getList);
 }
-export const fetch = herd(
-  async (): Promise<Error|null> => {
-    const opts = { url: `/api/1/session` };
-    const res = await Api.get<SessionListJson>(opts);
-    if (res.err) {
-      errorLog('SessionStore.fetch: err:', res.err, res.body);
-    } else {
-      if (!deepEqual(g_list, res.body.session_list)) {
-        g_list = res.body.session_list;
-        _emit('fetch');
-      }
+export function useSession(name: string) {
+  const list = useList();
+  return list?.find((s) => s.sessionName === name);
+}
+export const fetch = herd(async (): Promise<Error | null> => {
+  const opts = { url: `/api/1/session` };
+  const res = await Api.get<SessionListJson>(opts);
+  if (res.err) {
+    errorLog('SessionStore.fetch: err:', res.err, res.body);
+  } else {
+    if (!deepEqual(g_list, res.body.sessions)) {
+      g_list = res.body.sessions;
+      _emit('fetch');
     }
-    return res.err;
   }
-);
-export default {
-  useList,
-  fetch,
-};
+  return res.err;
+});
+export default { useList, useSession, fetch };

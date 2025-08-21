@@ -22,11 +22,11 @@ export function getSession(name: string): Session | undefined {
   return g_sessionMap.get(name);
 }
 export class Session {
-  public name: string;
-  public created: Date;
-  public clients: Client[] = [];
+  public readonly name: string;
+  public readonly created: Date;
+  public readonly clients: Client[] = [];
   public activeTerminal: Terminal | null = null;
-  public terminals: Terminal[] = [];
+  public readonly terminals: Terminal[] = [];
   public terminalParams: TerminalParams;
 
   public constructor(params: SessionParams) {
@@ -50,6 +50,11 @@ export class Session {
   }
   public connectClient(params: ConnectParams) {
     const { rows, columns, ...other } = params;
+    if (params.exclusive) {
+      if (this.clients.some((c) => c.exclusive)) {
+        throw new Error('conflict');
+      }
+    }
     const client = new Client(other);
     this.clients.push(client);
     this.terminalParams.rows = rows;
@@ -106,11 +111,11 @@ export class Session {
         client.disconnect({ reason: 'close', ...state });
       }
     }
-    this.clients = [];
+    this.clients.splice(0);
     for (const term of this.terminals) {
       term.removeAllListeners();
     }
-    this.terminals = [];
+    this.terminals.splice(0);
     this.activeTerminal = null;
     g_sessionMap.delete(this.name);
   }

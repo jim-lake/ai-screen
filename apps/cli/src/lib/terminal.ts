@@ -42,8 +42,8 @@ export type TerminalParams = {
 } & DeepPartial<AnsiDisplayState>;
 
 export class Terminal extends EventEmitter {
-  public id: number;
-  public pty: IPty;
+  public readonly id: number;
+  public readonly pty: IPty;
   private readonly _xterm: Headless.Terminal;
   private readonly _dataDispose: ReturnType<IPty['onData']> | null = null;
   private readonly _exitDispose: ReturnType<IPty['onExit']> | null = null;

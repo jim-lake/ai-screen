@@ -167,7 +167,9 @@ g_program.action(async (command: string[], options: CliOptions) => {
 
       if (!name) {
         const session_list = await getSessions();
-        const detached = session_list.filter((s) => s.clients.length === 0);
+        const detached = session_list.filter(
+          (s) => !s.clients.some((s) => s.exclusive)
+        );
         if (detached.length === 1 && detached[0]) {
           name = detached[0].sessionName;
         } else if (detached.length === 0 && options.R !== undefined) {
@@ -250,8 +252,9 @@ function _printSessions(list: Unpromised<typeof getSessions>) {
   log('Sessions found:');
   for (const session of list) {
     const att = session.clients.length > 0 ? 'Attached' : 'Detached';
+    const ex = session.clients.some((c) => c.exclusive) ? ', Exclusive' : '';
     log(
-      `  ${session.sessionName} (${FORMATTER.format(new Date(session.created))}) (${att})`
+      `  ${session.sessionName} (${FORMATTER.format(new Date(session.created))}) (${att}${ex})`
     );
   }
 }
