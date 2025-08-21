@@ -6,6 +6,8 @@ import { dirname, join } from 'node:path';
 
 import { log } from './log_utils';
 
+import type { SessionJson, TerminalJson } from '@ai-screen/shared';
+
 interface ApiResponse {
   status: number;
   data: Record<string, unknown>;
@@ -192,7 +194,7 @@ export async function stopTestServer(): Promise<void> {
 }
 export async function createTestSession(
   session_name: string
-): Promise<Record<string, unknown>> {
+): Promise<SessionJson> {
   const session_data = {
     shell: '/bin/bash',
     cwd: process.cwd(),
@@ -208,11 +210,11 @@ export async function createTestSession(
   if (result.status !== 200) {
     throw new Error(`Failed to create session: ${result.status}`);
   }
-  return result.data;
+  return result.data as SessionJson;
 }
 export async function createTerminalInSession(
   session_name: string
-): Promise<Record<string, unknown>> {
+): Promise<TerminalJson> {
   const result = await makeRequest(
     'POST',
     `/api/1/session/${session_name}/terminal`,
@@ -221,25 +223,11 @@ export async function createTerminalInSession(
   if (result.status !== 200) {
     throw new Error(`Failed to create terminal: ${result.status}`);
   }
-  return result.data;
+  return result.data as TerminalJson;
 }
 export async function getTerminalState(
   session_name: string
-): Promise<{
-  terminal_id: number;
-  screen_state: {
-    normal: {
-      cursor: { x: number; y: number; blinking: boolean; visible: boolean };
-      buffer: string[];
-    };
-    alternate?: {
-      cursor: { x: number; y: number; blinking: boolean; visible: boolean };
-      buffer: string[];
-    };
-    startY: number;
-  };
-  terminal_count: number;
-}> {
+): Promise<TerminalJson> {
   const result = await makeRequest(
     'GET',
     `/api/1/session/${session_name}/terminal`
@@ -248,21 +236,7 @@ export async function getTerminalState(
     throw new Error(`Failed to get terminal state: ${result.status}`);
   }
 
-  return {
-    terminal_id: result.data.terminal_id as number,
-    screen_state: result.data.screen_state as {
-      normal: {
-        cursor: { x: number; y: number; blinking: boolean; visible: boolean };
-        buffer: string[];
-      };
-      alternate?: {
-        cursor: { x: number; y: number; blinking: boolean; visible: boolean };
-        buffer: string[];
-      };
-      startY: number;
-    },
-    terminal_count: result.data.terminal_count as number,
-  };
+  return result.data as TerminalJson;
 }
 export async function writeToSession(
   session_name: string,

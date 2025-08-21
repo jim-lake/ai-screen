@@ -8,6 +8,12 @@ import {
   getServerInfo,
 } from './helpers/test_utils';
 
+import type {
+  SessionJson,
+  SessionListJson,
+  TerminalJson,
+} from '@ai-screen/shared';
+
 before(async () => {
   await startTestServer();
 });
@@ -51,7 +57,7 @@ void test('HTTP Endpoints', async (t) => {
     assert.strictEqual(result.status, 200);
     assert.strictEqual(Array.isArray(result.data.sessions), true);
 
-    const sessions = result.data.sessions as { name: string }[];
+    const sessions = result.data.sessions as SessionJson[];
     assert.strictEqual(sessions.length >= 1, true);
 
     const session = sessions.find((s) => s.sessionName === 'test-session');
@@ -67,8 +73,7 @@ void test('HTTP Endpoints', async (t) => {
       resize_data
     );
     assert.strictEqual(result.status, 200);
-    assert.strictEqual(result.data.rows, 30);
-    assert.strictEqual(result.data.columns, 100);
+    // Resize endpoint returns 200 status with no body
   });
 
   await t.test('resize non-existent session', async () => {
@@ -132,11 +137,13 @@ void test('HTTP Endpoints', async (t) => {
       terminal_data
     );
     assert.strictEqual(result.status, 200);
-    assert.strictEqual(typeof result.data.terminalId, 'number');
-    assert.strictEqual(result.data.sessionName, 'test-session');
-    assert.strictEqual(typeof result.data.terminal_count, 'number');
-    assert.strictEqual(typeof result.data.is_active, 'boolean');
-    assert.strictEqual((result.data.terminal_count as number) >= 1, true); // Should have at least 1 terminal now
+
+    const terminal = result.data as TerminalJson;
+    assert.strictEqual(typeof terminal.terminalId, 'number');
+    assert.strictEqual(typeof terminal.normal, 'object');
+    assert.strictEqual(typeof terminal.startY, 'number');
+    assert.strictEqual(Array.isArray(terminal.normal.buffer), true);
+    assert.strictEqual(typeof terminal.normal.cursor, 'object');
   });
 
   await t.test('get terminal state', async () => {
@@ -145,25 +152,21 @@ void test('HTTP Endpoints', async (t) => {
       '/api/1/session/test-session/terminal'
     );
     assert.strictEqual(result.status, 200);
-    assert.strictEqual(typeof result.data.terminalId, 'number');
-    assert.strictEqual(typeof result.data.screen_state, 'object');
 
-    const screen_state = result.data.screen_state as Record<string, unknown>;
-    assert.strictEqual(typeof screen_state.normal, 'object');
-    assert.strictEqual(typeof screen_state.startY, 'number');
+    const terminal = result.data as TerminalJson;
+    assert.strictEqual(typeof terminal.terminalId, 'number');
+    assert.strictEqual(typeof terminal.normal, 'object');
+    assert.strictEqual(typeof terminal.startY, 'number');
 
-    const normal = screen_state.normal as Record<string, unknown>;
+    const { normal } = terminal;
     assert.strictEqual(typeof normal.cursor, 'object');
     assert.strictEqual(Array.isArray(normal.buffer), true);
 
-    const cursor = normal.cursor as Record<string, unknown>;
+    const { cursor } = normal;
     assert.strictEqual(typeof cursor.x, 'number');
     assert.strictEqual(typeof cursor.y, 'number');
     assert.strictEqual(typeof cursor.blinking, 'boolean');
     assert.strictEqual(typeof cursor.visible, 'boolean');
-
-    assert.strictEqual(typeof result.data.terminal_count, 'number');
-    assert.strictEqual((result.data.terminal_count as number) >= 1, true);
   });
 
   await t.test('get terminal state for non-existent session', async () => {
@@ -187,11 +190,11 @@ void test('HTTP Endpoints', async (t) => {
       terminal_data
     );
     assert.strictEqual(result.status, 200);
-    assert.strictEqual(typeof result.data.terminalId, 'number');
-    assert.strictEqual(result.data.sessionName, 'test-session');
-    assert.strictEqual(typeof result.data.terminal_count, 'number');
-    assert.strictEqual(typeof result.data.is_active, 'boolean');
-    assert.strictEqual((result.data.terminal_count as number) >= 2, true); // Should have at least 2 terminals now
+
+    const terminal = result.data as TerminalJson;
+    assert.strictEqual(typeof terminal.terminalId, 'number');
+    assert.strictEqual(typeof terminal.normal, 'object');
+    assert.strictEqual(typeof terminal.startY, 'number');
   });
 
   await t.test('create terminal with minimal data', async () => {
@@ -201,8 +204,10 @@ void test('HTTP Endpoints', async (t) => {
       {}
     );
     assert.strictEqual(result.status, 200);
-    assert.strictEqual(typeof result.data.terminalId, 'number');
-    assert.strictEqual(result.data.sessionName, 'test-session');
+
+    const terminal = result.data as TerminalJson;
+    assert.strictEqual(typeof terminal.terminalId, 'number');
+    assert.strictEqual(typeof terminal.normal, 'object');
   });
 
   await t.test('create terminal in non-existent session', async () => {
@@ -227,12 +232,18 @@ void test('HTTP Endpoints', async (t) => {
   });
 
   await t.test('verify terminal count after multiple creations', async () => {
-    const result = await makeRequest(
-      'GET',
-      '/api/1/session/test-session/terminal'
-    );
+    // Get session list to verify terminal count
+    const result = await makeRequest('GET', '/api/1/session');
     assert.strictEqual(result.status, 200);
-    assert.strictEqual((result.data.terminal_count as number) >= 1, true); // Should have at least 1 terminal
+
+    const session_list = result.data as SessionListJson;
+    const session = session_list.sessions.find(
+      (s) => s.sessionName === 'test-session'
+    );
+    assert.strictEqual(session !== undefined, true);
+    if (session) {
+      assert.strictEqual(session.terminals.length >= 1, true); // Should have at least 1 terminal
+    }
   });
 
   await t.test('create session with duplicate name should fail', async () => {

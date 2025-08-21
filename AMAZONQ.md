@@ -7,24 +7,29 @@ This is a **TypeScript implementation of a GNU screen emulator** that provides t
 ## Architecture
 
 ### 1. **Client-Server Architecture**
+
 The project uses a client-server model where:
+
 - **Server**: Manages sessions and terminals in the background
 - **Client**: CLI interface that connects to the server to create/attach to sessions
 
 ### 2. **Core Components**
 
 #### **Session Management** (`src/lib/session.ts`)
+
 - **Session**: Main container that holds multiple terminals and clients
 - Manages terminal creation, client connections, and I/O routing
 - Handles session lifecycle (create, attach, detach, cleanup)
 - Maintains a global session registry
 
 #### **Terminal Emulation** (`src/lib/terminal.ts`)
+
 - Uses `node-pty` for actual terminal process spawning
 - Handles terminal I/O, resizing, and process lifecycle
 - Each terminal runs a shell process (bash by default)
 
 #### **Client Management** (`src/lib/client.ts`)
+
 - Represents a connected client to a session
 - Handles stdin/stdout routing between client and terminal
 - Manages client disconnection and cleanup
@@ -32,17 +37,21 @@ The project uses a client-server model where:
 ### 3. **Communication Layers**
 
 #### **HTTP API** (`src/server/web_server.ts`)
+
 - REST API for session management operations
 - Endpoints for listing sessions, creating sessions, server status
 - Runs on localhost:6847 by default
 
 #### **Unix Domain Socket** (`src/server/pipe_server.ts`)
+
 - Low-latency IPC for real-time terminal I/O
 - Handles connect, write, resize, and detach operations
 - Uses file descriptor passing for efficient I/O
 
 ### 4. **CLI Interface** (`src/cli.ts`)
+
 Implements screen-compatible command-line options:
+
 - `-dmS <name>`: Create detached session
 - `-r [session]`: Reattach to session
 - `-ls`: List sessions
@@ -52,16 +61,19 @@ Implements screen-compatible command-line options:
 ## Key Features
 
 ### **Session Persistence**
+
 - Sessions run independently of client connections
 - Can detach from sessions and reattach later
 - Sessions persist until explicitly terminated or all terminals exit
 
 ### **Terminal Multiplexing**
+
 - Multiple terminals per session (though UI switching not fully implemented)
 - Real-time I/O between client and active terminal
 - Terminal resizing support
 
 ### **Process Management**
+
 - Background server daemon manages all sessions
 - Automatic cleanup when terminals/sessions exit
 - Proper signal handling and resource cleanup
@@ -69,6 +81,7 @@ Implements screen-compatible command-line options:
 ## Development Setup
 
 The project uses:
+
 - **TypeScript** with modern ES modules
 - **Rollup** for building and bundling
 - **Node.js built-in test runner** for testing
@@ -114,6 +127,7 @@ ai-screen/
 ## Core Classes and Interfaces
 
 ### Session Class
+
 ```typescript
 class Session {
   name: string;
@@ -121,7 +135,7 @@ class Session {
   clients: Client[];
   activeTerminal: Terminal | null;
   terminals: Terminal[];
-  
+
   createTerminal(params?: Partial<TerminalParams>): Terminal;
   connectClient(params: ConnectParams): Client;
   resize(params: { rows: number; columns: number }): void;
@@ -132,11 +146,12 @@ class Session {
 ```
 
 ### Terminal Class
+
 ```typescript
 class Terminal extends EventEmitter {
   id: number;
   pty: IPty;
-  
+
   write(data: string): void;
   resize(params: { rows: number; columns: number }): void;
   destroy(): void;
@@ -144,11 +159,12 @@ class Terminal extends EventEmitter {
 ```
 
 ### Client Class
+
 ```typescript
 class Client extends EventEmitter {
   path: string;
   fd: number;
-  
+
   write(data: string): void;
   disconnect(reason: string): void;
   changeTerminal(terminal: Terminal): void;
@@ -158,12 +174,14 @@ class Client extends EventEmitter {
 ## API Endpoints
 
 ### HTTP API (Port 6847)
+
 - `GET /api/1/session` - List all sessions
 - `POST /api/1/session/:name` - Create new session
 - `GET /status` - Server status and socket path
 - `GET /quit` - Shutdown server
 
 ### Unix Socket IPC
+
 - `connect` - Attach client to session
 - `write` - Send data to terminal
 - `resize` - Resize terminal
@@ -185,9 +203,10 @@ The implementation provides:
 ✅ Client-server communication  
 ✅ Attach/detach functionality  
 ✅ HTTP API for session operations  
-✅ Unix socket for real-time I/O  
+✅ Unix socket for real-time I/O
 
 **Missing/Incomplete:**
+
 - Window switching within sessions (multiple terminals)
 - Full screen command compatibility
 - Configuration file support
@@ -197,6 +216,7 @@ The implementation provides:
 ## Build and Development
 
 ### Scripts
+
 - `npm run build` - Build the project with Rollup
 - `npm run dev` - Run in development mode with tsx
 - `npm run test` - Run test suite
@@ -204,6 +224,7 @@ The implementation provides:
 - `npm run pretty` - Format code with Prettier
 
 ### Dependencies
+
 - **Runtime**: `node-pty`, `express`, `commander`, `unix-dgram`
 - **Build**: `typescript`, `rollup`, `tsx`
 - **Development**: `eslint`, `prettier`, `@types/*`
