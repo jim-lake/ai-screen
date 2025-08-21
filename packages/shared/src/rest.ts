@@ -1,10 +1,10 @@
 export interface ClientJson {
-  path: string;
+  client_path: string;
   created: string;
   fd: number | null;
 }
 export interface SessionJson {
-  name: string;
+  session_name: string;
   created: string;
   client_list: ClientJson[];
   terminal_params: { rows: number; columns: number };
@@ -12,7 +12,7 @@ export interface SessionJson {
   active_terminal: TerminalJson | null;
 }
 export interface TerminalJson {
-  id: number;
+  terminal_id: number;
 }
 export interface SessionListJson {
   session_list: SessionJson[];

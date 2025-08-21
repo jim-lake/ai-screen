@@ -158,7 +158,7 @@ g_program.action(async (command: string[], options: CliOptions) => {
       if (typeof options.R === 'string') {
         name = options.R;
         const session_list = await getSessions();
-        const found = session_list.find((s) => s.name === options.R);
+        const found = session_list.find((s) => s.session_name === options.R);
         if (!found) {
           await createSession(_sessionParams({ name }));
         }
@@ -170,7 +170,7 @@ g_program.action(async (command: string[], options: CliOptions) => {
         const session_list = await getSessions();
         const detached = session_list.filter((s) => s.client_list.length === 0);
         if (detached.length === 1 && detached[0]) {
-          name = detached[0].name;
+          name = detached[0].session_name;
         } else if (detached.length === 0 && options.R !== undefined) {
           name = _defaultSessionName();
           await createSession(_sessionParams({ name }));
@@ -252,7 +252,7 @@ function _printSessions(list: Unpromised<typeof getSessions>) {
   for (const session of list) {
     const att = session.client_list.length > 0 ? 'Attached' : 'Detached';
     log(
-      `  ${session.name} (${FORMATTER.format(new Date(session.created))}) (${att})`
+      `  ${session.session_name} (${FORMATTER.format(new Date(session.created))}) (${att})`
     );
   }
 }

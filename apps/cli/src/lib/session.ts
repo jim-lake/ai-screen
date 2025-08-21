@@ -112,7 +112,7 @@ export class Session {
   }
   public toJSON(): SessionJson {
     return {
-      name: this.name,
+      session_name: this.name,
       created: this.created.toISOString(),
       client_list: this.clients.map((c) => c.toJSON()),
       terminal_params: {

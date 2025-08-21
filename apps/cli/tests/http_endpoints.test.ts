@@ -42,7 +42,7 @@ void test('HTTP Endpoints', async (t) => {
       session_data
     );
     assert.strictEqual(result.status, 200);
-    assert.strictEqual(result.data.name, 'test-session');
+    assert.strictEqual(result.data.session_name, 'test-session');
     assert.strictEqual(Array.isArray(result.data.terminal_list), true);
   });
 
@@ -54,8 +54,8 @@ void test('HTTP Endpoints', async (t) => {
     const session_list = result.data.session_list as { name: string }[];
     assert.strictEqual(session_list.length >= 1, true);
 
-    const session = session_list.find((s) => s.name === 'test-session');
-    assert.strictEqual(session?.name, 'test-session');
+    const session = session_list.find((s) => s.session_name === 'test-session');
+    assert.strictEqual(session?.session_name, 'test-session');
   });
 
   await t.test('resize session', async () => {
@@ -100,10 +100,7 @@ void test('HTTP Endpoints', async (t) => {
       write_data
     );
     assert.strictEqual(result.status, 200);
-    assert.strictEqual(result.data.success, true);
-    assert.strictEqual(result.data.bytes_written, write_data.data.length);
   });
-
   await t.test('write to non-existent session', async () => {
     const write_data = { data: 'echo "hello"\n' };
 
@@ -114,7 +111,6 @@ void test('HTTP Endpoints', async (t) => {
     );
     assert.strictEqual(result.status, 404);
   });
-
   await t.test('write to session with invalid data', async () => {
     const result = await makeRequest(
       'POST',
@@ -123,7 +119,6 @@ void test('HTTP Endpoints', async (t) => {
     );
     assert.strictEqual(result.status, 400);
   });
-
   await t.test('create terminal in session', async () => {
     const terminal_data = {
       shell: '/bin/sh',

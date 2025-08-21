@@ -89,7 +89,7 @@ function _writeToSession(req: Request, res: Response) {
   log(
     `server.session._writeToSession: wrote to session: ${name} ${data.length} bytes`
   );
-  res.send({ success: true, bytes_written: data.length });
+  res.sendStatus(200);
 }
 function _getTerminalState(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
