@@ -1,4 +1,4 @@
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
 export class HttpError extends Error {
   public constructor(
@@ -20,6 +20,25 @@ export default {
   requiredArray,
   isTypeSpec,
 };
+
+type JsonPrimitive = string | number | boolean | null;
+
+type JsonInput<T> = T extends (infer Item)[]
+  ? (Item | { toJSON: () => Item })[]
+  : T extends JsonPrimitive
+    ? T
+    : T extends object
+      ? { [K in keyof T]: JsonInput<T[K]> } | { toJSON: () => T }
+      : T;
+
+type Send<ResBody = unknown, T = JsonResponse<ResBody>> = (
+  body?: JsonInput<ResBody>
+) => T;
+
+export interface JsonResponse<ResBody = unknown>
+  extends Omit<Response, 'send'> {
+  send: Send<ResBody>;
+}
 
 export type JSONValue =
   | string

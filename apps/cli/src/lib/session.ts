@@ -3,22 +3,11 @@ import { Terminal } from './terminal';
 
 import { errorLog } from '../tools/log';
 
-import type { ClientParams, ClientJson } from './client';
-import type {
-  TerminalExitEvent,
-  TerminalParams,
-  TerminalJson,
-} from './terminal';
+import type { SessionJson } from '@ai-screen/shared';
+import type { ClientParams } from './client';
+import type { TerminalExitEvent, TerminalParams } from './terminal';
 import type { AnsiDisplayState } from '../tools/ansi';
 
-export interface SessionJson {
-  name: string;
-  created: string;
-  client_list: ClientJson[];
-  terminal_params: { rows: number; columns: number };
-  terminal_list: TerminalJson[];
-  active_terminal: TerminalJson | null;
-}
 export interface SessionParams extends TerminalParams {
   name: string;
 }

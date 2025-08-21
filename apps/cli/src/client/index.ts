@@ -2,7 +2,8 @@ import { getStatus } from './common';
 import { connectSession } from './connect';
 import { RequestError, request, setBaseUrl } from './request';
 
-import type { SessionJson, SessionParams } from '../lib/session';
+import type { SessionJson } from '@ai-screen/shared';
+import type { SessionParams } from '../lib/session';
 
 export { getStatus } from './common';
 export { connectSession } from './connect';

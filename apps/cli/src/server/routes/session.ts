@@ -1,8 +1,6 @@
 import express from 'express';
-import type { Request, Response } from 'express';
 
 import { listSessions, Session, getSession } from '../../lib/session';
-
 import { log } from '../../tools/log';
 import {
   HttpError,
@@ -13,6 +11,9 @@ import {
   optionalObject,
 } from '../../tools/http';
 
+import type { Request, Response } from 'express';
+import type { SessionListJson, SessionJson } from '@ai-screen/shared';
+import type { JsonResponse } from '../../tools/http';
 import type { TerminalParams } from '../../lib/terminal';
 
 export const router = express.Router();
@@ -25,11 +26,12 @@ router.post('/api/1/session/:name/write', _writeToSession);
 router.get('/api/1/session/:name/terminal', _getTerminalState);
 router.post('/api/1/session/:name/terminal', _createTerminal);
 
-function _getSessionList(req: Request, res: Response) {
+function _getSessionList(req: Request, res: JsonResponse<SessionListJson>) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.send({ session_list: listSessions() });
+  const session_list = listSessions();
+  res.send({ session_list });
 }
-function _createSession(req: Request, res: Response) {
+function _createSession(req: Request, res: JsonResponse<SessionJson>) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   const { name } = req.params;
   if (!name) {
@@ -70,7 +72,7 @@ function _resizeSession(req: Request, res: Response) {
   log(
     `server.session._resizeSession: resized session: ${name} ${columns}x${rows}`
   );
-  res.send({ success: true, rows, columns });
+  res.send({ rows, columns });
 }
 function _writeToSession(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');

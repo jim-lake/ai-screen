@@ -1,0 +1,26 @@
+{
+  "name": "@ai-screen/shared",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "pretty": "prettier -u --write \"**/*\" --log-level warn",
+    "ts-check": "tsc --noEmit",
+    "lint": "eslint src --fix",
+    "start": "node dist/cli.js",
+    "build": "rm -rf dist && rollup -c"
+  },
+  "devDependencies": {
+    "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-typescript": "^12.1.1",
+    "eslint-plugin-import": "^2.32.0",
+    "rollup": "^4.28.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "typescript": "^5.7.2"
+  }
+}

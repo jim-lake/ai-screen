@@ -21,6 +21,7 @@
     "test": "tsx --experimental-test-module-mocks --test tests/*.test.ts"
   },
   "dependencies": {
+    "@ai-screen/shared": "*",
     "@xterm/headless": "^5.5.0",
     "body-parser": "^2.2.0",
     "commander": "12.x",

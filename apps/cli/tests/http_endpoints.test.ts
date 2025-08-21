@@ -67,7 +67,6 @@ void test('HTTP Endpoints', async (t) => {
       resize_data
     );
     assert.strictEqual(result.status, 200);
-    assert.strictEqual(result.data.success, true);
     assert.strictEqual(result.data.rows, 30);
     assert.strictEqual(result.data.columns, 100);
   });

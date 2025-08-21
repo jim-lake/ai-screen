@@ -5,15 +5,11 @@ import { EventEmitter } from 'node:events';
 import { displayStateToAnsi } from '../tools/ansi';
 import { log, errorLog } from '../tools/log';
 
+import type { ClientJson } from '@ai-screen/shared';
 import type { Writable } from 'node:stream';
 import type { TerminalScreenState } from './terminal';
 import type { AnsiDisplayState } from '../tools/ansi';
 
-export interface ClientJson {
-  path: string;
-  created: string;
-  fd: number | null;
-}
 export interface ClientParams {
   path: string;
   fd?: number;

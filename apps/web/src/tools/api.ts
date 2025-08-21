@@ -48,10 +48,10 @@ class RetryError<T, U = T> extends Error {
 }
 
 const DEFAULT_TIMEOUT = 10 * 1000;
-const CUSTOM_BASE_URL_KEY = 'SCREEN_CUSTOM_BASE_URL';
+const CUSTOM_BASE_URL_KEY = 'AI_SCREEN_CUSTOM_BASE_URL';
 
-const DEV_BASE_URL = 'http://localhost:6874';
-const PROD_BASE_URL = 'http://localhost:6874';
+const DEV_BASE_URL = 'http://localhost:6847';
+const PROD_BASE_URL = 'http://localhost:6847';
 
 let g_baseUrl = '';
 let g_customBaseUrl = '';

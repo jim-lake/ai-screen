@@ -1,0 +1,81 @@
+import typescript from '@rollup/plugin-typescript';
+import replace from '@rollup/plugin-replace';
+import dts from 'rollup-plugin-dts';
+import { readFileSync } from 'node:fs';
+
+const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
+
+const external = [
+  ...Object.keys(pkg.dependencies || {}),
+  ...Object.keys(pkg.peerDependencies || {}),
+  // Node.js built-in modules
+  'fs',
+  'path',
+  'os',
+  'child_process',
+  'events',
+  'stream',
+  'util',
+  'crypto',
+  'http',
+  'https',
+  'url',
+  'querystring',
+  'readline',
+  'tty',
+  'net',
+  'dgram',
+  'dns',
+  'cluster',
+  'worker_threads',
+  'perf_hooks',
+  'inspector',
+  'async_hooks',
+  'buffer',
+  'string_decoder',
+  'timers',
+  'console',
+  'process',
+  'v8',
+  'vm',
+  'zlib',
+  'assert',
+  'constants',
+  'module',
+  'repl',
+  'domain',
+  'punycode',
+];
+
+const isExternal = (id) => {
+  return (
+    external.some((dep) => id === dep || id.startsWith(dep + '/')) ||
+    id.startsWith('node:')
+  );
+};
+const plugins = [
+  replace({
+    'globalThis.__VERSION__': JSON.stringify(pkg.version),
+    preventAssignment: true,
+  }),
+  typescript({
+    tsconfig: './tsconfig.json',
+    declaration: false,
+    rootDir: './src',
+    exclude: ['tests/**/*', 'node_modules/**/*'],
+  }),
+];
+export default [
+  {
+    input: 'src/index.ts',
+    output: { file: 'dist/index.js', format: 'es', sourcemap: true },
+    external: isExternal,
+    plugins,
+  },
+  {
+    input: 'src/index.ts',
+    output: { file: 'dist/index.d.ts', format: 'es' },
+    external: isExternal,
+    plugins: [dts()],
+  },
+];
