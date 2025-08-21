@@ -88,7 +88,7 @@ export class Client extends EventEmitter {
   }
   public toJSON(): ClientJson {
     return {
-      client_path: this.path,
+      clientPath: this.path,
       created: this.created.toISOString(),
       fd: this.fd,
     };

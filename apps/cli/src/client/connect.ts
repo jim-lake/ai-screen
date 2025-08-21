@@ -50,7 +50,7 @@ export async function connectSession(
     return result;
   } finally {
     sock.close();
-    if (result?.alt_screen) {
+    if (result?.altScreen) {
       process.stdout.write(
         displayStateToAnsi({ altScreen: false, cursor: result.cursor })
       );
@@ -127,7 +127,7 @@ async function _runConnection(params: RunParams): Promise<DisconnectMessage> {
           rows: stdout.rows,
           columns: stdout.columns,
           cursor: params.cursor,
-          alt_screen: params.altScreen,
+          altScreen: params.altScreen,
         };
         _send(sock, msg, [stdout_fd]);
       });

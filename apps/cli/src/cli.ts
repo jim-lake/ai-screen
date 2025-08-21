@@ -11,7 +11,6 @@ import {
   killServer,
   createSession,
   connectSession,
-  //startNewSession,
 } from './index';
 
 import { log, errorLog, setQuiet } from './tools/log';
@@ -158,7 +157,7 @@ g_program.action(async (command: string[], options: CliOptions) => {
       if (typeof options.R === 'string') {
         name = options.R;
         const session_list = await getSessions();
-        const found = session_list.find((s) => s.session_name === options.R);
+        const found = session_list.find((s) => s.sessionName === options.R);
         if (!found) {
           await createSession(_sessionParams({ name }));
         }
@@ -168,9 +167,9 @@ g_program.action(async (command: string[], options: CliOptions) => {
 
       if (!name) {
         const session_list = await getSessions();
-        const detached = session_list.filter((s) => s.client_list.length === 0);
+        const detached = session_list.filter((s) => s.clients.length === 0);
         if (detached.length === 1 && detached[0]) {
-          name = detached[0].session_name;
+          name = detached[0].sessionName;
         } else if (detached.length === 0 && options.R !== undefined) {
           name = _defaultSessionName();
           await createSession(_sessionParams({ name }));
@@ -250,9 +249,9 @@ type Unpromised<T extends (...args: unknown[]) => Promise<unknown>> =
 function _printSessions(list: Unpromised<typeof getSessions>) {
   log('Sessions found:');
   for (const session of list) {
-    const att = session.client_list.length > 0 ? 'Attached' : 'Detached';
+    const att = session.clients.length > 0 ? 'Attached' : 'Detached';
     log(
-      `  ${session.session_name} (${FORMATTER.format(new Date(session.created))}) (${att})`
+      `  ${session.sessionName} (${FORMATTER.format(new Date(session.created))}) (${att})`
     );
   }
 }

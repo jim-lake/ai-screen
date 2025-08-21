@@ -1,11 +1,12 @@
+interface CursorJson {
+    x: number;
+    y: number;
+    blinking: boolean;
+    visible: boolean;
+}
 interface AnsiDisplayJson {
-    cursor: {
-        x: number;
-        y: number;
-        blinking: boolean;
-        visible: boolean;
-    };
-    alt_screen: boolean;
+    cursor: CursorJson;
+    altScreen: boolean;
 }
 
 type DeepPartial<T> = T extends Function ? T : T extends (infer U)[] ? DeepPartial<U>[] : T extends object ? {
@@ -50,29 +51,38 @@ type PipeClientMessage = WsClientMessage | {
 };
 
 interface ClientJson {
-    client_path: string;
+    clientPath: string;
     created: string;
     fd: number | null;
 }
 interface SessionJson {
-    session_name: string;
+    sessionName: string;
     created: string;
-    client_list: ClientJson[];
-    terminal_params: {
+    clients: ClientJson[];
+    terminalParams: {
         rows: number;
         columns: number;
     };
-    terminal_list: TerminalJson[];
-    active_terminal: TerminalJson | null;
+    terminals: {
+        terminalId: number;
+    }[];
+    activeTerminal: TerminalJson | null;
+}
+interface BufferState {
+    cursor: CursorJson;
+    buffer: string[];
 }
 interface TerminalJson {
-    terminal_id: number;
+    terminalId: number;
+    normal: BufferState;
+    alternate?: BufferState;
+    startY: number;
 }
 interface SessionListJson {
-    session_list: SessionJson[];
+    sessions: SessionJson[];
 }
 
 declare const _default: {};
 
 export { _default as default };
-export type { AnsiDisplayJson, ClientJson, DisconnectMessage, PipeClientMessage, PipeServerMessage, SessionJson, SessionListJson, TerminalJson, WsClientMessage, WsServerMessage };
+export type { AnsiDisplayJson, BufferState, ClientJson, CursorJson, DisconnectMessage, PipeClientMessage, PipeServerMessage, SessionJson, SessionListJson, TerminalJson, WsClientMessage, WsServerMessage };

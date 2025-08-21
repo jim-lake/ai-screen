@@ -12,7 +12,11 @@ import {
 } from '../../tools/http';
 
 import type { Request, Response } from 'express';
-import type { SessionListJson, SessionJson } from '@ai-screen/shared';
+import type {
+  SessionListJson,
+  SessionJson,
+  TerminalJson,
+} from '@ai-screen/shared';
 import type { JsonResponse } from '../../tools/http';
 import type { TerminalParams } from '../../lib/terminal';
 
@@ -28,8 +32,8 @@ router.post('/api/1/session/:name/terminal', _createTerminal);
 
 function _getSessionList(req: Request, res: JsonResponse<SessionListJson>) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  const session_list = listSessions();
-  res.send({ session_list });
+  const sessions = listSessions();
+  res.send({ sessions });
 }
 function _createSession(req: Request, res: JsonResponse<SessionJson>) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -72,7 +76,7 @@ function _resizeSession(req: Request, res: Response) {
   log(
     `server.session._resizeSession: resized session: ${name} ${columns}x${rows}`
   );
-  res.send({ rows, columns });
+  res.sendStatus(200);
 }
 function _writeToSession(req: Request, res: Response) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -91,7 +95,7 @@ function _writeToSession(req: Request, res: Response) {
   );
   res.sendStatus(200);
 }
-function _getTerminalState(req: Request, res: Response) {
+function _getTerminalState(req: Request, res: JsonResponse<TerminalJson>) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   const { name } = req.params;
   if (!name) {
@@ -104,18 +108,9 @@ function _getTerminalState(req: Request, res: Response) {
   if (!session.activeTerminal) {
     throw new HttpError(404, 'no active terminal in session');
   }
-  const screen_state = session.activeTerminal.getScreenState();
-  log(
-    'server.session._getTerminalState: got terminal state for session:',
-    name
-  );
-  res.send({
-    terminal_id: session.activeTerminal.id,
-    screen_state,
-    terminal_count: session.terminals.length,
-  });
+  res.send(session.activeTerminal);
 }
-function _createTerminal(req: Request, res: Response) {
+function _createTerminal(req: Request, res: JsonResponse<TerminalJson>) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   const { name } = req.params;
   const shell = optionalProp(req, 'shell', 'string');
@@ -144,13 +139,5 @@ function _createTerminal(req: Request, res: Response) {
     params.env = env;
   }
   const terminal = session.createTerminal(params);
-  log(
-    `server.session._createTerminal: created terminal in session: ${name}, terminal_id: ${terminal.id}`
-  );
-  res.send({
-    terminal_id: terminal.id,
-    session_name: name,
-    terminal_count: session.terminals.length,
-    is_active: session.activeTerminal === terminal,
-  });
+  res.send(terminal);
 }

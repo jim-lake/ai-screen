@@ -51,7 +51,7 @@ function _onMessage(msg: Buffer, rinfo?: RInfo) {
             type: 'disconnect' as const,
             reason: result.reason,
             cursor: result.cursor,
-            alt_screen: result.altScreen,
+            altScreen: result.altScreen,
           });
         });
         _send(path, { type: 'connect_success' as const });

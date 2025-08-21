@@ -114,7 +114,7 @@ export class Terminal extends EventEmitter {
     return super.emit(event, ...args);
   }
   public toJSON(): TerminalJson {
-    return { terminal_id: this.id };
+    return { terminalId: this.id, ...this.getScreenState() };
   }
   private _bufferState(buffer: IBuffer): BufferState {
     const ret: BufferState = {

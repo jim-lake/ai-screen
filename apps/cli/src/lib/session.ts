@@ -116,15 +116,15 @@ export class Session {
   }
   public toJSON(): SessionJson {
     return {
-      session_name: this.name,
+      sessionName: this.name,
       created: this.created.toISOString(),
-      client_list: this.clients.map((c) => c.toJSON()),
-      terminal_params: {
+      clients: this.clients.map((c) => c.toJSON()),
+      terminalParams: {
         rows: this.terminalParams.rows,
         columns: this.terminalParams.columns,
       },
-      terminal_list: this.terminals.map((t) => t.toJSON()),
-      active_terminal:
+      terminals: this.terminals.map((t) => ({ terminalId: t.id })),
+      activeTerminal:
         this.activeTerminal === null ? null : this.activeTerminal.toJSON(),
     };
   }

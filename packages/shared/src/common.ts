@@ -1,4 +1,11 @@
+export interface CursorJson {
+  x: number;
+  y: number;
+  blinking: boolean;
+  visible: boolean;
+}
+
 export interface AnsiDisplayJson {
-  cursor: { x: number; y: number; blinking: boolean; visible: boolean };
-  alt_screen: boolean;
+  cursor: CursorJson;
+  altScreen: boolean;
 }

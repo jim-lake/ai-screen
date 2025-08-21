@@ -2,7 +2,7 @@ import { getStatus } from './common';
 import { connectSession } from './connect';
 import { RequestError, request, setBaseUrl } from './request';
 
-import type { SessionJson } from '@ai-screen/shared';
+import type { SessionListJson, SessionJson } from '@ai-screen/shared';
 import type { SessionParams } from '../lib/session';
 
 export { getStatus } from './common';
@@ -21,12 +21,9 @@ export default {
   RequestError,
 };
 
-export async function getSessions() {
+export async function getSessions(): Promise<SessionJson[]> {
   const opts = { url: '/api/1/session' };
-  interface SessionListBody {
-    session_list: SessionJson[];
-  }
-  const result = await request<SessionListBody>(opts);
+  const result = await request<SessionListJson>(opts);
   if (result.err?.code === 'ECONNREFUSED') {
     throw new Error('NO_SERVER', result.err);
   } else if (result.err) {
@@ -34,7 +31,7 @@ export async function getSessions() {
   } else if (!result.body) {
     throw new Error('INVALID_RESPONSE');
   }
-  return result.body.session_list;
+  return result.body.sessions;
 }
 export async function killServer() {
   const opts = { url: '/quit' };
