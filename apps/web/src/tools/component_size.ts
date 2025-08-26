@@ -1,9 +1,6 @@
 import { useRef, useSyncExternalStore } from 'react';
 
-function _subscribe<T extends HTMLElement>(
-  target: T,
-  callback: () => void
-): () => void {
+function _subscribe(target: HTMLElement, callback: () => void): () => void {
   const observer = new ResizeObserver(callback);
   observer.observe(target);
   return () => observer.disconnect();
@@ -22,8 +19,9 @@ export function useComponentSize<T extends HTMLElement>() {
       const rect = el.getBoundingClientRect();
       const ret = { width: rect.width, height: rect.height };
       if (
-        ret.width === stored?.current?.width &&
-        ret.height === stored?.current?.height
+        stored.current &&
+        ret.width === stored.current.width &&
+        ret.height === stored.current.height
       ) {
         return stored.current;
       } else {
@@ -41,7 +39,9 @@ export function useComponentSize<T extends HTMLElement>() {
       if (ref.current) {
         return _subscribe(ref.current, onStoreChange);
       } else {
-        return () => {};
+        return () => {
+          // Empty cleanup function
+        };
       }
     },
     _get,

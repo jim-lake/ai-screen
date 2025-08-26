@@ -17,7 +17,6 @@ import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE } from '../lib/defaults';
 import type { StyleInput } from './base_components';
 import type { SessionJson } from '@ai-screen/shared';
 
-const TEST_SIZE = 12;
 const PADDING = 4;
 
 const styles = StyleSheet.create({
@@ -60,69 +59,69 @@ export default function Terminal(props: TerminalProps) {
   const terminal = useTerminal(session.sessionName);
   const fontFamily = useSetting('fontFamily') ?? DEFAULT_FONT_FAMILY;
   const fontSize = useSetting('fontSize') ?? DEFAULT_FONT_SIZE;
-  const [container_ref, container_size] = useComponentSize();
+  const [container_ref, container_size] = useComponentSize<HTMLDivElement>();
   const [overflow, setOverflow] = useState('hidden');
 
   useEffect(() => {
     const element = element_ref.current;
     if (element) {
       const terminalOptions = {
-        fontFamily,
-        fontSize,
+        fontFamily: fontFamily as string,
+        fontSize: fontSize as number,
         //lineHeight: 1,
       };
       connect({ session, element, terminalOptions });
       return () => {
-        disconnect({ session, element });
+        disconnect({
+          session,
+          element,
+          columns: terminal?.cols ?? 80,
+          rows: terminal?.rows ?? 24,
+        });
       };
     }
-  }, [session, element_ref, fontFamily, fontSize]);
+  }, [session, element_ref, fontFamily, fontSize, terminal]);
   useEffect(() => {
-    if (session && terminal && container_size) {
+    if (terminal && container_size) {
       const { rows: old_rows, cols: old_cols } = terminal;
-      terminal.options.fontFamily = fontFamily;
+      terminal.options.fontFamily = fontFamily as string;
       const lineHeight = terminal.options.lineHeight ?? 1.0;
-      const char_size = measureCharSize({ fontFamily, fontSize, lineHeight });
-      const width_ratio = char_size.width / fontSize;
-      const height_ratio = char_size.height / fontSize;
+      const char_size = measureCharSize({
+        fontFamily: fontFamily as string,
+        fontSize: fontSize as number,
+        lineHeight,
+      });
+      const width_ratio = char_size.width / (fontSize as number);
+      const height_ratio = char_size.height / (fontSize as number);
       const avail_width = container_size.width - PADDING * 2;
       const avail_height = container_size.height - PADDING * 2;
-      console.log({ avail_width, avail_height });
-      console.log('char_size:', char_size);
-      console.log('container:', container_size);
+
       if (zoom === 'SHRINK') {
         const size_width = avail_width / old_cols / width_ratio;
         const size_height = avail_height / old_rows / height_ratio;
-        console.log({ avail_width, avail_height });
-        console.log({ size_width, size_height });
         let new_font_size = Math.floor(Math.min(size_width, size_height));
         const test_size = measureCharSize({
-          fontFamily,
+          fontFamily: fontFamily as string,
           fontSize: new_font_size,
           lineHeight,
         });
         const delta_w = avail_width - test_size.width * old_cols;
         const delta_h = avail_height - test_size.height * old_rows;
-        console.log({ delta_h, delta_w });
         if (delta_h < 0 || delta_w < 0) {
           new_font_size--;
         }
 
-        console.log('SHRINK:', new_font_size);
         terminal.options.fontSize = new_font_size;
         setOverflow('hidden');
       } else if (zoom === 'FIT') {
-        terminal.options.fontSize = fontSize;
+        terminal.options.fontSize = fontSize as number;
         const new_columns = Math.floor(avail_width / char_size.width);
         const new_rows = Math.floor(avail_height / char_size.height);
-        const delta_w = avail_width - char_size.width * new_columns;
-        const delta_h = avail_height - char_size.height * new_rows;
-        console.log({ delta_h, delta_w });
-        console.log('FIT:', { new_columns, new_rows });
         resize({ session, columns: new_columns, rows: new_rows });
         setOverflow('hidden');
-      } else if (zoom === 'EXPAND') {
-        terminal.options.fontSize = fontSize;
+      } else {
+        // zoom === 'EXPAND'
+        terminal.options.fontSize = fontSize as number;
         const delta_w = avail_width - char_size.width * old_cols;
         const delta_h = avail_height - char_size.height * old_rows;
         const overflow_x = delta_w < 0 ? 'scroll' : 'hidden';
@@ -130,10 +129,23 @@ export default function Terminal(props: TerminalProps) {
         setOverflow(overflow_x + ' ' + overflow_y);
       }
     }
-    window.terminal = terminal;
-  }, [terminal, zoom, container_size, fontFamily, fontSize, setOverflow]);
+    // Remove global assignment for production code
+    if (
+      typeof window !== 'undefined' &&
+      process.env.NODE_ENV === 'development'
+    ) {
+      (window as { terminal?: typeof terminal }).terminal = terminal;
+    }
+  }, [
+    terminal,
+    zoom,
+    container_size,
+    fontFamily,
+    fontSize,
+    setOverflow,
+    session,
+  ]);
 
-  console.log('render:', terminal?.options, zoom, overflow);
   return (
     <View getDiv={container_ref} style={[styles.terminal, props.style]}>
       <ScrollView

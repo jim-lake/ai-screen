@@ -20,19 +20,21 @@ export function measureCharSize(params: MeasureCharSizeParams): Size {
   if (!ret) {
     try {
       const canvas = new OffscreenCanvas(100, 100);
-      const ctx = canvas.getContext('2d')!;
-      ctx.font = `${fontSize}px ${fontFamily}`;
-      const metrics = ctx.measureText('W');
-      if (
-        'fontBoundingBoxAscent' in metrics &&
-        'fontBoundingBoxDescent' in metrics
-      ) {
-        const { width } = metrics;
-        const height = Math.ceil(
-          (metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent) *
-            lineHeight
-        );
-        ret = { width, height };
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.font = `${fontSize}px ${fontFamily}`;
+        const metrics = ctx.measureText('W');
+        if (
+          'fontBoundingBoxAscent' in metrics &&
+          'fontBoundingBoxDescent' in metrics
+        ) {
+          const { width } = metrics;
+          const height = Math.ceil(
+            (metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent) *
+              lineHeight
+          );
+          ret = { width, height };
+        }
       }
     } catch {
       // ignore

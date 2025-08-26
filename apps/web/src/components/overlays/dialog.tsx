@@ -30,7 +30,7 @@ export default function Dialog(props: DialogProps) {
     const dialog = dialog_ref.current;
     if (dialog) {
       function _handleClose() {
-        onClose?.();
+        onClose();
       }
       dialog.addEventListener('close', _handleClose);
       return () => {

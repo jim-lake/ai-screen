@@ -10,6 +10,8 @@ import { useSetting, fetch, saveSettings } from '../../stores/setting_store';
 import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE } from '../../lib/defaults';
 import { useBusy } from '../../tools/util';
 
+import type { JSONObject } from '@ai-screen/shared';
+
 const styles = StyleSheet.create({
   settingsDialog: {
     margin: 'auto',
@@ -92,12 +94,18 @@ export default function SettingsDialog(props: SettingsDialogProps) {
   const saved_size = useSetting('fontSize');
   const [is_busy, setBusy, clearBusy] = useBusy();
   useEffect(() => {
-    fetch();
+    void fetch();
   }, []);
 
-  const preview_family = family ?? saved_family ?? DEFAULT_FONT_FAMILY;
-  const preview_size = size ?? saved_size ?? DEFAULT_FONT_SIZE;
-  const preview_style = { fontFamily: preview_family, fontSize: preview_size };
+  const preview_family =
+    family ??
+    (typeof saved_family === 'string' ? saved_family : DEFAULT_FONT_FAMILY);
+  const preview_size =
+    size ?? (typeof saved_size === 'number' ? saved_size : DEFAULT_FONT_SIZE);
+  const preview_style = {
+    fontFamily: preview_family,
+    fontSize: `${preview_size}px`,
+  };
   async function _onSavePress() {
     const obj: JSONObject = {};
     if (family) {
@@ -107,14 +115,15 @@ export default function SettingsDialog(props: SettingsDialogProps) {
       obj.fontSize = size;
     }
     if (Object.keys(obj).length > 0 && setBusy()) {
-      const err = await saveSettings(obj);
-      clearBusy();
-      if (err) {
-        window.alert('Failed to save settings, please try again.');
-      } else {
+      try {
+        await saveSettings(obj);
+        clearBusy();
         props.onClose();
         setFamily(undefined);
         setSize(undefined);
+      } catch {
+        clearBusy();
+        window.alert('Failed to save settings, please try again.');
       }
     }
   }
@@ -140,7 +149,7 @@ export default function SettingsDialog(props: SettingsDialogProps) {
           <TextInput
             style={styles.input}
             type='number'
-            value={preview_size}
+            value={preview_size.toString()}
             onChangeText={(text) => setSize(parseInt(text))}
           />
         </View>

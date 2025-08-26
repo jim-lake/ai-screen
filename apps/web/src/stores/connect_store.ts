@@ -79,11 +79,21 @@ export function connect(params: ConnectParams) {
 interface DisconnectParams {
   session: SessionJson;
   element: HTMLDivElement;
+  columns: number;
+  rows: number;
 }
 export function disconnect(params: DisconnectParams) {
-  console.log('disconnect:', params);
+  // Handle disconnect logic here
+  const { session } = params;
+  const mounted = g_mountedMap.get(session.sessionName);
+  if (mounted) {
+    mounted.terminal.dispose();
+    mounted.webSocket.close();
+    g_mountedMap.delete(session.sessionName);
+    _emit('disconnect');
+  }
 }
-interface DisconnectParams {
+interface ResizeParams {
   session: SessionJson;
   columns: number;
   rows: number;
@@ -100,13 +110,11 @@ async function _create(params: ConnectParams) {
   const { sessionName } = params.session;
   try {
     const ws = await createWebSocket({});
-    console.log('_create: connected');
     await new Promise<void>((resolve, reject) => {
       const controller = new AbortController();
       const { signal } = controller;
       let terminal: Terminal | null = null;
       let data_dispose: IDisposable | null = null;
-      const resize_dispose: IDisposable | null = null;
       const connect_timeout = setTimeout(() => {
         _cleanup();
         reject(new Error('timeout'));
@@ -145,7 +153,7 @@ async function _create(params: ConnectParams) {
         } else if (obj?.type === 'resize') {
           g_sizeMap.set(sessionName, { rows: obj.rows, columns: obj.columns });
           _emit('resize');
-          terminal.resize(obj.columns, obj.rows);
+          terminal?.resize(obj.columns, obj.rows);
         } else if (obj?.type === 'disconnect') {
           log('connect_store._create: disconnect:', obj);
           ws.close();
@@ -177,13 +185,12 @@ async function _create(params: ConnectParams) {
     });
     return;
   } catch (e) {
-    console.log('threw:', e);
+    errorLog('connect_store._create error:', e);
   } finally {
     g_elementMap.delete(sessionName);
     g_mountedMap.delete(sessionName);
   }
 }
 function _send(ws: WebSocket, msg: WsClientMessage) {
-  console.log('_send:', msg);
   ws.send(JSON.stringify(msg));
 }
