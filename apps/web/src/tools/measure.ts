@@ -27,7 +27,7 @@ export function measureCharSize(params: MeasureCharSizeParams): Size {
         'fontBoundingBoxAscent' in metrics &&
         'fontBoundingBoxDescent' in metrics
       ) {
-        const width = metrics.width;
+        const { width } = metrics;
         const height = Math.ceil(
           (metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent) *
             lineHeight

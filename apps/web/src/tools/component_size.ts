@@ -20,7 +20,7 @@ export function useComponentSize<T extends HTMLElement>() {
     const el = ref.current;
     if (el) {
       const rect = el.getBoundingClientRect();
-      let ret = { width: rect.width, height: rect.height };
+      const ret = { width: rect.width, height: rect.height };
       if (
         ret.width === stored?.current?.width &&
         ret.height === stored?.current?.height

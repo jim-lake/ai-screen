@@ -106,7 +106,7 @@ async function _create(params: ConnectParams) {
       const { signal } = controller;
       let terminal: Terminal | null = null;
       let data_dispose: IDisposable | null = null;
-      let resize_dispose: IDisposable | null = null;
+      const resize_dispose: IDisposable | null = null;
       const connect_timeout = setTimeout(() => {
         _cleanup();
         reject(new Error('timeout'));
