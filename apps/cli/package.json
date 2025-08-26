@@ -18,7 +18,8 @@
     "lint": "eslint src tests --fix",
     "start": "node dist/cli.js",
     "build": "rm -rf dist && rollup -c",
-    "test": "tsx --experimental-test-module-mocks --test tests/*.test.ts"
+    "test": "tsx --experimental-test-module-mocks --test tests/*.test.ts",
+    "test:colors": "tsx tests/manual/color_test.ts"
   },
   "dependencies": {
     "@ai-screen/shared": "*",
