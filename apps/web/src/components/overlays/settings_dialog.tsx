@@ -143,7 +143,7 @@ export default function SettingsDialog(props: SettingsDialogProps) {
           <TextInput
             style={styles.input}
             type='number'
-            value={preview_size.toString()}
+            value={String(preview_size)}
             onChangeText={(text) => setSize(parseInt(text))}
           />
         </View>

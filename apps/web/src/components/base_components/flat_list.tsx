@@ -37,13 +37,9 @@ const styles = StyleSheet.create({
 });
 
 export function FlatList<T>(props: FlatListProps<T>) {
-  // Explicitly type each destructured prop to avoid unsafe array destructuring
   const { data } = props;
   const { inverted } = props;
   const { renderItem } = props;
-  // Skip destructuring contentContainerStyle to avoid type issues
-  // Will use props.contentContainerStyle directly in the render method
-  // Use a type assertion to assure TypeScript this function returns a string
   const keyExtractor: (item: T, index: number) => string =
     props.keyExtractor ?? _keyExtractor;
   const ListHeaderComponent = props.ListHeaderComponent ?? null;
@@ -78,14 +74,11 @@ export function FlatList<T>(props: FlatListProps<T>) {
     </ScrollView>
   );
 }
-// Item type is generic since we don't know the shape beforehand
 function _keyExtractor(item: unknown, index: number): string {
   return (
     (item as { key?: string | number }).key?.toString() ?? index.toString()
   );
 }
-
-// Intentionally empty function used as a placeholder for separators callbacks
 function _noop(): void {
   // No operation needed
 }
