@@ -20,10 +20,14 @@ export interface TerminalJson {
   normal: BufferState;
   alternate?: BufferState;
   startY: number;
+  scollbackLines: number;
 }
 export interface SessionListJson {
   sessions: SessionJson[];
 }
 export interface SettingsJson {
   settings: JSONObject;
+}
+export interface ScrollbackJson {
+  scrollback: string[];
 }

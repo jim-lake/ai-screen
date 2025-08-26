@@ -125,12 +125,16 @@ interface TerminalJson {
     normal: BufferState;
     alternate?: BufferState;
     startY: number;
+    scollbackLines: number;
 }
 interface SessionListJson {
     sessions: SessionJson[];
 }
 interface SettingsJson {
     settings: JSONObject;
+}
+interface ScrollbackJson {
+    scrollback: string[];
 }
 
 declare const _default: {
@@ -139,4 +143,4 @@ declare const _default: {
 };
 
 export { _default as default, displayStateToAnsi, jsonParse };
-export type { AnsiDisplayJson, AnsiDisplayState, BufferState, ClientJson, CursorJson, CursorState, DisconnectMessage, JSONArray, JSONObject, JSONPrimitive, JSONValue, PipeClientMessage, PipeServerMessage, SessionJson, SessionListJson, SettingsJson, TerminalJson, WsClientMessage, WsServerMessage };
+export type { AnsiDisplayJson, AnsiDisplayState, BufferState, ClientJson, CursorJson, CursorState, DisconnectMessage, JSONArray, JSONObject, JSONPrimitive, JSONValue, PipeClientMessage, PipeServerMessage, ScrollbackJson, SessionJson, SessionListJson, SettingsJson, TerminalJson, WsClientMessage, WsServerMessage };

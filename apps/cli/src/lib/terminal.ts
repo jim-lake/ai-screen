@@ -3,7 +3,7 @@ import { spawn } from 'node-pty';
 import Headless from '@xterm/headless';
 import { displayStateToAnsi } from '@ai-screen/shared';
 
-import { errorLog } from '../tools/log';
+import { log, errorLog } from '../tools/log';
 import { lineToString } from './xterm_serialize';
 
 import type {
@@ -14,6 +14,9 @@ import type {
 import type { IPty } from 'node-pty';
 import type { IBuffer } from '@xterm/headless';
 import type { DeepPartial } from '../tools/util';
+
+const VERY_LARGE = 10 * 1000 * 1000;
+const TARGET_TRIM = 100;
 
 let g_terminalNumber = 1;
 
@@ -49,9 +52,13 @@ export class Terminal extends EventEmitter {
   public readonly id: number;
   public readonly pty: IPty;
   private readonly _xterm: Headless.Terminal;
+  private readonly _lineFeedDispose: ReturnType<
+    Headless.Terminal['onLineFeed']
+  > | null = null;
   private readonly _dataDispose: ReturnType<IPty['onData']> | null = null;
   private readonly _exitDispose: ReturnType<IPty['onExit']> | null = null;
   private readonly _startY: number;
+  private readonly _trimmedRows: string[] = [];
 
   public constructor(params: TerminalParams) {
     super();
@@ -60,9 +67,13 @@ export class Terminal extends EventEmitter {
       cols: params.columns,
       rows: params.rows,
       allowProposedApi: true,
+      scrollback: VERY_LARGE,
     });
+    this._lineFeedDispose = this._xterm.onLineFeed(this._onLineFeed);
+
     if (params.cursor || params.altScreen) {
-      this._xterm.write(displayStateToAnsi(params));
+      const opts = { altScreen: params.altScreen, cursor: params.cursor };
+      this._xterm.write(displayStateToAnsi(opts));
     }
     this._startY = params.cursor?.y ?? 1;
 
@@ -100,9 +111,14 @@ export class Terminal extends EventEmitter {
       altScreen: this._xterm.buffer.active.type === 'alternate',
     };
   }
+  public getScrollback() {
+    this._trim();
+    return this._trimmedRows;
+  }
   public destroy() {
     this._dataDispose?.dispose();
     this._exitDispose?.dispose();
+    this._lineFeedDispose?.dispose();
     this._xterm.dispose();
   }
   public on<E extends keyof TerminalEvents>(
@@ -118,14 +134,20 @@ export class Terminal extends EventEmitter {
     return super.emit(event, ...args);
   }
   public toJSON(): TerminalJson {
-    return { terminalId: this.id, ...this.getScreenState() };
+    const buffer = this._xterm.buffer.normal;
+    const scrollback = Math.max(0, buffer.length - this._xterm.rows);
+    return {
+      terminalId: this.id,
+      ...this.getScreenState(),
+      scollbackLines: scrollback + this._trimmedRows.length,
+    };
   }
   private _bufferState(buffer: IBuffer): BufferState {
     const ret: BufferState = {
       buffer: [],
       cursor: this._getCursorState(buffer),
     };
-    let i = Math.max(0, buffer.length - this._xterm.cols);
+    let i = Math.max(0, buffer.length - this._xterm.rows);
     for (; i < buffer.length; i++) {
       const line = buffer.getLine(i);
       if (line) {
@@ -153,5 +175,29 @@ export class Terminal extends EventEmitter {
     const state = this.getAnsiDisplayState();
     this.emit('exit', { code: event.exitCode, signal: event.signal, ...state });
   };
+  private readonly _onLineFeed = () => {
+    const buffer = this._xterm.buffer.normal;
+    const scrollback = buffer.length - this._xterm.rows;
+    if (scrollback > TARGET_TRIM) {
+      this._trim();
+    }
+  };
+  private _trim() {
+    const buffer = this._xterm.buffer.normal;
+    const scrollback = buffer.length - this._xterm.rows;
+    log('_trim: before trim:', buffer.length);
+    for (let i = 0; i < scrollback; i++) {
+      const line = buffer.getLine(i);
+      if (line) {
+        this._trimmedRows.push(lineToString(line));
+      } else {
+        errorLog('terminal._trim: bad line:', line);
+        this._trimmedRows.push('');
+      }
+    }
+    this._xterm.options.scrollback = 0;
+    this._xterm.options.scrollback = VERY_LARGE;
+    log('_trim: after trim:', buffer.length);
+  }
 }
 export default { Terminal };

@@ -24,6 +24,7 @@ export const router = express.Router();
 export default { router };
 
 router.get('/api/1/session', _getSessionList);
+router.get('/api/1/session/:name', _getSession);
 router.post('/api/1/session/:name', _createSession);
 router.post('/api/1/session/:name/resize', _resizeSession);
 router.post('/api/1/session/:name/write', _writeToSession);
@@ -34,6 +35,15 @@ function _getSessionList(req: Request, res: JsonResponse<SessionListJson>) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   const sessions = listSessions();
   res.send({ sessions });
+}
+function _getSession(req: Request, res: JsonResponse<SessionJson>) {
+  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+  const { name } = req.params;
+  if (!name) {
+    throw new HttpError(400, 'session name required');
+  }
+  const session = listSessions().find((s) => s.name === name);
+  res.send(session);
 }
 function _createSession(req: Request, res: JsonResponse<SessionJson>) {
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
