@@ -143,7 +143,6 @@ function _onPong(this: WebSocket, _data: Buffer) {
   _log(this, `"PONG WS" - - - -`);
 }
 function _send(ws: WebSocket, msg: WsServerMessage) {
-  log('WssServer._send:', _getAddr(ws), msg);
   ws.send(JSON.stringify(msg));
 }
 interface ServerWebSocket extends WebSocket {

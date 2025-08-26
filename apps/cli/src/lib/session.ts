@@ -11,7 +11,10 @@ export interface SessionParams extends TerminalParams {
   name: string;
 }
 export type ConnectParams = ClientParams & { rows?: number; columns?: number };
-interface Size { rows: number; columns: number }
+interface Size {
+  rows: number;
+  columns: number;
+}
 
 const g_sessionMap = new Map<string, Session>();
 

@@ -17,7 +17,10 @@ export interface ClientParams {
 export interface ConnectResult extends AnsiDisplayState {
   reason: string;
 }
-interface Size { rows: number, columns: number };
+interface Size {
+  rows: number;
+  columns: number;
+}
 export interface ClientEvents {
   disconnect: (result: ConnectResult) => void;
   write: (data: string) => void;

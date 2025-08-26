@@ -19,12 +19,9 @@ export async function loadSettings(
   let ret: JSONObject | undefined;
   try {
     const data = await readFile(FILE, { encoding: 'utf8' });
-    console.log("data:", data);
     ret = jsonParse(data);
-    console.log("ret:", ret);
     if (ret && subkey) {
       const sub = ret[subkey];
-      console.log(subkey, sub, _isObj(sub));
       if (_isObj(sub)) {
         ret = sub;
       } else {
@@ -34,7 +31,6 @@ export async function loadSettings(
   } catch (e) {
     errorLog('loadSettings: threw:', e);
   }
-  console.log("return:", ret);
   return ret;
 }
 
@@ -61,7 +57,7 @@ export async function saveSettings(params: SaveParams) {
       Object.assign(settings, params.obj);
     }
     await _mkdir(DIR);
-    const json = JSON.stringify(settings, null, '  ') + "\n";
+    const json = JSON.stringify(settings, null, '  ') + '\n';
     await writeFile(FILE, json, { encoding: 'utf8' });
     return settings;
   })();
