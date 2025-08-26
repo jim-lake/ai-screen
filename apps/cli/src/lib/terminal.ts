@@ -4,6 +4,7 @@ import Headless from '@xterm/headless';
 import { displayStateToAnsi } from '@ai-screen/shared';
 
 import { errorLog } from '../tools/log';
+import { lineToString } from './xterm_serialize';
 
 import type {
   AnsiDisplayState,
@@ -128,7 +129,7 @@ export class Terminal extends EventEmitter {
     for (; i < buffer.length; i++) {
       const line = buffer.getLine(i);
       if (line) {
-        ret.buffer.push(line.translateToString());
+        ret.buffer.push(lineToString(line));
       } else {
         errorLog('terminal._bufferState: bad line:', line);
         ret.buffer.push('');
