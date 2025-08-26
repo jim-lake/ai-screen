@@ -136,7 +136,11 @@ export default function Terminal(props: TerminalProps) {
         style={[styles.scroller, { overflow }]}
         contentContainerStyle={styles.scrollerInner}
       >
-        <View style={styles.inner} getDiv={element_ref} />
+        <View
+          style={styles.inner}
+          getDiv={element_ref}
+          data-testid='terminal-inner'
+        />
       </ScrollView>
     </View>
   );
