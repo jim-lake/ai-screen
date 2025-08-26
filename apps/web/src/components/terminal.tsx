@@ -66,8 +66,8 @@ export default function Terminal(props: TerminalProps) {
     const element = element_ref.current;
     if (element) {
       const terminalOptions = {
-        fontFamily: fontFamily,
-        fontSize: fontSize,
+        fontFamily,
+        fontSize,
         //lineHeight: 1,
       };
       connect({ session, element, terminalOptions });
@@ -75,20 +75,18 @@ export default function Terminal(props: TerminalProps) {
         disconnect({
           session,
           element,
-          columns: terminal?.cols ?? 80,
-          rows: terminal?.rows ?? 24,
         });
       };
     }
-  }, [session, element_ref, fontFamily, fontSize, terminal]);
+  }, [session, element_ref, fontFamily, fontSize]);
   useEffect(() => {
     if (terminal && container_size) {
       const { rows: old_rows, cols: old_cols } = terminal;
       terminal.options.fontFamily = fontFamily;
       const lineHeight = terminal.options.lineHeight ?? 1.0;
       const char_size = measureCharSize({
-        fontFamily: fontFamily,
-        fontSize: fontSize,
+        fontFamily,
+        fontSize,
         lineHeight,
       });
       const width_ratio = char_size.width / fontSize;
@@ -101,7 +99,7 @@ export default function Terminal(props: TerminalProps) {
         const size_height = avail_height / old_rows / height_ratio;
         let new_font_size = Math.floor(Math.min(size_width, size_height));
         const test_size = measureCharSize({
-          fontFamily: fontFamily,
+          fontFamily,
           fontSize: new_font_size,
           lineHeight,
         });

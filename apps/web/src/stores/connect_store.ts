@@ -79,19 +79,9 @@ export function connect(params: ConnectParams) {
 interface DisconnectParams {
   session: SessionJson;
   element: HTMLDivElement;
-  columns: number;
-  rows: number;
 }
 export function disconnect(params: DisconnectParams) {
-  // Handle disconnect logic here
-  const { session } = params;
-  const mounted = g_mountedMap.get(session.sessionName);
-  if (mounted) {
-    mounted.terminal.dispose();
-    mounted.webSocket.close();
-    g_mountedMap.delete(session.sessionName);
-    _emit('disconnect');
-  }
+  log('connect_store.disconnect:', params);
 }
 interface ResizeParams {
   session: SessionJson;
@@ -134,6 +124,8 @@ async function _create(params: ConnectParams) {
           const element = g_elementMap.get(sessionName) ?? null;
           if (element) {
             terminal.open(element);
+          } else {
+            errorLog('connect_store._create: no element!');
           }
           data_dispose = terminal.onData(_onData);
           terminal.write(obj.normal.buffer.join('\r\n'));
@@ -147,7 +139,7 @@ async function _create(params: ConnectParams) {
           }
           g_mountedMap.set(sessionName, { element, terminal, webSocket: ws });
           _emit('update');
-          log('connect_store._create: success:', obj);
+          log('connect_store._create: success:', obj.rows, obj.columns);
         } else if (obj?.type === 'data') {
           terminal?.write(obj.data);
         } else if (obj?.type === 'resize') {
