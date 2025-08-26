@@ -150,12 +150,12 @@ class MockBufferLine implements IBufferLine {
     const start = start_column ?? 0;
     const end = end_column ?? this.length;
     let result = '';
-    
+
     for (let i = start; i < end && i < this.length; i++) {
       const cell = this.cells[i];
       result += cell ? cell.getChars() : ' ';
     }
-    
+
     return trim_right ? result.trimEnd() : result;
   }
 }
@@ -244,7 +244,10 @@ void describe('xterm_serialize', () => {
         new MockBufferCell('g', 1, 2), // green foreground
         new MockBufferCell('b', 1, 4), // blue foreground
       ]);
-      assert.strictEqual(lineToString(line), '\x1b[31mr\x1b[32mg\x1b[34mb\x1b[0m');
+      assert.strictEqual(
+        lineToString(line),
+        '\x1b[31mr\x1b[32mg\x1b[34mb\x1b[0m'
+      );
     });
 
     void it('should handle bright ANSI colors (8-15)', () => {
@@ -260,7 +263,10 @@ void describe('xterm_serialize', () => {
         new MockBufferCell('x', 1, 196), // bright red in 256-color palette
         new MockBufferCell('y', 1, 46), // bright green in 256-color palette
       ]);
-      assert.strictEqual(lineToString(line), '\x1b[38;5;196mx\x1b[38;5;46my\x1b[0m');
+      assert.strictEqual(
+        lineToString(line),
+        '\x1b[38;5;196mx\x1b[38;5;46my\x1b[0m'
+      );
     });
 
     void it('should handle RGB colors', () => {
@@ -268,7 +274,10 @@ void describe('xterm_serialize', () => {
         new MockBufferCell('r', 2, 0xff0000), // red RGB
         new MockBufferCell('g', 2, 0x00ff00), // green RGB
       ]);
-      assert.strictEqual(lineToString(line), '\x1b[38;2;255;0;0mr\x1b[38;2;0;255;0mg\x1b[0m');
+      assert.strictEqual(
+        lineToString(line),
+        '\x1b[38;2;255;0;0mr\x1b[38;2;0;255;0mg\x1b[0m'
+      );
     });
 
     void it('should handle background colors', () => {
@@ -292,7 +301,10 @@ void describe('xterm_serialize', () => {
         new MockBufferCell('x', 0, 0, 2, 0xff0000), // red RGB background
         new MockBufferCell('y', 0, 0, 2, 0x00ff00), // green RGB background
       ]);
-      assert.strictEqual(lineToString(line), '\x1b[48;2;255;0;0mx\x1b[48;2;0;255;0my\x1b[0m');
+      assert.strictEqual(
+        lineToString(line),
+        '\x1b[48;2;255;0;0mx\x1b[48;2;0;255;0my\x1b[0m'
+      );
     });
 
     void it('should handle foreground and background colors together', () => {
@@ -320,7 +332,10 @@ void describe('xterm_serialize', () => {
         new MockBufferCell('d', 0, 0), // default
         new MockBufferCell('b', 1, 4), // blue
       ]);
-      assert.strictEqual(lineToString(line), '\x1b[31mr\x1b[0md\x1b[34mb\x1b[0m');
+      assert.strictEqual(
+        lineToString(line),
+        '\x1b[31mr\x1b[0md\x1b[34mb\x1b[0m'
+      );
     });
 
     void it('should handle complex formatting transitions', () => {
@@ -330,9 +345,12 @@ void describe('xterm_serialize', () => {
         new MockBufferCell('c', 0, 0, 0, 0), // default
       ]);
       // First char: red fg + blue bg + bold
-      // Second char: needs reset (bold->italic), then green fg + blue bg + italic  
+      // Second char: needs reset (bold->italic), then green fg + blue bg + italic
       // Third char: reset to default
-      assert.strictEqual(lineToString(line), '\x1b[1m\x1b[31m\x1b[44ma\x1b[0m\x1b[3m\x1b[32m\x1b[44mb\x1b[0mc');
+      assert.strictEqual(
+        lineToString(line),
+        '\x1b[1m\x1b[31m\x1b[44ma\x1b[0m\x1b[3m\x1b[32m\x1b[44mb\x1b[0mc'
+      );
     });
 
     void it('should handle undefined cells as spaces', () => {
@@ -354,7 +372,21 @@ void describe('xterm_serialize', () => {
 
     void it('should handle strikethrough attribute', () => {
       const line = new MockBufferLine([
-        new MockBufferCell('x', 0, 0, 0, 0, false, false, false, false, false, false, false, true), // strikethrough
+        new MockBufferCell(
+          'x',
+          0,
+          0,
+          0,
+          0,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ), // strikethrough
         new MockBufferCell('y'),
       ]);
       assert.strictEqual(lineToString(line), '\x1b[9mx\x1b[0my');
@@ -378,7 +410,19 @@ void describe('xterm_serialize', () => {
 
     void it('should handle inverse attribute', () => {
       const line = new MockBufferLine([
-        new MockBufferCell('x', 0, 0, 0, 0, false, false, false, false, false, true), // inverse
+        new MockBufferCell(
+          'x',
+          0,
+          0,
+          0,
+          0,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ), // inverse
         new MockBufferCell('y'),
       ]);
       assert.strictEqual(lineToString(line), '\x1b[7mx\x1b[0my');
@@ -386,7 +430,20 @@ void describe('xterm_serialize', () => {
 
     void it('should handle invisible attribute', () => {
       const line = new MockBufferLine([
-        new MockBufferCell('x', 0, 0, 0, 0, false, false, false, false, false, false, true), // invisible
+        new MockBufferCell(
+          'x',
+          0,
+          0,
+          0,
+          0,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ), // invisible
         new MockBufferCell('y'),
       ]);
       assert.strictEqual(lineToString(line), '\x1b[8mx\x1b[0my');
@@ -394,7 +451,22 @@ void describe('xterm_serialize', () => {
 
     void it('should handle overline attribute', () => {
       const line = new MockBufferLine([
-        new MockBufferCell('x', 0, 0, 0, 0, false, false, false, false, false, false, false, false, true), // overline
+        new MockBufferCell(
+          'x',
+          0,
+          0,
+          0,
+          0,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          true
+        ), // overline
         new MockBufferCell('y'),
       ]);
       assert.strictEqual(lineToString(line), '\x1b[53mx\x1b[0my');

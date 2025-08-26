@@ -11,25 +11,30 @@ A comprehensive visual test of ANSI color support that demonstrates all color mo
 #### Features Tested
 
 **Basic Colors (8-color palette)**
+
 - Foreground colors (30-37): Black, Red, Green, Yellow, Blue, Magenta, Cyan, White
 - Background colors (40-47): Same colors as backgrounds
 - Bright variants (90-97, 100-107): Bright versions of the basic colors
 
 **256-Color Palette**
+
 - Standard colors (0-15): Same as basic + bright colors
 - RGB cube colors (16-231): 6×6×6 color cube
 - Grayscale colors (232-255): 24 shades of gray
 
 **24-bit RGB Colors**
+
 - True color support with full RGB values
 - Both foreground and background RGB colors
 - Automatic contrast adjustment for readability
 
 **Text Attributes**
+
 - Bold, Italic, Dim, Underline, Strikethrough, Blink, Inverse, Overline
 - Combined with colors to show proper formatting
 
 **Mixed Formatting**
+
 - Demonstrates transitions between different color modes
 - Shows complex formatting combinations
 - Tests color transitions and effects
@@ -105,6 +110,7 @@ This provides a comprehensive visual verification of terminal color support and 
 #### Zero Dependencies
 
 This script is completely self-contained with no external dependencies. It only uses:
+
 - TypeScript/JavaScript built-in functions
 - Node.js `process.stdout.write()` and `console.log()`
 - Hardcoded ANSI escape sequences

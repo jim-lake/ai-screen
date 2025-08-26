@@ -1,313 +1,147 @@
 #!/usr/bin/env tsx
 /* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/naming-convention */
 
-// Zero-dependency manual color test script
-// Hardcoded ANSI escape sequences for testing terminal color support
+console.log(`
+🎨 ANSI Color Test Suite
+========================
 
-// ANSI escape sequence constants
-const ESC = '\x1b[';
-const RESET = `${ESC}0m`;
+📝 Basic Foreground Colors (30-37):
+-----------------------------------
+[30mBlack (30)[0m
+[31mRed (31)[0m
+[32mGreen (32)[0m
+[33mYellow (33)[0m
+[34mBlue (34)[0m
+[35mMagenta (35)[0m
+[36mCyan (36)[0m
+[37mWhite (37)[0m
 
-// Foreground colors (30-37)
-const FG_BLACK = `${ESC}30m`;
-const FG_RED = `${ESC}31m`;
-const FG_GREEN = `${ESC}32m`;
-const FG_YELLOW = `${ESC}33m`;
-const FG_BLUE = `${ESC}34m`;
-const FG_MAGENTA = `${ESC}35m`;
-const FG_CYAN = `${ESC}36m`;
-const FG_WHITE = `${ESC}37m`;
+✨ Bright Foreground Colors (90-97):
+------------------------------------
+[90mBright Black (90)[0m
+[91mBright Red (91)[0m
+[92mBright Green (92)[0m
+[93mBright Yellow (93)[0m
+[94mBright Blue (94)[0m
+[95mBright Magenta (95)[0m
+[96mBright Cyan (96)[0m
+[97mBright White (97)[0m
 
-// Bright foreground colors (90-97)
-const FG_BRIGHT_BLACK = `${ESC}90m`;
-const FG_BRIGHT_RED = `${ESC}91m`;
-const FG_BRIGHT_GREEN = `${ESC}92m`;
-const FG_BRIGHT_YELLOW = `${ESC}93m`;
-const FG_BRIGHT_BLUE = `${ESC}94m`;
-const FG_BRIGHT_MAGENTA = `${ESC}95m`;
-const FG_BRIGHT_CYAN = `${ESC}96m`;
-const FG_BRIGHT_WHITE = `${ESC}97m`;
+🎯 Basic Background Colors (40-47):
+-----------------------------------
+[37m[40mBlack BG (40)[0m
+[30m[41mRed BG (41)[0m
+[30m[42mGreen BG (42)[0m
+[30m[43mYellow BG (43)[0m
+[37m[44mBlue BG (44)[0m
+[30m[45mMagenta BG (45)[0m
+[30m[46mCyan BG (46)[0m
+[30m[47mWhite BG (47)[0m
 
-// Background colors (40-47)
-const BG_BLACK = `${ESC}40m`;
-const BG_RED = `${ESC}41m`;
-const BG_GREEN = `${ESC}42m`;
-const BG_YELLOW = `${ESC}43m`;
-const BG_BLUE = `${ESC}44m`;
-const BG_MAGENTA = `${ESC}45m`;
-const BG_CYAN = `${ESC}46m`;
-const BG_WHITE = `${ESC}47m`;
+🌟 Bright Background Colors (100-107):
+--------------------------------------
+[30m[100mBright Black BG (100)[0m
+[30m[101mBright Red BG (101)[0m
+[30m[102mBright Green BG (102)[0m
+[30m[103mBright Yellow BG (103)[0m
+[30m[104mBright Blue BG (104)[0m
+[30m[105mBright Magenta BG (105)[0m
+[30m[106mBright Cyan BG (106)[0m
+[30m[107mBright White BG (107)[0m
 
-// Bright background colors (100-107)
-const BG_BRIGHT_BLACK = `${ESC}100m`;
-const BG_BRIGHT_RED = `${ESC}101m`;
-const BG_BRIGHT_GREEN = `${ESC}102m`;
-const BG_BRIGHT_YELLOW = `${ESC}103m`;
-const BG_BRIGHT_BLUE = `${ESC}104m`;
-const BG_BRIGHT_MAGENTA = `${ESC}105m`;
-const BG_BRIGHT_CYAN = `${ESC}106m`;
-const BG_BRIGHT_WHITE = `${ESC}107m`;
+🌈 256-Color Palette Sample (Foreground):
+-----------------------------------------
+Standard colors (0-15):
+[38;5;0mColor   0[0m  [38;5;1mColor   1[0m  [38;5;2mColor   2[0m  [38;5;3mColor   3[0m  [38;5;4mColor   4[0m  [38;5;5mColor   5[0m  [38;5;6mColor   6[0m  [38;5;7mColor   7[0m
+[38;5;8mColor   8[0m  [38;5;9mColor   9[0m  [38;5;10mColor  10[0m  [38;5;11mColor  11[0m  [38;5;12mColor  12[0m  [38;5;13mColor  13[0m  [38;5;14mColor  14[0m  [38;5;15mColor  15[0m
 
-// Text attributes
-const BOLD = `${ESC}1m`;
-const ITALIC = `${ESC}3m`;
-const DIM = `${ESC}2m`;
-const UNDERLINE = `${ESC}4m`;
-const BLINK = `${ESC}5m`;
-const INVERSE = `${ESC}7m`;
-const INVISIBLE = `${ESC}8m`;
-const STRIKETHROUGH = `${ESC}9m`;
-const OVERLINE = `${ESC}53m`;
+216 RGB colors (16-231) - Sample every 6th color:
+[38;5;16m 16[0m [38;5;22m 22[0m [38;5;28m 28[0m [38;5;34m 34[0m [38;5;40m 40[0m [38;5;46m 46[0m
+[38;5;52m 52[0m [38;5;58m 58[0m [38;5;64m 64[0m [38;5;70m 70[0m [38;5;76m 76[0m [38;5;82m 82[0m
+[38;5;88m 88[0m [38;5;94m 94[0m [38;5;100m100[0m [38;5;106m106[0m [38;5;112m112[0m [38;5;118m118[0m
+[38;5;124m124[0m [38;5;130m130[0m [38;5;136m136[0m [38;5;142m142[0m [38;5;148m148[0m [38;5;154m154[0m
+[38;5;160m160[0m [38;5;166m166[0m [38;5;172m172[0m [38;5;178m178[0m [38;5;184m184[0m [38;5;190m190[0m
+[38;5;196m196[0m [38;5;202m202[0m [38;5;208m208[0m [38;5;214m214[0m [38;5;220m220[0m [38;5;226m226[0m
 
-// Helper functions
-function fg256(color: number): string {
-  return `${ESC}38;5;${color}m`;
-}
+Grayscale colors (232-255):
+[38;5;232m232[0m [38;5;233m233[0m [38;5;234m234[0m [38;5;235m235[0m [38;5;236m236[0m [38;5;237m237[0m [38;5;238m238[0m [38;5;239m239[0m [38;5;240m240[0m [38;5;241m241[0m [38;5;242m242[0m [38;5;243m243[0m
+[38;5;244m244[0m [38;5;245m245[0m [38;5;246m246[0m [38;5;247m247[0m [38;5;248m248[0m [38;5;249m249[0m [38;5;250m250[0m [38;5;251m251[0m [38;5;252m252[0m [38;5;253m253[0m [38;5;254m254[0m [38;5;255m255[0m
 
-function bg256(color: number): string {
-  return `${ESC}48;5;${color}m`;
-}
+🎨 256-Color Palette Sample (Background):
+-----------------------------------------
+Standard colors (0-15) backgrounds:
+[37m[48;5;0mBG 0[0m [37m[48;5;1mBG 1[0m [37m[48;5;2mBG 2[0m [30m[48;5;3mBG 3[0m [37m[48;5;4mBG 4[0m [37m[48;5;5mBG 5[0m [30m[48;5;6mBG 6[0m [37m[48;5;7mBG 7[0m
+[30m[48;5;8mBG 8[0m [30m[48;5;9mBG 9[0m [30m[48;5;10mBG10[0m [30m[48;5;11mBG11[0m [30m[48;5;12mBG12[0m [30m[48;5;13mBG13[0m [30m[48;5;14mBG14[0m [30m[48;5;15mBG15[0m
 
-function fgRGB(r: number, g: number, b: number): string {
-  return `${ESC}38;2;${r};${g};${b}m`;
-}
+RGB colors backgrounds - Sample every 12th color:
+[30m[48;5;16m 16[0m [30m[48;5;28m 28[0m [30m[48;5;40m 40[0m [30m[48;5;52m 52[0m [30m[48;5;64m 64[0m [30m[48;5;76m 76[0m [30m[48;5;88m 88[0m [30m[48;5;100m100[0m [30m[48;5;112m112[0m [30m[48;5;124m124[0m [30m[48;5;136m136[0m [30m[48;5;148m148[0m [30m[48;5;160m160[0m [30m[48;5;172m172[0m [30m[48;5;184m184[0m [30m[48;5;196m196[0m [30m[48;5;208m208[0m [30m[48;5;220m220[0m
+🌈 RGB (24-bit) Color Sample:
+-----------------------------
+[38;2;255;0;0mPure Red RGB(255,0,0)[0m
+[38;2;0;255;0mPure Green RGB(0,255,0)[0m
+[38;2;0;0;255mPure Blue RGB(0,0,255)[0m
+[38;2;255;255;0mYellow RGB(255,255,0)[0m
+[38;2;255;0;255mMagenta RGB(255,0,255)[0m
+[38;2;0;255;255mCyan RGB(0,255,255)[0m
+[38;2;255;165;0mOrange RGB(255,165,0)[0m
+[38;2;128;0;128mPurple RGB(128,0,128)[0m
+[38;2;255;192;203mPink RGB(255,192,203)[0m
+[38;2;50;205;50mLime RGB(50,205,50)[0m
 
-function bgRGB(r: number, g: number, b: number): string {
-  return `${ESC}48;2;${r};${g};${b}m`;
-}
+🎯 RGB (24-bit) Background Sample:
+----------------------------------
+[37m[48;2;255;0;0mPure Red BG[0m
+[30m[48;2;0;255;0mPure Green BG[0m
+[37m[48;2;0;0;255mPure Blue BG[0m
+[30m[48;2;255;255;0mYellow BG[0m
+[37m[48;2;255;0;255mMagenta BG[0m
+[30m[48;2;0;255;255mCyan BG[0m
+[30m[48;2;255;165;0mOrange BG[0m
+[37m[48;2;128;0;128mPurple BG[0m
+[30m[48;2;255;192;203mPink BG[0m
+[30m[48;2;50;205;50mLime BG[0m
 
-function colorText(text: string, ...codes: string[]): string {
-  return codes.join('') + text + RESET;
-}
+🎭 Text Attributes with Colors:
+-------------------------------
+[1m[31mBold Red[0m
+[3m[32mItalic Green[0m
+[4m[34mUnderline Blue[0m
+[2m[33mDim Yellow[0m
+[9m[35mStrikethrough Magenta[0m
+[5m[36mBlink Cyan[0m
+[7m[37mInverse White[0m
+[53m[31mOverline Red[0m
 
-// Color names for reference
-const basicColorNames = [
-  'Black', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White'
-];
+🎪 Mixed Formatting Demonstration:
+----------------------------------
+Normal [1m[31mBold Red [0m[3m[34mItalic Blue [0m[30m[43mYellow BG [0m[38;2;128;0;128mRGB Purple [0mBack to Normal
 
-const brightColorNames = [
-  'Bright Black', 'Bright Red', 'Bright Green', 'Bright Yellow', 
-  'Bright Blue', 'Bright Magenta', 'Bright Cyan', 'Bright White'
-];
+🎪 All Attributes Combined:
+---------------------------
+[1m[3m[4m[31mBold + Italic + Underline Red[0m
+[2m[9m[34mDim + Strikethrough Blue[0m
+[1m[38;2;128;0;128m[43mBold + RGB Purple + Yellow BG[0m
 
-const basicFgColors = [
-  FG_BLACK, FG_RED, FG_GREEN, FG_YELLOW, FG_BLUE, FG_MAGENTA, FG_CYAN, FG_WHITE
-];
+🌈 Color Transition Test:
+-------------------------
+[31mR[0m[33mA[0m[32mI[0m[36mN[0m[34mB[0m[35mO[0m[37mW[0m
 
-const brightFgColors = [
-  FG_BRIGHT_BLACK, FG_BRIGHT_RED, FG_BRIGHT_GREEN, FG_BRIGHT_YELLOW,
-  FG_BRIGHT_BLUE, FG_BRIGHT_MAGENTA, FG_BRIGHT_CYAN, FG_BRIGHT_WHITE
-];
+🎨 Background Rainbow:
+---------------------
+[37m[41mR[0m[37m[43mA[0m[37m[42mI[0m[37m[46mN[0m[37m[44mB[0m[37m[45mO[0m[30m[47mW[0m
 
-const basicBgColors = [
-  BG_BLACK, BG_RED, BG_GREEN, BG_YELLOW, BG_BLUE, BG_MAGENTA, BG_CYAN, BG_WHITE
-];
+✅ Color test complete! All colors should be visible above.
+💡 If colors don't appear, your terminal may not support them.
+🔧 Try running in a modern terminal with full color support.
 
-const brightBgColors = [
-  BG_BRIGHT_BLACK, BG_BRIGHT_RED, BG_BRIGHT_GREEN, BG_BRIGHT_YELLOW,
-  BG_BRIGHT_BLUE, BG_BRIGHT_MAGENTA, BG_BRIGHT_CYAN, BG_BRIGHT_WHITE
-];
-
-console.log('🎨 ANSI Color Test Suite');
-console.log('========================\n');
-
-// Test 1: Basic 8 colors (30-37) foreground
-console.log('📝 Basic Foreground Colors (30-37):');
-console.log('-----------------------------------');
-for (let i = 0; i < 8; i++) {
-  const colorName = basicColorNames[i];
-  const colorCode = basicFgColors[i];
-  console.log(colorText(`${colorName} (${30 + i})`, colorCode));
-}
-console.log();
-
-// Test 2: Bright 8 colors (90-97) foreground  
-console.log('✨ Bright Foreground Colors (90-97):');
-console.log('------------------------------------');
-for (let i = 0; i < 8; i++) {
-  const colorName = brightColorNames[i];
-  const colorCode = brightFgColors[i];
-  console.log(colorText(`${colorName} (${90 + i})`, colorCode));
-}
-console.log();
-
-// Test 3: Basic 8 colors (40-47) background
-console.log('🎯 Basic Background Colors (40-47):');
-console.log('-----------------------------------');
-for (let i = 0; i < 8; i++) {
-  const colorName = basicColorNames[i];
-  const bgColor = basicBgColors[i];
-  // Use white text on dark backgrounds, black text on light backgrounds
-  const fgColor = (i === 0 || i === 4) ? FG_WHITE : FG_BLACK;
-  console.log(colorText(`${colorName} BG (${40 + i})`, fgColor, bgColor));
-}
-console.log();
-
-// Test 4: Bright 8 colors (100-107) background
-console.log('🌟 Bright Background Colors (100-107):');
-console.log('--------------------------------------');
-for (let i = 0; i < 8; i++) {
-  const colorName = brightColorNames[i];
-  const bgColor = brightBgColors[i];
-  // Use black text on bright backgrounds (they're all light)
-  console.log(colorText(`${colorName} BG (${100 + i})`, FG_BLACK, bgColor));
-}
-console.log();
-
-// Test 5: 256-color palette sample (foreground)
-console.log('🌈 256-Color Palette Sample (Foreground):');
-console.log('-----------------------------------------');
-console.log('Standard colors (0-15):');
-for (let i = 0; i < 16; i++) {
-  const colorCode = fg256(i);
-  process.stdout.write(colorText(`Color ${i.toString().padStart(3)}`, colorCode) + '  ');
-  if ((i + 1) % 8 === 0) {console.log();}
-}
-console.log();
-
-console.log('216 RGB colors (16-231) - Sample every 6th color:');
-for (let i = 16; i < 232; i += 6) {
-  const colorCode = fg256(i);
-  process.stdout.write(colorText(i.toString().padStart(3), colorCode) + ' ');
-  if ((i - 16) % 36 === 30) {console.log();}
-}
-console.log();
-
-console.log('Grayscale colors (232-255):');
-for (let i = 232; i < 256; i++) {
-  const colorCode = fg256(i);
-  process.stdout.write(colorText(i.toString().padStart(3), colorCode) + ' ');
-  if ((i - 232 + 1) % 12 === 0) {console.log();}
-}
-console.log();
-
-// Test 6: 256-color palette sample (background)
-console.log('🎨 256-Color Palette Sample (Background):');
-console.log('-----------------------------------------');
-console.log('Standard colors (0-15) backgrounds:');
-for (let i = 0; i < 16; i++) {
-  // Use contrasting foreground colors
-  const fgColor = (i < 8 && i !== 3 && i !== 6) ? FG_WHITE : FG_BLACK;
-  const bgColor = bg256(i);
-  process.stdout.write(colorText(`BG${i.toString().padStart(2)}`, fgColor, bgColor) + ' ');
-  if ((i + 1) % 8 === 0) {console.log();}
-}
-console.log();
-
-console.log('RGB colors backgrounds - Sample every 12th color:');
-for (let i = 16; i < 232; i += 12) {
-  const bgColor = bg256(i);
-  process.stdout.write(colorText(i.toString().padStart(3), FG_BLACK, bgColor) + ' ');
-  if ((i - 16) % 72 === 64) {console.log();}
-}
-console.log();
-
-// Test 7: RGB colors (24-bit)
-console.log('🌈 RGB (24-bit) Color Sample:');
-console.log('-----------------------------');
-const rgbColors = [
-  { name: 'Pure Red', r: 255, g: 0, b: 0 },
-  { name: 'Pure Green', r: 0, g: 255, b: 0 },
-  { name: 'Pure Blue', r: 0, g: 0, b: 255 },
-  { name: 'Yellow', r: 255, g: 255, b: 0 },
-  { name: 'Magenta', r: 255, g: 0, b: 255 },
-  { name: 'Cyan', r: 0, g: 255, b: 255 },
-  { name: 'Orange', r: 255, g: 165, b: 0 },
-  { name: 'Purple', r: 128, g: 0, b: 128 },
-  { name: 'Pink', r: 255, g: 192, b: 203 },
-  { name: 'Lime', r: 50, g: 205, b: 50 },
-];
-
-for (const color of rgbColors) {
-  const fgColor = fgRGB(color.r, color.g, color.b);
-  console.log(colorText(`${color.name} RGB(${color.r},${color.g},${color.b})`, fgColor));
-}
-console.log();
-
-// Test 8: RGB backgrounds
-console.log('🎯 RGB (24-bit) Background Sample:');
-console.log('----------------------------------');
-for (const color of rgbColors) {
-  const bgColor = bgRGB(color.r, color.g, color.b);
-  // Use black or white text based on brightness
-  const brightness = (color.r * 299 + color.g * 587 + color.b * 114) / 1000;
-  const fgColor = brightness > 128 ? FG_BLACK : FG_WHITE;
-  console.log(colorText(`${color.name} BG`, fgColor, bgColor));
-}
-console.log();
-
-// Test 9: Text attributes with colors
-console.log('🎭 Text Attributes with Colors:');
-console.log('-------------------------------');
-console.log(colorText('Bold Red', BOLD, FG_RED));
-console.log(colorText('Italic Green', ITALIC, FG_GREEN));
-console.log(colorText('Underline Blue', UNDERLINE, FG_BLUE));
-console.log(colorText('Dim Yellow', DIM, FG_YELLOW));
-console.log(colorText('Strikethrough Magenta', STRIKETHROUGH, FG_MAGENTA));
-console.log(colorText('Blink Cyan', BLINK, FG_CYAN));
-console.log(colorText('Inverse White', INVERSE, FG_WHITE));
-console.log(colorText('Overline Red', OVERLINE, FG_RED));
-console.log();
-
-// Test 10: Mixed formatting demonstration
-console.log('🎪 Mixed Formatting Demonstration:');
-console.log('----------------------------------');
-process.stdout.write('Normal ');
-process.stdout.write(colorText('Bold Red ', BOLD, FG_RED));
-process.stdout.write(colorText('Italic Blue ', ITALIC, FG_BLUE));
-process.stdout.write(colorText('Yellow BG ', FG_BLACK, BG_YELLOW));
-process.stdout.write(colorText('RGB Purple ', fgRGB(128, 0, 128)));
-process.stdout.write('Back to Normal');
-console.log();
-console.log();
-
-// Test 11: All attributes combined
-console.log('🎪 All Attributes Combined:');
-console.log('---------------------------');
-console.log(colorText('Bold + Italic + Underline Red', BOLD, ITALIC, UNDERLINE, FG_RED));
-console.log(colorText('Dim + Strikethrough Blue', DIM, STRIKETHROUGH, FG_BLUE));
-console.log(colorText('Bold + RGB Purple + Yellow BG', BOLD, fgRGB(128, 0, 128), BG_YELLOW));
-console.log();
-
-// Test 12: Color transition test
-console.log('🌈 Color Transition Test:');
-console.log('-------------------------');
-const transitionText = 'RAINBOW';
-const rainbowColors = [FG_RED, FG_YELLOW, FG_GREEN, FG_CYAN, FG_BLUE, FG_MAGENTA, FG_WHITE];
-for (let i = 0; i < transitionText.length; i++) {
-  const char = transitionText[i];
-  const color = rainbowColors[i % rainbowColors.length];
-  process.stdout.write(colorText(char, color));
-}
-console.log();
-console.log();
-
-// Test 13: Background rainbow
-console.log('🎨 Background Rainbow:');
-console.log('---------------------');
-const bgRainbowColors = [BG_RED, BG_YELLOW, BG_GREEN, BG_CYAN, BG_BLUE, BG_MAGENTA, BG_WHITE];
-for (let i = 0; i < transitionText.length; i++) {
-  const char = transitionText[i];
-  const bgColor = bgRainbowColors[i % bgRainbowColors.length];
-  const fgColor = (i === 6) ? FG_BLACK : FG_WHITE; // Black text on white background
-  process.stdout.write(colorText(char, fgColor, bgColor));
-}
-console.log();
-console.log();
-
-console.log('✅ Color test complete! All colors should be visible above.');
-console.log('💡 If colors don\'t appear, your terminal may not support them.');
-console.log('🔧 Try running in a modern terminal with full color support.');
-console.log();
-console.log('📋 Test Summary:');
-console.log('- Basic 8 foreground colors (30-37)');
-console.log('- Bright 8 foreground colors (90-97)');
-console.log('- Basic 8 background colors (40-47)');
-console.log('- Bright 8 background colors (100-107)');
-console.log('- 256-color palette samples');
-console.log('- 24-bit RGB true colors');
-console.log('- Text attributes (bold, italic, underline, etc.)');
-console.log('- Mixed formatting combinations');
-console.log('- Color transitions and effects');
+📋 Test Summary:
+- Basic 8 foreground colors (30-37)
+- Bright 8 foreground colors (90-97)
+- Basic 8 background colors (40-47)
+- Bright 8 background colors (100-107)
+- 256-color palette samples
+- 24-bit RGB true colors
+- Text attributes (bold, italic, underline, etc.)
+- Mixed formatting combinations
+- Color transitions and effects
+`);

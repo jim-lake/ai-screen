@@ -1,8 +1,5 @@
 import type { IBufferLine, IBufferCell } from '@xterm/headless';
 
-/**
- * Color state tracking for efficient ANSI escape sequence generation
- */
 interface ColorState {
   fgColorMode: number;
   fgColor: number;
@@ -18,15 +15,11 @@ interface ColorState {
   strikethrough: boolean;
   overline: boolean;
 }
-
-/**
- * Creates a default color state representing terminal defaults
- */
 function _createDefaultColorState(): ColorState {
   return {
-    fgColorMode: 0, // Default foreground
+    fgColorMode: 0,
     fgColor: 0,
-    bgColorMode: 0, // Default background
+    bgColorMode: 0,
     bgColor: 0,
     bold: false,
     italic: false,
@@ -39,10 +32,6 @@ function _createDefaultColorState(): ColorState {
     overline: false,
   };
 }
-
-/**
- * Extracts color state from a buffer cell
- */
 function _getCellColorState(cell: IBufferCell): ColorState {
   return {
     fgColorMode: cell.getFgColorMode(),
@@ -60,10 +49,6 @@ function _getCellColorState(cell: IBufferCell): ColorState {
     overline: !!cell.isOverline(),
   };
 }
-
-/**
- * Compares two color states for equality
- */
 function _colorStatesEqual(a: ColorState, b: ColorState): boolean {
   return (
     a.fgColorMode === b.fgColorMode &&
@@ -82,9 +67,6 @@ function _colorStatesEqual(a: ColorState, b: ColorState): boolean {
   );
 }
 
-/**
- * Generates ANSI escape sequences to transition from one color state to another
- */
 function _generateColorTransition(from: ColorState, to: ColorState): string {
   if (_colorStatesEqual(from, to)) {
     return '';
@@ -92,7 +74,6 @@ function _generateColorTransition(from: ColorState, to: ColorState): string {
 
   const sequences: string[] = [];
 
-  // Reset if we need to clear attributes or change to default colors
   const needs_reset =
     (to.fgColorMode === 0 && from.fgColorMode !== 0) ||
     (to.bgColorMode === 0 && from.bgColorMode !== 0) ||
@@ -111,24 +92,38 @@ function _generateColorTransition(from: ColorState, to: ColorState): string {
     from = _createDefaultColorState();
   }
 
-  // Set attributes
-  if (to.bold && !from.bold) {sequences.push('\x1b[1m');}
-  if (to.italic && !from.italic) {sequences.push('\x1b[3m');}
-  if (to.dim && !from.dim) {sequences.push('\x1b[2m');}
-  if (to.underline && !from.underline) {sequences.push('\x1b[4m');}
-  if (to.blink && !from.blink) {sequences.push('\x1b[5m');}
-  if (to.inverse && !from.inverse) {sequences.push('\x1b[7m');}
-  if (to.invisible && !from.invisible) {sequences.push('\x1b[8m');}
-  if (to.strikethrough && !from.strikethrough) {sequences.push('\x1b[9m');}
-  if (to.overline && !from.overline) {sequences.push('\x1b[53m');}
+  if (to.bold && !from.bold) {
+    sequences.push('\x1b[1m');
+  }
+  if (to.italic && !from.italic) {
+    sequences.push('\x1b[3m');
+  }
+  if (to.dim && !from.dim) {
+    sequences.push('\x1b[2m');
+  }
+  if (to.underline && !from.underline) {
+    sequences.push('\x1b[4m');
+  }
+  if (to.blink && !from.blink) {
+    sequences.push('\x1b[5m');
+  }
+  if (to.inverse && !from.inverse) {
+    sequences.push('\x1b[7m');
+  }
+  if (to.invisible && !from.invisible) {
+    sequences.push('\x1b[8m');
+  }
+  if (to.strikethrough && !from.strikethrough) {
+    sequences.push('\x1b[9m');
+  }
+  if (to.overline && !from.overline) {
+    sequences.push('\x1b[53m');
+  }
 
-  // Set foreground color
   if (to.fgColorMode !== from.fgColorMode || to.fgColor !== from.fgColor) {
     if (to.fgColorMode === 0) {
-      // Default foreground
       sequences.push('\x1b[39m');
     } else if (to.fgColorMode === 1) {
-      // Palette color
       if (to.fgColor < 8) {
         sequences.push(`\x1b[${30 + to.fgColor}m`);
       } else if (to.fgColor < 16) {
@@ -137,7 +132,6 @@ function _generateColorTransition(from: ColorState, to: ColorState): string {
         sequences.push(`\x1b[38;5;${to.fgColor}m`);
       }
     } else if (to.fgColorMode === 2) {
-      // RGB color
       const r = (to.fgColor >> 16) & 0xff;
       const g = (to.fgColor >> 8) & 0xff;
       const b = to.fgColor & 0xff;
@@ -145,13 +139,10 @@ function _generateColorTransition(from: ColorState, to: ColorState): string {
     }
   }
 
-  // Set background color
   if (to.bgColorMode !== from.bgColorMode || to.bgColor !== from.bgColor) {
     if (to.bgColorMode === 0) {
-      // Default background
       sequences.push('\x1b[49m');
     } else if (to.bgColorMode === 1) {
-      // Palette color
       if (to.bgColor < 8) {
         sequences.push(`\x1b[${40 + to.bgColor}m`);
       } else if (to.bgColor < 16) {
@@ -160,24 +151,14 @@ function _generateColorTransition(from: ColorState, to: ColorState): string {
         sequences.push(`\x1b[48;5;${to.bgColor}m`);
       }
     } else if (to.bgColorMode === 2) {
-      // RGB color
       const r = (to.bgColor >> 16) & 0xff;
       const g = (to.bgColor >> 8) & 0xff;
       const b = to.bgColor & 0xff;
       sequences.push(`\x1b[48;2;${r};${g};${b}m`);
     }
   }
-
   return sequences.join('');
 }
-
-/**
- * Converts a terminal buffer line to a string with ANSI escape sequences
- * for colors and formatting, optimized to only emit deltas between characters.
- * 
- * @param line - The IBufferLine from xterm.js getLine()
- * @returns String representation with ANSI escape sequences, right-trimmed, no newlines
- */
 export function lineToString(line: IBufferLine): string {
   if (line.length === 0) {
     return '';
@@ -187,7 +168,6 @@ export function lineToString(line: IBufferLine): string {
   let current_state = _createDefaultColorState();
   let last_non_space_index = -1;
 
-  // First pass: find the last non-space character to determine trim point
   for (let i = 0; i < line.length; i++) {
     const cell = line.getCell(i);
     if (cell?.getChars().trim() !== '') {
@@ -195,12 +175,10 @@ export function lineToString(line: IBufferLine): string {
     }
   }
 
-  // If the line is all spaces, return empty string
   if (last_non_space_index === -1) {
     return '';
   }
 
-  // Second pass: build the string with escape sequences
   for (let i = 0; i <= last_non_space_index; i++) {
     const cell = line.getCell(i);
     if (!cell) {
@@ -210,7 +188,7 @@ export function lineToString(line: IBufferLine): string {
 
     const cell_state = _getCellColorState(cell);
     const transition = _generateColorTransition(current_state, cell_state);
-    
+
     if (transition) {
       result += transition;
       current_state = cell_state;
@@ -220,7 +198,6 @@ export function lineToString(line: IBufferLine): string {
     result += chars || ' ';
   }
 
-  // Reset to default at the end if we have any formatting
   if (!_colorStatesEqual(current_state, _createDefaultColorState())) {
     result += '\x1b[0m';
   }
