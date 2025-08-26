@@ -168,7 +168,7 @@ g_program.action(async (command: string[], options: CliOptions) => {
       if (!name) {
         const session_list = await getSessions();
         const detached = session_list.filter(
-          (s) => !s.clients.some((s) => s.exclusive)
+          (s) => !s.clients.some((c) => c.exclusive)
         );
         if (detached.length === 1 && detached[0]) {
           name = detached[0].sessionName;

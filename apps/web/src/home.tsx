@@ -14,18 +14,17 @@ const styles = StyleSheet.create({
 export default function Home() {
   const list = SessionStore.useList();
   useEffect(() => {
-    SessionStore.fetch();
+    void SessionStore.fetch();
   }, []);
-  console.log(list);
   return (
     <View style={styles.home}>
       <Text style={styles.text}>Home</Text>
       {list?.map((s) => (
         <LinkText
-          key={s.session_name}
+          key={s.sessionName}
           style={styles.text}
-          url={`/session/${s.session_name}`}
-          text={s.session_name}
+          url={`/session/${s.sessionName}`}
+          text={s.sessionName}
         />
       )) ?? null}
     </View>

@@ -1,0 +1,6 @@
+.base-component-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+.base-component-dialog:not([open]) {
+  display: none !important;
+}

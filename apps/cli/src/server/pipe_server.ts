@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Buffer } from 'node:buffer';
+import { jsonParse } from '@ai-screen/shared';
 
 import { getSession } from '../lib/session';
 import { log, errorLog } from '../tools/log';
-import { jsonParse } from '../tools/util';
 
 import type { RInfo } from 'unix-dgram';
 import type { PipeClientMessage, PipeServerMessage } from '@ai-screen/shared';
@@ -58,7 +58,7 @@ function _onMessage(msg: Buffer, rinfo?: RInfo) {
               err: 'SESSION_ALREADY_CONNECTED',
             });
           } else {
-            throw e;
+            _send(path, { type: 'error' as const, err: 'CONNECT_FAILED' });
           }
         }
       }

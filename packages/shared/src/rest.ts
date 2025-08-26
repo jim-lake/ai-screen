@@ -1,4 +1,5 @@
-import type { CursorJson } from './common';
+import type { BufferState } from './ansi';
+import type { JSONObject } from './json';
 
 export interface ClientJson {
   clientPath: string;
@@ -14,10 +15,6 @@ export interface SessionJson {
   terminals: { terminalId: number }[];
   activeTerminal: TerminalJson | null;
 }
-export interface BufferState {
-  cursor: CursorJson;
-  buffer: string[];
-}
 export interface TerminalJson {
   terminalId: number;
   normal: BufferState;
@@ -26,4 +23,7 @@ export interface TerminalJson {
 }
 export interface SessionListJson {
   sessions: SessionJson[];
+}
+export interface SettingsJson {
+  settings: JSONObject;
 }

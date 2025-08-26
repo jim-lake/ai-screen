@@ -1,14 +1,17 @@
 import { EventEmitter } from 'node:events';
 import { spawn } from 'node-pty';
 import Headless from '@xterm/headless';
+import { displayStateToAnsi } from '@ai-screen/shared';
 
-import { displayStateToAnsi } from '../tools/ansi';
 import { errorLog } from '../tools/log';
 
-import type { TerminalJson } from '@ai-screen/shared';
+import type {
+  AnsiDisplayState,
+  CursorState,
+  TerminalJson,
+} from '@ai-screen/shared';
 import type { IPty } from 'node-pty';
 import type { IBuffer } from '@xterm/headless';
-import type { AnsiDisplayState, CursorState } from '../tools/ansi';
 import type { DeepPartial } from '../tools/util';
 
 let g_terminalNumber = 1;

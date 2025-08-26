@@ -6,6 +6,7 @@ import onFinished from 'on-finished';
 
 import routes from './routes';
 import { SOCK_PATH } from './pipe_server';
+import WssServer from './wss_server';
 
 import type { HttpError } from '../tools/http';
 import { log, errorLog } from '../tools/log';
@@ -50,6 +51,9 @@ export async function start(params: StartParams): Promise<number> {
       const addr = g_server?.address();
       const listen_port = typeof addr == 'object' ? (addr?.port ?? 0) : 0;
       log('web_server.start: listening on port:', listen_port);
+      if (g_server) {
+        WssServer.start({ server: g_server });
+      }
       resolve(listen_port);
     });
   });

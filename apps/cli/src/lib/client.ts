@@ -1,14 +1,13 @@
 import * as fs from 'node:fs';
 import * as tty from 'node:tty';
 import { EventEmitter } from 'node:events';
+import { displayStateToAnsi } from '@ai-screen/shared';
 
-import { displayStateToAnsi } from '../tools/ansi';
 import { log, errorLog } from '../tools/log';
 
-import type { ClientJson } from '@ai-screen/shared';
+import type { AnsiDisplayState, ClientJson } from '@ai-screen/shared';
 import type { Writable } from 'node:stream';
 import type { TerminalScreenState } from './terminal';
-import type { AnsiDisplayState } from '../tools/ansi';
 
 export interface ClientParams {
   path: string;
@@ -18,8 +17,11 @@ export interface ClientParams {
 export interface ConnectResult extends AnsiDisplayState {
   reason: string;
 }
+interface Size { rows: number, columns: number };
 export interface ClientEvents {
   disconnect: (result: ConnectResult) => void;
+  write: (data: string) => void;
+  resize: (size: Size) => void;
 }
 
 const g_clientMap = new Map<string, Client>();
@@ -61,7 +63,11 @@ export class Client extends EventEmitter {
     g_clientMap.set(path, this);
   }
   public write(data: string) {
-    this.stream?.write(data);
+    if (this.stream) {
+      this.stream.write(data);
+    } else {
+      this.emit('write', data);
+    }
   }
   public disconnect(result: ConnectResult) {
     this.stream?.removeAllListeners();
@@ -76,6 +82,9 @@ export class Client extends EventEmitter {
       this.write(state.alternate.buffer.join('\n'));
       this.write(displayStateToAnsi({ cursor: state.alternate.cursor }));
     }
+  }
+  public resize(params: Size) {
+    this.emit('resize', params);
   }
   public on<E extends keyof ClientEvents>(
     event: E,

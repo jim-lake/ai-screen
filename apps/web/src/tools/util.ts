@@ -11,7 +11,6 @@ export default {
   preventDefault,
   stopPropagation,
   stopAll,
-  jsonParse,
   herd,
   herdOnce,
   canonicalJson,
@@ -121,15 +120,6 @@ export function stopAll(e: {
 }) {
   stopPropagation(e);
   preventDefault(e);
-}
-export function jsonParse(s: string): unknown {
-  let ret: unknown;
-  try {
-    ret = JSON.parse(s);
-  } catch {
-    // noop
-  }
-  return ret;
 }
 export type HerdFunction<T extends unknown[], S, A extends boolean> = ((
   ...args: T

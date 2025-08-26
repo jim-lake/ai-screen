@@ -1,22 +1,12 @@
 /* eslint-disable no-control-regex */
 import { setTimeout, clearTimeout } from 'node:timers';
+import type { AnsiDisplayState } from '@ai-screen/shared';
 
 import type { DeepPartial, Require } from './util';
 
-export default { queryDisplay, displayStateToAnsi };
+export default { queryDisplay };
 
 const TIMEOUT = 1000;
-
-export interface CursorState {
-  x: number;
-  y: number;
-  visible: boolean;
-  blinking: boolean;
-}
-export interface AnsiDisplayState {
-  cursor: CursorState;
-  altScreen: boolean;
-}
 
 export async function queryDisplay(): Promise<DeepPartial<AnsiDisplayState>> {
   const ret: Require<DeepPartial<AnsiDisplayState>, 'cursor'> = {
@@ -71,25 +61,4 @@ export async function queryDisplay(): Promise<DeepPartial<AnsiDisplayState>> {
     process.stdin.pause();
     process.stdin.unref();
   }
-}
-export function displayStateToAnsi(
-  state: DeepPartial<AnsiDisplayState>
-): string {
-  const codes: string[] = [];
-  if (state.altScreen !== undefined) {
-    codes.push(state.altScreen ? '\x1b[?1049h' : '\x1b[?1049l');
-  }
-  if (state.cursor) {
-    const { x, y, visible, blinking } = state.cursor;
-    if (x !== undefined && y !== undefined) {
-      codes.push(`\x1b[${y};${x}H`);
-    }
-    if (visible !== undefined) {
-      codes.push(visible ? '\x1b[?25h' : '\x1b[?25l');
-    }
-    if (blinking !== undefined) {
-      codes.push(blinking ? '\x1b[?12h' : '\x1b[?12l');
-    }
-  }
-  return codes.join('');
 }

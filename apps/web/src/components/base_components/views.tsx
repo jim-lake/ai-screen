@@ -7,7 +7,7 @@ interface ViewProps {
   children?: React.ReactNode;
   className?: string;
   pointerEvents?: string;
-  getDiv?: (ref: HTMLDivElement | null) => void;
+  getDiv?: React.RefObject<HTMLDivElement | null>;
   [key: string]: unknown;
 }
 
@@ -15,12 +15,6 @@ interface ScrollViewProps extends ViewProps {
   contentContainerStyle?: StyleInput;
   horizontal?: boolean;
   onScroll?: (event: React.UIEvent<HTMLDivElement>) => void;
-  ref?: ScrollViewHandle;
-}
-
-interface ScrollViewHandle {
-  addScrollTop: (delta: number | string) => void;
-  setScrollTop: (value: number | string) => number | undefined;
 }
 
 const styles = StyleSheet.create({
@@ -52,12 +46,7 @@ export function View({
       : style;
 
   const { inlineStyle, className } = resolveStyle(computedStyle, extraClass);
-
-  const extra_props = { ref: getDiv };
-  if (!getDiv) {
-    delete extra_props.ref;
-  }
-
+  const extra_props = getDiv ? { ref: getDiv } : {};
   return (
     <div
       className={className}
@@ -75,39 +64,14 @@ export function ScrollView({
   horizontal,
   children,
   onScroll,
-  ref,
   ...other_props
 }: ScrollViewProps) {
-  const scrollRef = React.useRef<HTMLDivElement | null>(null);
-
-  // Set up ref for exposed methods
-  React.useEffect(() => {
-    if (ref) {
-      ref.addScrollTop = (delta: number | string) => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop += Number(delta);
-        }
-      };
-
-      ref.setScrollTop = (value: number | string) => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = Number(value);
-        }
-        return scrollRef.current?.scrollTop;
-      };
-    }
-  }, [ref]);
-
-  const onScrollRef = React.useCallback((new_ref: HTMLDivElement | null) => {
-    scrollRef.current = new_ref;
-  }, []);
-
   const base_style = horizontal
     ? styles.scrollerStyleHorizontal
     : styles.scrollerStyle;
 
   return (
-    <View getDiv={onScrollRef} style={[base_style, style]} {...other_props}>
+    <View style={[base_style, style]} {...other_props}>
       <div
         style={{
           ...resolveStyle([styles.contentContainerStyle, contentContainerStyle])

@@ -31,6 +31,7 @@ export default tseslint.config(
       },
     },
     rules: {
+      '@typescript-eslint/no-shadow': 'error',
       'no-restricted-properties': [
         'error',
         {

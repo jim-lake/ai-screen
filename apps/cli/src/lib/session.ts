@@ -3,15 +3,15 @@ import { Terminal } from './terminal';
 
 import { errorLog } from '../tools/log';
 
-import type { SessionJson } from '@ai-screen/shared';
+import type { AnsiDisplayState, SessionJson } from '@ai-screen/shared';
 import type { ClientParams } from './client';
 import type { TerminalExitEvent, TerminalParams } from './terminal';
-import type { AnsiDisplayState } from '../tools/ansi';
 
 export interface SessionParams extends TerminalParams {
   name: string;
 }
-export type ConnectParams = ClientParams & { rows: number; columns: number };
+export type ConnectParams = ClientParams & { rows?: number; columns?: number };
+interface Size { rows: number; columns: number }
 
 const g_sessionMap = new Map<string, Session>();
 
@@ -55,15 +55,14 @@ export class Session {
         throw new Error('conflict');
       }
     }
+    if (rows && columns) {
+      this.resize({ rows, columns });
+    }
     const client = new Client(other);
     this.clients.push(client);
-    this.terminalParams.rows = rows;
-    this.terminalParams.columns = columns;
-
     if (this.terminals.length === 0) {
       this.createTerminal(params);
     } else {
-      this.resize({ rows, columns });
       if (this.activeTerminal) {
         const state = this.activeTerminal.getScreenState();
         client.changeTerminal(state);
@@ -71,9 +70,14 @@ export class Session {
     }
     return client;
   }
-  public resize(params: { rows: number; columns: number }) {
+  public resize(params: Size) {
+    this.terminalParams.rows = params.rows;
+    this.terminalParams.columns = params.columns;
     for (const terminal of this.terminals) {
       terminal.resize(params);
+    }
+    for (const client of this.clients) {
+      client.resize(params);
     }
   }
   public write(data: string) {

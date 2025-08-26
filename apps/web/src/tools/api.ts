@@ -1,6 +1,6 @@
 import util from './util';
 import Storage from './storage';
-import { log } from './log';
+import { log, errorLog } from './log';
 
 export class ApiError extends Error {
   constructor(
@@ -23,6 +23,7 @@ export default {
   put,
   del,
   request,
+  createWebSocket,
 };
 export type ApiResponse<T = unknown, U = T> =
   | {
@@ -272,4 +273,45 @@ async function _rawRequest<T, U>(
       headers: {},
     };
   }
+}
+export interface CreateWebSocketParams {
+  path?: string;
+  timeout?: number;
+}
+export function createWebSocket(
+  params: CreateWebSocketParams
+): Promise<WebSocket> {
+  let url = g_baseUrl.replace('http', 'ws');
+  if (params.path) {
+    url += params.path;
+  }
+  return new Promise((resolve, reject) => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    const ws = new WebSocket(url);
+    const timeout = setTimeout(() => {
+      controller.abort();
+      ws.close();
+      reject(new Error('timeout'));
+    }, params.timeout ?? DEFAULT_TIMEOUT);
+    function _onError(ev: Event) {
+      errorLog('createWebSocket._onError: ev:', ev);
+      controller.abort();
+      clearTimeout(timeout);
+      reject(new Error('error'));
+    }
+    function _onOpen() {
+      controller.abort();
+      clearTimeout(timeout);
+      resolve(ws);
+    }
+    function _onClose(): void {
+      controller.abort();
+      clearTimeout(timeout);
+      reject(new Error('closed'));
+    }
+    ws.addEventListener('error', _onError, { signal });
+    ws.addEventListener('open', _onOpen, { signal });
+    ws.addEventListener('close', _onClose, { signal });
+  });
 }

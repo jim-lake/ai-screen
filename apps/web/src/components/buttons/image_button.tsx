@@ -25,10 +25,11 @@ interface Props {
   onPress: (event?: React.SyntheticEvent) => void | Promise<void>;
   resizeMode?: string;
   underlayColor?: string;
+  title?: string;
 }
 export default function ImageButton(props: Props) {
   return (
-    <View style={[styles.imageButton, props.style]}>
+    <View style={[styles.imageButton, props.style]} title={props.title}>
       {props.source ? (
         <Image
           style={[styles.image, props.imageStyle]}

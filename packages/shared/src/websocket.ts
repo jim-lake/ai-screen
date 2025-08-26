@@ -1,13 +1,5 @@
-import type { AnsiDisplayJson } from './common';
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-type DeepPartial<T> = T extends Function
-  ? T
-  : T extends (infer U)[]
-    ? DeepPartial<U>[]
-    : T extends object
-      ? { [K in keyof T]?: DeepPartial<T[K]> }
-      : T;
+import type { AnsiDisplayJson, BufferState } from './ansi';
+import type { DeepPartial } from './helper';
 
 export type DisconnectMessage = {
   type: 'disconnect';
@@ -15,8 +7,16 @@ export type DisconnectMessage = {
 } & AnsiDisplayJson;
 
 export type WsServerMessage =
-  | { type: 'connect_success' }
+  | {
+      type: 'connect_success';
+      rows: number;
+      columns: number;
+      normal: BufferState;
+      alternate?: BufferState;
+    }
   | { type: 'error'; err: string }
+  | { type: 'resize'; rows: number; columns: number }
+  | { type: 'data'; data: string }
   | DisconnectMessage;
 
 export type WsClientMessage =
@@ -24,9 +24,9 @@ export type WsClientMessage =
       type: 'connect';
       name: string;
       exclusive: boolean;
-      rows: number;
-      columns: number;
+      rows?: number;
+      columns?: number;
     } & DeepPartial<AnsiDisplayJson>)
-  | { type: 'write'; name: string; data: string }
-  | { type: 'resize'; name: string; rows: number; columns: number }
-  | { type: 'detach'; name: string };
+  | { type: 'write'; data: string }
+  | { type: 'resize'; rows: number; columns: number }
+  | { type: 'detach' };

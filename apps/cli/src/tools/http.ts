@@ -251,12 +251,12 @@ export function optionalObject<
 >(
   req: Request<T, U, V, W, X>,
   prop: string,
-  spec: S
+  spec?: S
 ): SpecToType<S> | undefined;
 export function optionalObject(
   req: RequestJsonBody,
   prop: string,
-  spec: unknown
+  spec?: unknown
 ): JSONObject | undefined {
   const v: unknown = req.body?.[prop];
   if (v === null || (v !== undefined && typeof v !== 'object')) {
@@ -278,11 +278,11 @@ export function requiredObject<
   V,
   W,
   X extends Record<string, unknown>,
->(req: Request<T, U, V, W, X>, prop: string, spec: S): SpecToType<S>;
+>(req: Request<T, U, V, W, X>, prop: string, spec?: S): SpecToType<S>;
 export function requiredObject(
   req: RequestJsonBody,
   prop: string,
-  spec: unknown
+  spec?: unknown
 ): JSONObject {
   const v = optionalObject(req, prop, spec);
   if (v === undefined || v === null) {
