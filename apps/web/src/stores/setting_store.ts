@@ -25,9 +25,12 @@ export async function init() {
 }
 export function useSetting(key: string, type: 'string'): string | undefined;
 export function useSetting(key: string, type: 'number'): number | undefined;
-export function useSetting<T = JSONValue>(key: string, type: 'string' | 'number'): T | undefined {
+export function useSetting<T = JSONValue>(
+  key: string,
+  type: 'string' | 'number'
+): T | undefined {
   const _get = useCallback(() => {
-    return typeof g_settings[key] === type ? g_settings[key] as T : undefined;
+    return typeof g_settings[key] === type ? (g_settings[key] as T) : undefined;
   }, [key, type]);
   return useSyncExternalStore(_subscribe, _get);
 }

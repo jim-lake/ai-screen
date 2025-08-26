@@ -99,10 +99,7 @@ export default function SettingsDialog(props: SettingsDialogProps) {
 
   const preview_family = family ?? saved_family ?? DEFAULT_FONT_FAMILY;
   const preview_size = size ?? saved_size ?? DEFAULT_FONT_SIZE;
-  const preview_style = {
-    fontFamily: preview_family,
-    fontSize: preview_size,
-  };
+  const preview_style = { fontFamily: preview_family, fontSize: preview_size };
   async function _onSavePress() {
     const obj: JSONObject = {};
     if (family) {

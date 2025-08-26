@@ -213,6 +213,49 @@ The implementation provides:
 - Advanced terminal features (scrollback, etc.)
 - Comprehensive error handling
 
+## Coding Guidelines
+
+### Comments Policy
+
+**Avoid ALL comments unless the code path is extremely non-obvious.** Well-written code should be self-documenting through:
+
+- Clear variable and function names
+- Logical code structure
+- Appropriate abstractions
+- Meaningful type definitions
+
+**Only add comments when:**
+
+- Complex algorithms require explanation of the approach
+- Non-obvious performance optimizations are used
+- Workarounds for external library bugs or limitations
+- Business logic that cannot be made clear through code structure alone
+
+**Examples of unnecessary comments:**
+
+```typescript
+// Increment counter
+counter++;
+
+// Create new user object
+const user = new User(name, email);
+
+// Loop through items
+for (const item of items) {
+```
+
+**Examples of appropriate comments:**
+
+```typescript
+// Workaround: node-pty doesn't handle resize events properly on Windows
+if (process.platform === 'win32') {
+  await delay(100);
+}
+
+// Use binary search for O(log n) lookup in sorted array
+const index = binarySearch(sortedArray, target);
+```
+
 ## Build and Development
 
 ### Scripts

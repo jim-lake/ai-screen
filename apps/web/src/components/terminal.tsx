@@ -72,10 +72,7 @@ export default function Terminal(props: TerminalProps) {
       };
       connect({ session, element, terminalOptions });
       return () => {
-        disconnect({
-          session,
-          element,
-        });
+        disconnect({ session, element });
       };
     }
   }, [session, element_ref, fontFamily, fontSize]);
@@ -84,11 +81,7 @@ export default function Terminal(props: TerminalProps) {
       const { rows: old_rows, cols: old_cols } = terminal;
       terminal.options.fontFamily = fontFamily;
       const lineHeight = terminal.options.lineHeight ?? 1.0;
-      const char_size = measureCharSize({
-        fontFamily,
-        fontSize,
-        lineHeight,
-      });
+      const char_size = measureCharSize({ fontFamily, fontSize, lineHeight });
       const width_ratio = char_size.width / fontSize;
       const height_ratio = char_size.height / fontSize;
       const avail_width = container_size.width - PADDING * 2;
