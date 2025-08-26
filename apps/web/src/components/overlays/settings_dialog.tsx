@@ -90,21 +90,18 @@ export interface SettingsDialogProps {
 export default function SettingsDialog(props: SettingsDialogProps) {
   const [family, setFamily] = useState<string | undefined>();
   const [size, setSize] = useState<number | undefined>();
-  const saved_family = useSetting('fontFamily');
-  const saved_size = useSetting('fontSize');
+  const saved_family = useSetting('fontFamily', 'string');
+  const saved_size = useSetting('fontSize', 'number');
   const [is_busy, setBusy, clearBusy] = useBusy();
   useEffect(() => {
     void fetch();
   }, []);
 
-  const preview_family =
-    family ??
-    (typeof saved_family === 'string' ? saved_family : DEFAULT_FONT_FAMILY);
-  const preview_size =
-    size ?? (typeof saved_size === 'number' ? saved_size : DEFAULT_FONT_SIZE);
+  const preview_family = family ?? saved_family ?? DEFAULT_FONT_FAMILY;
+  const preview_size = size ?? saved_size ?? DEFAULT_FONT_SIZE;
   const preview_style = {
     fontFamily: preview_family,
-    fontSize: `${preview_size}px`,
+    fontSize: preview_size,
   };
   async function _onSavePress() {
     const obj: JSONObject = {};

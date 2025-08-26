@@ -23,10 +23,12 @@ function _subscribe(callback: (reason: string) => void) {
 export async function init() {
   return fetch();
 }
-export function useSetting(key: string): JSONValue | undefined {
+export function useSetting(key: string, type: 'string'): string | undefined;
+export function useSetting(key: string, type: 'number'): number | undefined;
+export function useSetting<T = JSONValue>(key: string, type: 'string' | 'number'): T | undefined {
   const _get = useCallback(() => {
-    return g_settings[key];
-  }, [key]);
+    return typeof g_settings[key] === type ? g_settings[key] as T : undefined;
+  }, [key, type]);
   return useSyncExternalStore(_subscribe, _get);
 }
 export const fetch = herd(async (): Promise<Error | null> => {

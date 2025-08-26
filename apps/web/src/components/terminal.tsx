@@ -57,8 +57,8 @@ export default function Terminal(props: TerminalProps) {
   const { session, zoom } = props;
   const element_ref = useRef<HTMLDivElement>(null);
   const terminal = useTerminal(session.sessionName);
-  const fontFamily = useSetting('fontFamily') ?? DEFAULT_FONT_FAMILY;
-  const fontSize = useSetting('fontSize') ?? DEFAULT_FONT_SIZE;
+  const fontFamily = useSetting('fontFamily', 'string') ?? DEFAULT_FONT_FAMILY;
+  const fontSize = useSetting('fontSize', 'number') ?? DEFAULT_FONT_SIZE;
   const [container_ref, container_size] = useComponentSize<HTMLDivElement>();
   const [overflow, setOverflow] = useState('hidden');
 
@@ -66,8 +66,8 @@ export default function Terminal(props: TerminalProps) {
     const element = element_ref.current;
     if (element) {
       const terminalOptions = {
-        fontFamily: fontFamily as string,
-        fontSize: fontSize as number,
+        fontFamily: fontFamily,
+        fontSize: fontSize,
         //lineHeight: 1,
       };
       connect({ session, element, terminalOptions });
@@ -84,15 +84,15 @@ export default function Terminal(props: TerminalProps) {
   useEffect(() => {
     if (terminal && container_size) {
       const { rows: old_rows, cols: old_cols } = terminal;
-      terminal.options.fontFamily = fontFamily as string;
+      terminal.options.fontFamily = fontFamily;
       const lineHeight = terminal.options.lineHeight ?? 1.0;
       const char_size = measureCharSize({
-        fontFamily: fontFamily as string,
-        fontSize: fontSize as number,
+        fontFamily: fontFamily,
+        fontSize: fontSize,
         lineHeight,
       });
-      const width_ratio = char_size.width / (fontSize as number);
-      const height_ratio = char_size.height / (fontSize as number);
+      const width_ratio = char_size.width / fontSize;
+      const height_ratio = char_size.height / fontSize;
       const avail_width = container_size.width - PADDING * 2;
       const avail_height = container_size.height - PADDING * 2;
 
@@ -101,7 +101,7 @@ export default function Terminal(props: TerminalProps) {
         const size_height = avail_height / old_rows / height_ratio;
         let new_font_size = Math.floor(Math.min(size_width, size_height));
         const test_size = measureCharSize({
-          fontFamily: fontFamily as string,
+          fontFamily: fontFamily,
           fontSize: new_font_size,
           lineHeight,
         });
@@ -114,27 +114,20 @@ export default function Terminal(props: TerminalProps) {
         terminal.options.fontSize = new_font_size;
         setOverflow('hidden');
       } else if (zoom === 'FIT') {
-        terminal.options.fontSize = fontSize as number;
+        terminal.options.fontSize = fontSize;
         const new_columns = Math.floor(avail_width / char_size.width);
         const new_rows = Math.floor(avail_height / char_size.height);
         resize({ session, columns: new_columns, rows: new_rows });
         setOverflow('hidden');
       } else {
         // zoom === 'EXPAND'
-        terminal.options.fontSize = fontSize as number;
+        terminal.options.fontSize = fontSize;
         const delta_w = avail_width - char_size.width * old_cols;
         const delta_h = avail_height - char_size.height * old_rows;
         const overflow_x = delta_w < 0 ? 'scroll' : 'hidden';
         const overflow_y = delta_h < 0 ? 'scroll' : 'hidden';
         setOverflow(overflow_x + ' ' + overflow_y);
       }
-    }
-    // Remove global assignment for production code
-    if (
-      typeof window !== 'undefined' &&
-      process.env.NODE_ENV === 'development'
-    ) {
-      (window as { terminal?: typeof terminal }).terminal = terminal;
     }
   }, [
     terminal,
