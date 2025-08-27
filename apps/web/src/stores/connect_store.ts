@@ -25,12 +25,7 @@ export interface Size {
 
 const g_mountedMap = new Map<
   string,
-  {
-    element: HTMLDivElement | null;
-    terminal: Terminal;
-    webSocket: WebSocket;
-    customRendererAddon: CustomRendererAddon;
-  }
+  { element: HTMLDivElement | null; terminal: Terminal; webSocket: WebSocket }
 >();
 const g_elementMap = new Map<string, HTMLDivElement>();
 const g_sizeMap = new Map<string, Size>();
@@ -69,28 +64,17 @@ export function connect(params: ConnectParams) {
 
   const mounted = g_mountedMap.get(sessionName);
   if (mounted) {
-    const {
-      terminal,
-      element: old_element,
-      webSocket,
-      customRendererAddon,
-    } = mounted;
+    const { terminal, element: old_element, webSocket } = mounted;
     old_element?.remove();
 
-    // Dispose old addon and create new one
-    customRendererAddon.dispose();
+    // Create and load new addon - xterm.js will handle disposal automatically
     const newCustomRendererAddon = new CustomRendererAddon();
     terminal.loadAddon(newCustomRendererAddon);
 
     // Open terminal in new element
     terminal.open(element);
 
-    g_mountedMap.set(sessionName, {
-      terminal,
-      element,
-      webSocket,
-      customRendererAddon: newCustomRendererAddon,
-    });
+    g_mountedMap.set(sessionName, { terminal, element, webSocket });
     _emit('update');
   } else if (g_elementMap.has(sessionName)) {
     g_elementMap.set(sessionName, element);
@@ -108,9 +92,9 @@ export function disconnect(params: DisconnectParams) {
   const { sessionName } = params.session;
   const mounted = g_mountedMap.get(sessionName);
   if (mounted) {
-    const { webSocket, customRendererAddon } = mounted;
+    const { webSocket } = mounted;
     _send(webSocket, { type: 'detach' as const });
-    customRendererAddon.dispose();
+    // xterm.js will automatically dispose addons when terminal is disposed
   }
 }
 interface ResizeParams {
@@ -152,11 +136,10 @@ async function _create(params: ConnectParams) {
           };
           terminal = new Terminal(opts);
           const element = g_elementMap.get(sessionName) ?? null;
-          let customRendererAddon: CustomRendererAddon;
 
           if (element) {
             // Create and load the custom renderer addon
-            customRendererAddon = new CustomRendererAddon();
+            const customRendererAddon = new CustomRendererAddon();
             terminal.loadAddon(customRendererAddon);
 
             // Open terminal normally - the addon will replace the renderer
@@ -178,12 +161,7 @@ async function _create(params: ConnectParams) {
               displayStateToAnsi({ cursor: obj.alternate.cursor })
             );
           }
-          g_mountedMap.set(sessionName, {
-            element,
-            terminal,
-            webSocket: ws,
-            customRendererAddon,
-          });
+          g_mountedMap.set(sessionName, { element, terminal, webSocket: ws });
           _emit('update');
           log('connect_store._create: success:', obj.rows, obj.columns);
         } else if (obj?.type === 'data') {
@@ -226,10 +204,7 @@ async function _create(params: ConnectParams) {
     errorLog('connect_store._create error:', e);
   } finally {
     g_elementMap.delete(sessionName);
-    const mounted = g_mountedMap.get(sessionName);
-    if (mounted?.customRendererAddon) {
-      mounted.customRendererAddon.dispose();
-    }
+    // xterm.js will automatically dispose addons when terminal is disposed
     g_mountedMap.delete(sessionName);
   }
 }
