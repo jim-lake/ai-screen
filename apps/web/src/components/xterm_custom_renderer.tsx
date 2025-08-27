@@ -4,8 +4,34 @@ import type {
   IRenderDimensions,
   IRequestRedrawEvent,
 } from '@xterm/xterm/src/browser/renderer/shared/Types';
-import type { ITerminal } from '@xterm/xterm/src/browser/Types';
 import type { IDisposable, IEvent } from '@xterm/xterm';
+
+// Interface for xterm.js core terminal
+export interface ITerminalCore {
+  cols: number;
+  rows: number;
+  buffer?: {
+    active?: {
+      ydisp: number;
+      ybase: number;
+      y: number;
+      x: number;
+      lines: { get(index: number): IBufferLine | undefined; length: number };
+    };
+  };
+  options: { cursorBlink?: boolean; theme?: unknown };
+}
+
+interface IBufferLine {
+  length: number;
+  isWrapped: boolean;
+  getCell(x: number): ICharData | undefined;
+  translateToString(
+    trimRight?: boolean,
+    startColumn?: number,
+    endColumn?: number
+  ): string;
+}
 
 interface ICharData {
   getChars(): string;
@@ -24,27 +50,8 @@ interface ICharData {
   isInvisible(): number;
 }
 
-interface IBufferLine {
-  length: number;
-  isWrapped: boolean;
-  getCell(x: number): ICharData | undefined;
-  translateToString(
-    trimRight?: boolean,
-    startColumn?: number,
-    endColumn?: number
-  ): string;
-}
-
-interface IBuffer {
-  lines: { get(index: number): IBufferLine | undefined; length: number };
-  ydisp: number;
-  ybase: number;
-  y: number;
-  x: number;
-}
-
 export class XTermCustomRenderer implements IRenderer {
-  private readonly _terminal: ITerminal;
+  private readonly _terminal: ITerminalCore;
   private readonly _container: HTMLElement;
   private readonly _rowContainer: HTMLElement;
   private readonly _cursorElement: HTMLElement;
@@ -54,12 +61,11 @@ export class XTermCustomRenderer implements IRenderer {
   private _devicePixelRatio = 1;
   private _cursorX = 0;
   private _cursorY = 0;
-  private _cursorVisible = true;
   private _selectionStart: [number, number] | undefined;
   private _selectionEnd: [number, number] | undefined;
   private _columnSelectMode = false;
 
-  constructor(terminal: ITerminal, container: HTMLElement) {
+  constructor(terminal: ITerminalCore, container: HTMLElement) {
     this._terminal = terminal;
     this._container = container;
     this._eventEmitter = new EventEmitter();
@@ -215,11 +221,13 @@ export class XTermCustomRenderer implements IRenderer {
       return;
     }
 
-    const terminal = this._terminal as unknown as {
-      buffer?: { active?: IBuffer };
-    };
-    const buffer = terminal.buffer?.active;
+    const buffer = this._terminal.buffer?.active;
     if (!buffer) {
+      // If buffer is not available, render empty rows
+      this._ensureRowElements(this._terminal.rows);
+      for (let y = start; y <= end; y++) {
+        this._renderEmptyRow(y);
+      }
       return;
     }
 
@@ -233,89 +241,19 @@ export class XTermCustomRenderer implements IRenderer {
     this._updateSelection();
   }
 
-  private _calculateDimensions(): IRenderDimensions {
-    const containerRect = this._container.getBoundingClientRect();
-    const computedStyle = window.getComputedStyle(this._container);
-    const fontSize = parseFloat(computedStyle.fontSize) || 12;
-    const fontFamily = computedStyle.fontFamily || 'monospace';
-    const lineHeightValue = parseFloat(computedStyle.lineHeight);
-    const lineHeight = isNaN(lineHeightValue)
-      ? fontSize * 1.2
-      : lineHeightValue;
-
-    const testChar = document.createElement('span');
-    testChar.textContent = 'W';
-    testChar.style.cssText = `
-      position: absolute;
-      visibility: hidden;
-      font-family: ${fontFamily};
-      font-size: ${fontSize}px;
-      line-height: ${lineHeight}px;
-      white-space: pre;
-    `;
-    document.body.appendChild(testChar);
-    const charRect = testChar.getBoundingClientRect();
-    document.body.removeChild(testChar);
-
-    const cellWidth = charRect.width;
-    const cellHeight = lineHeight;
-
-    return {
-      css: {
-        canvas: { width: containerRect.width, height: containerRect.height },
-        cell: { width: cellWidth, height: cellHeight },
-      },
-      device: {
-        canvas: {
-          width: containerRect.width * this._devicePixelRatio,
-          height: containerRect.height * this._devicePixelRatio,
-        },
-        cell: {
-          width: cellWidth * this._devicePixelRatio,
-          height: cellHeight * this._devicePixelRatio,
-        },
-        char: {
-          width: cellWidth * this._devicePixelRatio,
-          height: cellHeight * this._devicePixelRatio,
-          top: 0,
-          left: 0,
-        },
-      },
-    };
+  private _renderEmptyRow(y: number): void {
+    const rowElement = this._rowContainer.children[y] as HTMLElement;
+    // rowElement is guaranteed to exist since we call _ensureRowElements before this
+    rowElement.innerHTML = '&nbsp;'.repeat(this._terminal.cols);
   }
 
-  private _setupStyles(): void {
-    const cellHeight = this._dimensions.css.cell.height;
-    this._rowContainer.style.lineHeight = `${cellHeight}px`;
-    this._cursorElement.style.width = `${this._dimensions.css.cell.width}px`;
-    this._cursorElement.style.height = `${cellHeight}px`;
-  }
-
-  private _ensureRowElements(rows: number): void {
-    const currentRows = this._rowContainer.children.length;
-
-    if (currentRows < rows) {
-      for (let i = currentRows; i < rows; i++) {
-        const rowElement = document.createElement('div');
-        rowElement.className = 'xterm-custom-row';
-        rowElement.style.cssText = `
-          position: relative;
-          height: ${this._dimensions.css.cell.height}px;
-          white-space: pre;
-        `;
-        this._rowContainer.appendChild(rowElement);
-      }
-    } else if (currentRows > rows) {
-      for (let i = currentRows - 1; i >= rows; i--) {
-        const child = this._rowContainer.children[i];
-        if (child) {
-          child.remove();
-        }
-      }
+  private _renderRow(
+    y: number,
+    buffer: {
+      ydisp: number;
+      lines: { get(index: number): IBufferLine | undefined };
     }
-  }
-
-  private _renderRow(y: number, buffer: IBuffer): void {
+  ): void {
     const rowElement = this._rowContainer.children[y] as HTMLElement;
     // rowElement is guaranteed to exist since we call _ensureRowElements before this
 
@@ -414,6 +352,111 @@ export class XTermCustomRenderer implements IRenderer {
     rowElement.innerHTML = html;
   }
 
+  private _calculateDimensions(): IRenderDimensions {
+    const containerRect = this._container.getBoundingClientRect();
+    const computedStyle = window.getComputedStyle(this._container);
+    const fontSize = parseFloat(computedStyle.fontSize) || 12;
+    const fontFamily = computedStyle.fontFamily || 'monospace';
+    const lineHeightValue = parseFloat(computedStyle.lineHeight);
+    const lineHeight = isNaN(lineHeightValue)
+      ? fontSize * 1.2
+      : lineHeightValue;
+
+    const testChar = document.createElement('span');
+    testChar.textContent = 'W';
+    testChar.style.cssText = `
+      position: absolute;
+      visibility: hidden;
+      font-family: ${fontFamily};
+      font-size: ${fontSize}px;
+      line-height: ${lineHeight}px;
+      white-space: pre;
+    `;
+    document.body.appendChild(testChar);
+    const charRect = testChar.getBoundingClientRect();
+    document.body.removeChild(testChar);
+
+    const cellWidth = charRect.width;
+    const cellHeight = lineHeight;
+
+    return {
+      css: {
+        canvas: { width: containerRect.width, height: containerRect.height },
+        cell: { width: cellWidth, height: cellHeight },
+      },
+      device: {
+        canvas: {
+          width: containerRect.width * this._devicePixelRatio,
+          height: containerRect.height * this._devicePixelRatio,
+        },
+        cell: {
+          width: cellWidth * this._devicePixelRatio,
+          height: cellHeight * this._devicePixelRatio,
+        },
+        char: {
+          width: cellWidth * this._devicePixelRatio,
+          height: cellHeight * this._devicePixelRatio,
+          top: 0,
+          left: 0,
+        },
+      },
+    };
+  }
+
+  private _setupStyles(): void {
+    const cellHeight = this._dimensions.css.cell.height;
+    this._rowContainer.style.lineHeight = `${cellHeight}px`;
+    this._cursorElement.style.width = `${this._dimensions.css.cell.width}px`;
+    this._cursorElement.style.height = `${cellHeight}px`;
+  }
+
+  private _ensureRowElements(rows: number): void {
+    const currentRows = this._rowContainer.children.length;
+
+    if (currentRows < rows) {
+      for (let i = currentRows; i < rows; i++) {
+        const rowElement = document.createElement('div');
+        rowElement.className = 'xterm-custom-row';
+        rowElement.style.cssText = `
+          position: relative;
+          height: ${this._dimensions.css.cell.height}px;
+          white-space: pre;
+        `;
+        this._rowContainer.appendChild(rowElement);
+      }
+    } else if (currentRows > rows) {
+      for (let i = currentRows - 1; i >= rows; i--) {
+        const child = this._rowContainer.children[i];
+        if (child) {
+          child.remove();
+        }
+      }
+    }
+  }
+
+  private _updateCursor(): void {
+    const buffer = this._terminal.buffer?.active;
+    if (
+      !buffer ||
+      typeof buffer.x !== 'number' ||
+      typeof buffer.y !== 'number'
+    ) {
+      // If buffer is not available, position cursor at 0,0
+      this._cursorX = 0;
+      this._cursorY = 0;
+    } else {
+      this._cursorX = buffer.x;
+      this._cursorY = buffer.y;
+    }
+
+    const x = this._cursorX * this._dimensions.css.cell.width;
+    const y = this._cursorY * this._dimensions.css.cell.height;
+
+    this._cursorElement.style.left = `${x}px`;
+    this._cursorElement.style.top = `${y}px`;
+    this._cursorElement.style.display = 'block';
+  }
+
   private _getColor(color: number): string {
     if (color === -1) {
       return '';
@@ -464,28 +507,6 @@ export class XTermCustomRenderer implements IRenderer {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-  }
-
-  private _updateCursor(): void {
-    const terminal = this._terminal as unknown as {
-      buffer?: { active?: IBuffer };
-      options?: { cursorBlink?: boolean };
-    };
-    const buffer = terminal.buffer?.active;
-    if (!buffer) {
-      return;
-    }
-
-    this._cursorX = buffer.x;
-    this._cursorY = buffer.y;
-    this._cursorVisible = terminal.options?.cursorBlink !== false;
-
-    const x = this._cursorX * this._dimensions.css.cell.width;
-    const y = this._cursorY * this._dimensions.css.cell.height;
-
-    this._cursorElement.style.left = `${x}px`;
-    this._cursorElement.style.top = `${y}px`;
-    this._cursorElement.style.display = this._cursorVisible ? 'block' : 'none';
   }
 
   private _updateSelection(): void {

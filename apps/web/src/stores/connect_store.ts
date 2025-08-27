@@ -2,6 +2,7 @@ import { useCallback, useSyncExternalStore } from 'react';
 import EventEmitter from 'events';
 import { Terminal } from '@xterm/xterm';
 import { displayStateToAnsi, jsonParse } from '@ai-screen/shared';
+import { CustomRendererAddon } from '../components/xterm_custom_renderer_addon';
 
 import { createWebSocket } from '../tools/api';
 import { log, errorLog } from '../tools/log';
@@ -24,7 +25,12 @@ export interface Size {
 
 const g_mountedMap = new Map<
   string,
-  { element: HTMLDivElement | null; terminal: Terminal; webSocket: WebSocket }
+  {
+    element: HTMLDivElement | null;
+    terminal: Terminal;
+    webSocket: WebSocket;
+    customRendererAddon: CustomRendererAddon;
+  }
 >();
 const g_elementMap = new Map<string, HTMLDivElement>();
 const g_sizeMap = new Map<string, Size>();
@@ -63,10 +69,28 @@ export function connect(params: ConnectParams) {
 
   const mounted = g_mountedMap.get(sessionName);
   if (mounted) {
-    const { terminal, element: old_element, webSocket } = mounted;
+    const {
+      terminal,
+      element: old_element,
+      webSocket,
+      customRendererAddon,
+    } = mounted;
     old_element?.remove();
+
+    // Dispose old addon and create new one
+    customRendererAddon.dispose();
+    const newCustomRendererAddon = new CustomRendererAddon();
+    terminal.loadAddon(newCustomRendererAddon);
+
+    // Open terminal in new element
     terminal.open(element);
-    g_mountedMap.set(sessionName, { terminal, element, webSocket });
+
+    g_mountedMap.set(sessionName, {
+      terminal,
+      element,
+      webSocket,
+      customRendererAddon: newCustomRendererAddon,
+    });
     _emit('update');
   } else if (g_elementMap.has(sessionName)) {
     g_elementMap.set(sessionName, element);
@@ -82,9 +106,11 @@ interface DisconnectParams {
 }
 export function disconnect(params: DisconnectParams) {
   const { sessionName } = params.session;
-  const webSocket = g_mountedMap.get(sessionName)?.webSocket;
-  if (webSocket) {
+  const mounted = g_mountedMap.get(sessionName);
+  if (mounted) {
+    const { webSocket, customRendererAddon } = mounted;
     _send(webSocket, { type: 'detach' as const });
+    customRendererAddon.dispose();
   }
 }
 interface ResizeParams {
@@ -126,11 +152,20 @@ async function _create(params: ConnectParams) {
           };
           terminal = new Terminal(opts);
           const element = g_elementMap.get(sessionName) ?? null;
+          let customRendererAddon: CustomRendererAddon;
+
           if (element) {
+            // Create and load the custom renderer addon
+            customRendererAddon = new CustomRendererAddon();
+            terminal.loadAddon(customRendererAddon);
+
+            // Open terminal normally - the addon will replace the renderer
             terminal.open(element);
           } else {
             errorLog('connect_store._create: no element!');
+            return;
           }
+
           data_dispose = terminal.onData(_onData);
           if (obj.normal) {
             terminal.write(obj.normal.buffer.join('\r\n'));
@@ -143,7 +178,12 @@ async function _create(params: ConnectParams) {
               displayStateToAnsi({ cursor: obj.alternate.cursor })
             );
           }
-          g_mountedMap.set(sessionName, { element, terminal, webSocket: ws });
+          g_mountedMap.set(sessionName, {
+            element,
+            terminal,
+            webSocket: ws,
+            customRendererAddon,
+          });
           _emit('update');
           log('connect_store._create: success:', obj.rows, obj.columns);
         } else if (obj?.type === 'data') {
@@ -186,6 +226,10 @@ async function _create(params: ConnectParams) {
     errorLog('connect_store._create error:', e);
   } finally {
     g_elementMap.delete(sessionName);
+    const mounted = g_mountedMap.get(sessionName);
+    if (mounted?.customRendererAddon) {
+      mounted.customRendererAddon.dispose();
+    }
     g_mountedMap.delete(sessionName);
   }
 }
