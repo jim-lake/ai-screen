@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "ts-check": "tsc -p tsconfig.app.json --noEmit",
-    "lint": "eslint . --fix",
+    "lint": "eslint src --fix",
     "preview": "vite preview",
     "test": "vitest run"
   },
