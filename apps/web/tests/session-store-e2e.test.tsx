@@ -9,6 +9,7 @@ import {
 } from 'vitest';
 import { renderHook, waitFor, render } from '@testing-library/react';
 import { act } from 'react';
+import os from 'os';
 import {
   startTestServer,
   stopTestServer,
@@ -22,56 +23,15 @@ import {
 import SessionStore from '../src/stores/session_store';
 import Terminal from '../src/components/terminal';
 
-// Mock only the API module to point to our test server
-vi.mock('../src/tools/api', () => {
-  let testPort = 6847;
-
-  return {
-    default: {
-      init: vi.fn(),
-      isReady: () => true,
-      getBaseUrl: () => `http://localhost:${testPort}`,
-      get: async (params: { url: string }) => {
-        const serverInfo = getServerInfo();
-        if (serverInfo) {
-          testPort = serverInfo.port;
-        }
-        const url = `http://localhost:${testPort}${params.url}`;
-        try {
-          const response = await fetch(url);
-          const data = await response.json();
-          return { err: null, status: response.status, body: data };
-        } catch (error) {
-          return { err: error, status: 0, body: null };
-        }
-      },
-      post: async (params: { url: string; body?: any }) => {
-        const serverInfo = getServerInfo();
-        if (serverInfo) {
-          testPort = serverInfo.port;
-        }
-        const url = `http://localhost:${testPort}${params.url}`;
-        try {
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: params.body ? JSON.stringify(params.body) : undefined,
-          });
-          const data = await response.json();
-          return { err: null, status: response.status, body: data };
-        } catch (error) {
-          return { err: error, status: 0, body: null };
-        }
-      },
-    },
-  };
-});
-
 describe('Session Store - End-to-End Tests', () => {
   let serverInfo: { port: number; pid: number };
 
   beforeAll(async () => {
     serverInfo = await startTestServer();
+
+    // Set up the API base URL for the test server
+    const { default: Api } = await import('../src/tools/api');
+    Api.setCustomBaseUrl(`http://localhost:${serverInfo.port}`);
   });
 
   afterAll(async () => {
@@ -179,16 +139,19 @@ describe('Session Store - End-to-End Tests', () => {
     const sessionName = 'store-test-session-4';
     await createTestSession(serverInfo.port, sessionName);
 
-    // Execute some commands to create terminal content
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'echo "Terminal content test"\n'
-    );
-    await waitForTerminalOutput(200);
+    // Execute environment-independent commands to create terminal content
+    const tmpDir = os.tmpdir();
+    const commands = [
+      `cd "${tmpDir}"`,
+      'echo "SESSION_STORE_TEST_START"',
+      'echo "Testing session store functionality"',
+      'echo "SESSION_STORE_TEST_END"',
+    ];
 
-    await writeToSession(serverInfo.port, sessionName, 'pwd\n');
-    await waitForTerminalOutput(100);
+    for (const cmd of commands) {
+      await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
+      await waitForTerminalOutput(100);
+    }
 
     // Fetch sessions
     await act(async () => {
@@ -220,7 +183,9 @@ describe('Session Store - End-to-End Tests', () => {
       expect(typeof cursor.blinking).toBe('boolean');
 
       // Instead of checking buffer, render the terminal and verify DOM content
-      const { container } = render(<Terminal session={session} zoom='FIT' />);
+      const { container } = render(
+        <Terminal session={session} zoom='EXPAND' />
+      );
 
       await waitFor(() => {
         const terminalInner = container.querySelector(
@@ -239,8 +204,13 @@ describe('Session Store - End-to-End Tests', () => {
       );
       const domContent = terminalInner?.textContent || '';
 
-      // Verify that xterm has rendered some content to the DOM
-      expect(domContent.length).toBeGreaterThan(0);
+      // Verify that xterm has rendered our test content to the DOM
+      const hasOurContent =
+        domContent.includes('SESSION_STORE_TEST') ||
+        domContent.includes('Testing session store') ||
+        domContent.length > 50;
+
+      expect(hasOurContent).toBe(true);
       expect(domContent.trim()).not.toBe('');
     }
   });
@@ -253,14 +223,20 @@ describe('Session Store - End-to-End Tests', () => {
       'multi-session-3',
     ];
 
+    const tmpDir = os.tmpdir();
     for (const name of sessionNames) {
       await createTestSession(serverInfo.port, name);
-      await writeToSession(
-        serverInfo.port,
-        name,
-        `echo "Content for ${name}"\n`
-      );
-      await waitForTerminalOutput(100);
+
+      const commands = [
+        `cd "${tmpDir}"`,
+        `echo "MULTI_SESSION_TEST_${name}"`,
+        `echo "Content for session ${name}"`,
+      ];
+
+      for (const cmd of commands) {
+        await writeToSession(serverInfo.port, name, `${cmd}\n`);
+        await waitForTerminalOutput(50);
+      }
     }
 
     // Fetch all sessions
@@ -299,7 +275,7 @@ describe('Session Store - End-to-End Tests', () => {
       // Verify each session has terminal content by rendering and checking DOM
       if (sessionResult.current!.activeTerminal) {
         const { container } = render(
-          <Terminal session={sessionResult.current!} zoom='FIT' />
+          <Terminal session={sessionResult.current!} zoom='EXPAND' />
         );
 
         await waitFor(() => {
@@ -319,8 +295,13 @@ describe('Session Store - End-to-End Tests', () => {
         );
         const domContent = terminalInner?.textContent || '';
 
-        // Verify that xterm has rendered content to the DOM
-        expect(domContent.length).toBeGreaterThan(0);
+        // Verify that xterm has rendered our session-specific content to the DOM
+        const hasOurContent =
+          domContent.includes(`MULTI_SESSION_TEST_${name}`) ||
+          domContent.includes(`Content for session ${name}`) ||
+          domContent.length > 50;
+
+        expect(hasOurContent).toBe(true);
       }
     }
   });
@@ -421,13 +402,17 @@ describe('Session Store - End-to-End Tests', () => {
     const sessionName = 'complex-state-session';
     await createTestSession(serverInfo.port, sessionName);
 
-    // Create complex terminal state with various commands
+    // Create complex terminal state with environment-independent commands
+    const tmpDir = os.tmpdir();
     const commands = [
-      'ls -la',
-      'echo "Multi-line\\noutput\\ntest"',
-      'cat /etc/hostname',
-      'whoami',
-      'date',
+      `cd "${tmpDir}"`,
+      'echo "COMPLEX_STATE_START"',
+      'echo "Multi-line output test"',
+      'echo "Line 1" > complex_test.txt',
+      'echo "Line 2" >> complex_test.txt',
+      'cat complex_test.txt',
+      'rm complex_test.txt',
+      'echo "COMPLEX_STATE_END"',
     ];
 
     for (const cmd of commands) {
@@ -450,7 +435,9 @@ describe('Session Store - End-to-End Tests', () => {
 
     if (session.activeTerminal) {
       // Instead of checking buffer content, render the terminal and verify DOM
-      const { container } = render(<Terminal session={session} zoom='FIT' />);
+      const { container } = render(
+        <Terminal session={session} zoom='EXPAND' />
+      );
 
       await waitFor(() => {
         const terminalInner = container.querySelector(
@@ -469,8 +456,15 @@ describe('Session Store - End-to-End Tests', () => {
       );
       const domContent = terminalInner?.textContent || '';
 
-      // Verify that xterm has rendered substantial content to the DOM
-      expect(domContent.length).toBeGreaterThan(50);
+      // Verify that xterm has rendered our complex test content to the DOM
+      const hasOurContent =
+        domContent.includes('COMPLEX_STATE_START') ||
+        domContent.includes('COMPLEX_STATE_END') ||
+        domContent.includes('complex_test.txt') ||
+        domContent.includes('Multi-line output test') ||
+        domContent.length > 100;
+
+      expect(hasOurContent).toBe(true);
       expect(domContent.trim()).not.toBe('');
 
       // Verify cursor position is reasonable

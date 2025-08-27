@@ -58,3 +58,9 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Replace JSDOM's WebSocket with real WebSocket from ws library
 global.WebSocket = WebSocket as any;
+
+// Also make it available on window for browser-like code
+Object.defineProperty(window, 'WebSocket', {
+  writable: true,
+  value: WebSocket,
+});
