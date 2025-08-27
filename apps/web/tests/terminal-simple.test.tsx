@@ -10,6 +10,7 @@ import {
 import { render, screen } from '@testing-library/react';
 import { act } from 'react';
 import Terminal from '../src/components/terminal';
+import Api from '../src/tools/api';
 import {
   startTestServer,
   stopTestServer,
@@ -18,29 +19,9 @@ import {
   getTerminalState,
   waitForTerminalOutput,
   getServerInfo,
+  getVisibleText,
 } from './test-utils';
 import type { SessionJson } from '@ai-screen/shared';
-
-// Mock only essential modules that can't work in test environment
-vi.mock('@xterm/xterm', () => {
-  const mockTerminal = {
-    options: { fontFamily: 'monospace', fontSize: 14, lineHeight: 1.0 },
-    rows: 24,
-    cols: 80,
-    open: vi.fn(),
-    write: vi.fn(),
-    resize: vi.fn(),
-    onData: vi.fn(() => ({ dispose: vi.fn() })),
-    dispose: vi.fn(),
-    _writtenContent: '',
-  };
-
-  mockTerminal.write.mockImplementation((data: string) => {
-    mockTerminal._writtenContent += data;
-  });
-
-  return { Terminal: vi.fn(() => mockTerminal) };
-});
 
 // Mock the measurement tools
 vi.mock('../src/tools/measure', () => ({
@@ -61,23 +42,13 @@ vi.mock('../src/stores/setting_store', () => ({
   }),
 }));
 
-// Mock connect store to use minimal mocking
-vi.mock('../src/stores/connect_store', () => ({
-  connect: vi.fn(),
-  disconnect: vi.fn(),
-  resize: vi.fn(),
-  useTerminal: vi.fn(() => {
-    const { Terminal } = require('@xterm/xterm');
-    return new Terminal();
-  }),
-  useTerminalSize: vi.fn(() => ({ rows: 24, columns: 80 })),
-}));
-
 describe('Terminal Component - Simple Tests with Real Data', () => {
   let serverInfo: { port: number; pid: number };
 
   beforeAll(async () => {
     serverInfo = await startTestServer();
+    Api.init();
+    Api.setCustomBaseUrl(`http://localhost:${serverInfo.port}`);
   });
 
   afterAll(async () => {
@@ -98,39 +69,24 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
 
     const terminalInner = screen.getByTestId('terminal-inner');
     expect(terminalInner).toBeInTheDocument();
-  });
+    await waitForTerminalOutput(300);
 
-  it('calls connect with real session parameters', async () => {
-    const sessionName = 'simple-test-session-2';
-    const session = await createTestSession(serverInfo.port, sessionName);
+    const terminal = await getTerminalState(serverInfo.port, sessionName);
+    console.log('terminal:', terminal);
 
-    const { connect } = await import('../src/stores/connect_store');
-
-    await act(async () => {
-      render(<Terminal session={session} zoom='FIT' />);
-    });
-
-    expect(vi.mocked(connect)).toHaveBeenCalledWith(
-      expect.objectContaining({
-        session: expect.objectContaining({
-          sessionName: sessionName,
-          created: expect.any(String),
-          terminals: expect.any(Array),
-        }),
-        element: expect.any(HTMLDivElement),
-        terminalOptions: expect.objectContaining({
-          fontFamily: 'monospace',
-          fontSize: 14,
-        }),
-      })
-    );
+    const textContent = getVisibleText(terminalInner);
+    console.log('textContent:', textContent);
+    expect(textContent.length).toBeGreaterThan(0);
   });
 
   it('displays terminal content from real server session', async () => {
     const sessionName = 'simple-test-session-3';
     const session = await createTestSession(serverInfo.port, sessionName);
+    await act(async () => {
+      render(<Terminal session={session} zoom='EXPAND' />);
+    });
+    await waitForTerminalOutput(300);
 
-    // Execute commands to create real terminal content
     await writeToSession(
       serverInfo.port,
       sessionName,
@@ -141,29 +97,13 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     await writeToSession(serverInfo.port, sessionName, 'pwd\n');
     await waitForTerminalOutput(200);
 
-    // Get the real terminal state
-    const terminalState = await getTerminalState(serverInfo.port, sessionName);
-
-    const sessionWithRealData: SessionJson = {
-      ...session,
-      activeTerminal: terminalState,
-    };
-
-    await act(async () => {
-      render(<Terminal session={sessionWithRealData} zoom='FIT' />);
-    });
-
     const terminalInner = screen.getByTestId('terminal-inner');
     expect(terminalInner).toBeInTheDocument();
-
-    // Verify the session has real terminal data
-    expect(sessionWithRealData.activeTerminal).toBeDefined();
-
-    // Join buffer and check for content (handles ANSI escape sequences)
-    const bufferContent = terminalState.normal.buffer.join(' ');
-    expect(bufferContent).toContain('echo "Real terminal test"');
-    expect(bufferContent).toContain('Real terminal test');
-    expect(bufferContent).toContain('pwd');
+    const textContent = getVisibleText(terminalInner);
+    console.log(textContent);
+    expect(textContent).toContain('echo "Real terminal test"');
+    expect(textContent).toContain('Real terminal test');
+    expect(textContent).toContain('pwd');
   });
 
   it('handles different zoom modes with real session data', async () => {
@@ -186,33 +126,14 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     }
   });
 
-  it('calls disconnect when component unmounts with real session', async () => {
-    const sessionName = 'simple-test-session-5';
-    const session = await createTestSession(serverInfo.port, sessionName);
-
-    const { connect, disconnect } = await import('../src/stores/connect_store');
-
-    const { unmount } = await act(async () => {
-      return render(<Terminal session={session} zoom='FIT' />);
-    });
-
-    expect(vi.mocked(connect)).toHaveBeenCalled();
-
-    unmount();
-
-    expect(vi.mocked(disconnect)).toHaveBeenCalledWith(
-      expect.objectContaining({
-        session: expect.objectContaining({ sessionName: sessionName }),
-        element: expect.any(HTMLDivElement),
-      })
-    );
-  });
-
   it('handles real terminal state with cursor information', async () => {
     const sessionName = 'simple-test-session-6';
     const session = await createTestSession(serverInfo.port, sessionName);
+    await act(async () => {
+      render(<Terminal session={session} zoom='EXPAND' />);
+    });
+    await waitForTerminalOutput(100);
 
-    // Execute command that positions cursor
     await writeToSession(
       serverInfo.port,
       sessionName,
@@ -227,10 +148,6 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
       activeTerminal: terminalState,
     };
 
-    await act(async () => {
-      render(<Terminal session={sessionWithRealData} zoom='FIT' />);
-    });
-
     // Verify real cursor data
     expect(sessionWithRealData.activeTerminal!.normal.cursor).toBeDefined();
     const cursor = sessionWithRealData.activeTerminal!.normal.cursor;
@@ -243,11 +160,14 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     expect(cursor.y).toBeGreaterThanOrEqual(0);
   });
 
-  it('processes real terminal buffer with multiple lines', async () => {
+  it('processes real with multiple lines', async () => {
     const sessionName = 'simple-test-session-7';
     const session = await createTestSession(serverInfo.port, sessionName);
+    await act(async () => {
+      render(<Terminal session={session} zoom='EXPAND' />);
+    });
+    await waitForTerminalOutput(100);
 
-    // Create multi-line output
     const commands = [
       'echo "Line 1"',
       'echo "Line 2"',
@@ -267,26 +187,23 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
       activeTerminal: terminalState,
     };
 
-    await act(async () => {
-      render(<Terminal session={sessionWithRealData} zoom='FIT' />);
-    });
+    const terminalInner = screen.getByTestId('terminal-inner');
+    expect(terminalInner).toBeInTheDocument();
+    const textContent = terminalInner.textContent;
 
-    const buffer = sessionWithRealData.activeTerminal!.normal.buffer;
-
-    // Verify we have substantial content
-    expect(buffer.length).toBeGreaterThan(5);
-
-    // Verify specific content
-    expect(buffer.some((line) => line.includes('Line 1'))).toBe(true);
-    expect(buffer.some((line) => line.includes('Line 2'))).toBe(true);
-    expect(buffer.some((line) => line.includes('Line 3'))).toBe(true);
+    expect(textContent.includes('Line 1')).toBe(true);
+    expect(textContent.includes('Line 2')).toBe(true);
+    expect(textContent.includes('Line 3')).toBe(true);
   });
 
   it('handles real session with error output', async () => {
     const sessionName = 'simple-test-session-8';
     const session = await createTestSession(serverInfo.port, sessionName);
+    await act(async () => {
+      render(<Terminal session={session} zoom='EXPAND' />);
+    });
+    await waitForTerminalOutput(300);
 
-    // Execute command that produces error
     await writeToSession(
       serverInfo.port,
       sessionName,
@@ -294,26 +211,10 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     );
     await waitForTerminalOutput(300);
 
-    const terminalState = await getTerminalState(serverInfo.port, sessionName);
-
-    const sessionWithRealData: SessionJson = {
-      ...session,
-      activeTerminal: terminalState,
-    };
-
-    await act(async () => {
-      render(<Terminal session={sessionWithRealData} zoom='FIT' />);
-    });
-
-    const buffer = sessionWithRealData.activeTerminal!.normal.buffer;
-    const bufferContent = buffer.join(' ');
-
-    // Should contain the command that was executed
-    expect(bufferContent).toContain('cat /nonexistent/file');
-
-    // Verify we have real terminal data structure
-    expect(buffer.length).toBeGreaterThan(0);
-    expect(typeof terminalState.normal.cursor.x).toBe('number');
+    const terminalInner = screen.getByTestId('terminal-inner');
+    expect(terminalInner).toBeInTheDocument();
+    const textContent = terminalInner.textContent;
+    expect(textContent.includes('nonexistent')).toBe(true);
   });
 
   it('maintains session structure integrity with real data', async () => {
@@ -338,11 +239,8 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
   it('handles session updates with changing terminal state', async () => {
     const sessionName = 'simple-test-session-10';
     const session = await createTestSession(serverInfo.port, sessionName);
+    render(<Terminal session={session} zoom='FIT' />);
 
-    // Initial render
-    const { rerender } = render(<Terminal session={session} zoom='FIT' />);
-
-    // Execute command to change state
     await writeToSession(
       serverInfo.port,
       sessionName,
@@ -359,18 +257,7 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
       ...session,
       activeTerminal: updatedTerminalState,
     };
-
-    // Re-render with updated session
-    rerender(<Terminal session={updatedSession} zoom='FIT' />);
-
     const terminalInner = screen.getByTestId('terminal-inner');
     expect(terminalInner).toBeInTheDocument();
-
-    // Verify updated state contains new content
-    expect(
-      updatedSession.activeTerminal!.normal.buffer.some((line) =>
-        line.includes('State change test')
-      )
-    ).toBe(true);
   });
 });

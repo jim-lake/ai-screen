@@ -219,7 +219,7 @@ export async function createTestSession(
   sessionName: string
 ): Promise<SessionJson> {
   const sessionData = {
-    shell: '/bin/bash',
+    shell: 'bash',
     cwd: process.cwd(),
     rows: 24,
     columns: 80,
@@ -299,4 +299,31 @@ export async function waitForTerminalOutput(delay_ms = 100): Promise<void> {
 
 export function getServerInfo(): ServerInfo | null {
   return g_serverInfo;
+}
+
+export function getVisibleText(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent ?? '';
+    if (!text.trim()) {
+      return '';
+    }
+    if (/^W{10,}$/.test(text)) {
+      return '';
+    }
+    return text + '\n';
+  }
+
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    const el = node as HTMLElement;
+    if (el.tagName === 'STYLE' || el.tagName === 'SCRIPT') {
+      return '';
+    }
+    let text = '';
+    node.childNodes.forEach((child) => {
+      text += getVisibleText(child);
+    });
+    return text;
+  }
+
+  return '';
 }

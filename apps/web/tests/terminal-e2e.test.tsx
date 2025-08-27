@@ -20,6 +20,7 @@ import {
   getServerInfo,
 } from './test-utils';
 import type { SessionJson } from '@ai-screen/shared';
+import Api from '../src/tools/api';
 
 // Mock Storage to inject test server URL
 vi.mock('../src/tools/storage', () => ({
@@ -53,9 +54,9 @@ describe('Terminal Component - End-to-End Tests', () => {
   beforeAll(async () => {
     serverInfo = await startTestServer();
 
-    // Initialize API with test server
-    const api = await import('../src/tools/api');
-    await api.default.init();
+    serverInfo = await startTestServer();
+    Api.init();
+    Api.setCustomBaseUrl(`http://localhost:${serverInfo.port}`);
   });
 
   afterAll(async () => {
@@ -83,6 +84,17 @@ describe('Terminal Component - End-to-End Tests', () => {
     const sessionName = 'e2e-test-session-2';
     const session = await createTestSession(serverInfo.port, sessionName);
 
+    await act(async () => {
+      render(<Terminal session={session} zoom='EXPAND' />);
+    });
+    await waitForTerminalOutput(200);
+
+    await waitFor(() => {
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
+    });
+    await waitForTerminalOutput(200);
+
     // Execute a simple command
     await writeToSession(
       serverInfo.port,
@@ -91,29 +103,9 @@ describe('Terminal Component - End-to-End Tests', () => {
     );
     await waitForTerminalOutput(200);
 
-    // Get the updated terminal state
-    const terminalState = await getTerminalState(serverInfo.port, sessionName);
-
-    // Update session with real terminal state
-    const updatedSession: SessionJson = {
-      ...session,
-      activeTerminal: terminalState,
-    };
-
-    await act(async () => {
-      render(<Terminal session={updatedSession} zoom='EXPAND' />);
-    });
-
-    // Wait for the component to render and process the terminal data
-    await waitFor(() => {
-      const terminalInner = screen.getByTestId('terminal-inner');
-      expect(terminalInner).toBeInTheDocument();
-    });
-
-    // Verify that the terminal buffer contains our command and output
-    const bufferContent = terminalState.normal.buffer.join(' ');
-    expect(bufferContent).toContain('echo "Hello E2E Test"');
-    expect(bufferContent).toContain('Hello E2E Test');
+    const textContent = screen.getByTestId('terminal-inner').textContent;
+    console.log('textContent:', textContent);
+    expect(textContent).toContain('Hello E2E Test');
   });
 
   it('handles multiple commands and complex output', async () => {

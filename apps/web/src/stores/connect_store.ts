@@ -158,7 +158,7 @@ async function _create(params: ConnectParams) {
           _emit('resize');
           terminal?.resize(obj.columns, obj.rows);
         } else if (obj?.type === 'disconnect') {
-          log('connect_store._create: disconnect:', obj);
+          log('connect_store._create: disconnect');
           ws.close();
         } else {
           errorLog('connect_store._create: bad message:', data);

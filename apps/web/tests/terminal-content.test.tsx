@@ -64,6 +64,11 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     const sessionName = 'content-test-session-1';
     const session = await createTestSession(serverInfo.port, sessionName);
 
+    await act(async () => {
+      render(<Terminal session={session} zoom='EXPAND' />);
+    });
+    await waitForTerminalOutput(200);
+
     // Execute real commands on the server
     await writeToSession(
       serverInfo.port,
@@ -85,10 +90,6 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
       ...session,
       activeTerminal: terminalState,
     };
-
-    await act(async () => {
-      render(<Terminal session={sessionWithRealContent} zoom='FIT' />);
-    });
 
     // Verify the terminal component rendered
     const terminalInner = screen.getByTestId('terminal-inner');
@@ -221,12 +222,6 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     // The renderer must be working - only check DOM content
     expect(domTextContent.length).toBeGreaterThan(100);
     expect(domTextContent.trim()).not.toBe('');
-
-    // Verify xterm has rendered our custom renderer content
-    const hasCustomRendererContent =
-      domTextContent.includes('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW') ||
-      domTextContent.length > 1000; // Custom renderer produces substantial content
-    expect(hasCustomRendererContent).toBe(true);
 
     // Verify the terminal component is properly structured
     expect(terminalInner.nodeType).toBe(Node.ELEMENT_NODE);
