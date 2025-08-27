@@ -107,14 +107,18 @@ export async function stopTestServer(): Promise<void> {
   const { process: serverProcess, port, pid } = g_serverInfo;
 
   try {
-    // Try graceful shutdown via HTTP
-    await fetch(`http://localhost:${port}/quit`);
+    // Try graceful shutdown via HTTP with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+    await fetch(`http://localhost:${port}/quit`, { signal: controller.signal });
+    clearTimeout(timeoutId);
   } catch {
     // Server might already be down or not responding
   }
 
   if (serverProcess && pid) {
-    const max_wait_time = 5000;
+    const max_wait_time = 3000; // Reduced wait time
     const check_interval = 50;
     const max_attempts = max_wait_time / check_interval;
 
@@ -128,9 +132,10 @@ export async function stopTestServer(): Promise<void> {
 
     try {
       serverProcess.kill('SIGTERM');
-      await setTimeoutPromise(100);
+      await setTimeoutPromise(200);
       if (_isProcessRunning(pid)) {
         serverProcess.kill('SIGKILL');
+        await setTimeoutPromise(100);
       }
       g_serverInfo = null;
     } catch {
@@ -164,9 +169,15 @@ export async function makeRequest(
   body?: Record<string, unknown>
 ): Promise<{ status: number; data: any }> {
   const url = `http://localhost:${port}${path}`;
+
+  // Add timeout to prevent hanging requests
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
   const options: RequestInit = {
     method: method.toUpperCase(),
     headers: { 'Content-Type': 'application/json' },
+    signal: controller.signal,
   };
 
   if (
@@ -178,22 +189,29 @@ export async function makeRequest(
     options.body = JSON.stringify(body);
   }
 
-  const response = await fetch(url, options);
-  let data: any;
+  try {
+    const response = await fetch(url, options);
+    clearTimeout(timeoutId);
 
-  const contentType = response.headers.get('content-type');
-  if (contentType?.includes('application/json')) {
-    try {
-      data = await response.json();
-    } catch {
-      data = { error: 'Failed to parse JSON' };
+    let data: any;
+
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
+        data = { error: 'Failed to parse JSON' };
+      }
+    } else {
+      const text = await response.text();
+      data = { text };
     }
-  } else {
-    const text = await response.text();
-    data = { text };
-  }
 
-  return { status: response.status, data };
+    return { status: response.status, data };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
 }
 
 export async function createTestSession(

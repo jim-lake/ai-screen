@@ -2,6 +2,15 @@ import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 import WebSocket from 'ws';
 
+// Mock ResizeObserver for xterm.js and component size utilities
+global.ResizeObserver = vi
+  .fn()
+  .mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }));
+
 // Mock canvas for xterm.js in JSDOM environment
 Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
   value: vi.fn(() => ({

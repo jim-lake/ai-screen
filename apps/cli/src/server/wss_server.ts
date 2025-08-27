@@ -90,7 +90,7 @@ function _onMessage(this: WebSocket, raw_data: Buffer) {
         g_socketMap.set(this, { session, client });
         client.on('disconnect', (event) => {
           _send(this, { type: 'disconnect' as const, ...event });
-          this.close(0, 'disconnect');
+          this.close(1000, 'disconnect');
         });
         client.on('write', (data) => {
           _send(this, { type: 'data' as const, data });
