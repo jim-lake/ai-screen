@@ -1,7 +1,10 @@
 import { spawn } from 'node:child_process';
 import { setTimeout as setTimeoutPromise } from 'node:timers/promises';
-import { resolve } from 'node:path';
+import { setTimeout as setTimeoutCallback } from 'node:timers';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import type { ChildProcess } from 'node:child_process';
+import type { SessionJson, TerminalJson } from '@ai-screen/shared';
 
 interface ServerInfo {
   port: number;
@@ -11,64 +14,63 @@ interface ServerInfo {
 
 let g_serverInfo: ServerInfo | null = null;
 
+function _isProcessRunning(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function startTestServer(): Promise<ServerInfo> {
   if (g_serverInfo) {
     return g_serverInfo;
   }
 
   return new Promise((resolve, reject) => {
-    // Path to the CLI server entry point
-    const cliPath = resolve(__dirname, '../../../cli/src/index.ts');
+    // Use the same pattern as CLI tests - spawn the test_server.ts helper
+    const current_file = fileURLToPath(import.meta.url);
+    const current_dir = dirname(current_file);
+    const test_server_path = join(current_dir, '../../cli/tests/helpers/test_server.ts');
 
-    // Start the CLI server in the background
-    const child = spawn('tsx', [cliPath, '--server', '--port', '0'], {
+    const child = spawn('tsx', [test_server_path], {
       stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
       env: { ...process.env, NODE_ENV: 'test' },
     });
 
     let server_output = '';
-    const startup_timeout = setTimeout(() => {
+    const startup_timeout = setTimeoutCallback(() => {
       child.kill('SIGTERM');
       reject(new Error(`Server startup timeout\nOutput: ${server_output}`));
-    }, 15000); // Increased timeout
+    }, 10000);
 
     child.stdout?.on('data', (data: Buffer) => {
-      const output = data.toString();
-      server_output += output;
-      console.log('Server stdout:', output);
-
-      // Look for server started message - adjust pattern based on actual CLI output
-      const portMatch = output.match(/port[:\s]+(\d+)/i);
-      const pidMatch = output.match(/pid[:\s]+(\d+)/i) || [
-        null,
-        process.pid.toString(),
-      ];
-
-      if (portMatch) {
-        clearTimeout(startup_timeout);
-        const port = parseInt(portMatch[1], 10);
-        const pid = parseInt(pidMatch[1], 10);
-        g_serverInfo = { port, pid, process: child };
-        resolve(g_serverInfo);
-      }
+      server_output += data.toString();
+      process.stdout.write(data);
     });
 
     child.stderr?.on('data', (data: Buffer) => {
-      const output = data.toString();
-      server_output += output;
-      console.log('Server stderr:', output);
+      server_output += data.toString();
+      process.stderr.write(data);
     });
 
-    child.on('message', (message: any) => {
-      console.log('Server message:', message);
+    child.on('message', (message: unknown) => {
       if (
-        message &&
         typeof message === 'object' &&
-        message.event === 'server-started'
+        message !== null &&
+        'event' in message
       ) {
-        clearTimeout(startup_timeout);
-        g_serverInfo = { port: message.port, pid: message.pid, process: child };
-        resolve(g_serverInfo);
+        const msg = message as { event: string; port?: number; pid?: number };
+        if (msg.event === 'server-started' && msg.port && msg.pid) {
+          clearTimeout(startup_timeout);
+          g_serverInfo = { port: msg.port, pid: msg.pid, process: child };
+          waitForServer(msg.port)
+            .then(() => {
+              resolve(g_serverInfo!);
+            })
+            .catch(reject);
+        }
       }
     });
 
@@ -99,32 +101,44 @@ export async function stopTestServer(): Promise<void> {
     return;
   }
 
-  const { process: serverProcess, port } = g_serverInfo;
+  const { process: serverProcess, port, pid } = g_serverInfo;
 
   try {
     // Try graceful shutdown via HTTP
     await fetch(`http://localhost:${port}/quit`);
   } catch {
-    // Server might already be down
+    // Server might already be down or not responding
   }
 
-  // Force kill if still running
-  try {
-    serverProcess.kill('SIGTERM');
-    await setTimeoutPromise(100);
-    if (!serverProcess.killed) {
-      serverProcess.kill('SIGKILL');
+  if (serverProcess && pid) {
+    const max_wait_time = 5000;
+    const check_interval = 50;
+    const max_attempts = max_wait_time / check_interval;
+
+    for (let i = 0; i < max_attempts; i++) {
+      if (!_isProcessRunning(pid)) {
+        g_serverInfo = null;
+        return;
+      }
+      await setTimeoutPromise(check_interval);
     }
-  } catch {
-    // Process might already be dead
-  }
 
-  g_serverInfo = null;
+    try {
+      serverProcess.kill('SIGTERM');
+      await setTimeoutPromise(100);
+      if (_isProcessRunning(pid)) {
+        serverProcess.kill('SIGKILL');
+      }
+      g_serverInfo = null;
+    } catch {
+      g_serverInfo = null;
+    }
+  }
 }
 
 export async function waitForServer(
   port: number,
-  maxAttempts = 50
+  maxAttempts = 30
 ): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
@@ -135,7 +149,7 @@ export async function waitForServer(
     } catch {
       // Server not ready yet
     }
-    await setTimeoutPromise(200);
+    await setTimeoutPromise(100);
   }
   throw new Error('Server failed to start within timeout');
 }
@@ -179,7 +193,7 @@ export async function makeRequest(
   return { status: response.status, data };
 }
 
-export async function createTestSession(port: number, sessionName: string) {
+export async function createTestSession(port: number, sessionName: string): Promise<SessionJson> {
   const sessionData = {
     shell: '/bin/bash',
     cwd: process.cwd(),
@@ -197,14 +211,38 @@ export async function createTestSession(port: number, sessionName: string) {
   if (result.status !== 200) {
     throw new Error(`Failed to create session: ${result.status}`);
   }
-  return result.data;
+  
+  // Create a terminal in the session since sessions don't auto-create terminals
+  const terminalResult = await makeRequest(
+    port,
+    'POST',
+    `/api/1/session/${sessionName}/terminal`,
+    {}
+  );
+  if (terminalResult.status !== 200) {
+    throw new Error(`Failed to create terminal: ${terminalResult.status}`);
+  }
+  
+  // Get the updated session data that includes the terminal
+  const sessionListResult = await makeRequest(port, 'GET', '/api/1/session');
+  if (sessionListResult.status !== 200) {
+    throw new Error(`Failed to get session list: ${sessionListResult.status}`);
+  }
+  
+  const sessions = sessionListResult.data.sessions as SessionJson[];
+  const updatedSession = sessions.find(s => s.sessionName === sessionName);
+  if (!updatedSession) {
+    throw new Error(`Session ${sessionName} not found in session list`);
+  }
+  
+  return updatedSession;
 }
 
 export async function writeToSession(
   port: number,
   sessionName: string,
   data: string
-) {
+): Promise<void> {
   const result = await makeRequest(
     port,
     'POST',
@@ -214,6 +252,25 @@ export async function writeToSession(
   if (result.status !== 200) {
     throw new Error(`Failed to write to session: ${result.status}`);
   }
+}
+
+export async function getTerminalState(
+  port: number,
+  sessionName: string
+): Promise<TerminalJson> {
+  const result = await makeRequest(
+    port,
+    'GET',
+    `/api/1/session/${sessionName}/terminal`
+  );
+  if (result.status !== 200) {
+    throw new Error(`Failed to get terminal state: ${result.status}`);
+  }
+  return result.data as TerminalJson;
+}
+
+export async function waitForTerminalOutput(delay_ms = 100): Promise<void> {
+  await setTimeoutPromise(delay_ms);
 }
 
 export function getServerInfo(): ServerInfo | null {

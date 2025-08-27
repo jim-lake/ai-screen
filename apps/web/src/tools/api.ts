@@ -281,7 +281,7 @@ export interface CreateWebSocketParams {
 export function createWebSocket(
   params: CreateWebSocketParams
 ): Promise<WebSocket> {
-  let url = g_baseUrl.replace('http', 'ws');
+  let url = getBaseUrl().replace('http', 'ws');
   if (params.path) {
     url += params.path;
   }
