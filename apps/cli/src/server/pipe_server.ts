@@ -73,6 +73,8 @@ function _onMessage(msg: Buffer, rinfo?: RInfo) {
     }
   } catch (e) {
     errorLog('pipe_server._onMessage: threw:', e);
+    const err = e instanceof Error ? e.message : 'unknown';
+    _send(path, { type: 'error', err });
   }
 }
 function _send(path: string | undefined, msg: PipeServerMessage) {

@@ -75,87 +75,93 @@ function _onMessage(this: WebSocket, raw_data: Buffer) {
   const path = g_socketPathMap.get(this);
   const type = obj?.type;
 
-  let result = 'unhandled';
-  if (!path) {
-    errorLog('wss_server._onMessage: no path for socket:', json);
-    result = 'no_path';
-  } else if (!type) {
-    errorLog('wss_server._onMessage: bad message:', json);
-    result = 'bad_message';
-  } else if (type === 'connect') {
-    const session = getSession(obj.name);
-    if (session) {
-      try {
-        const client = session.connectClient({ path, ...obj });
-        g_socketMap.set(this, { session, client });
-        client.on('disconnect', (event) => {
-          _send(this, { type: 'disconnect' as const, ...event });
-          this.close(1000, 'disconnect');
-        });
-        client.on('write', (data) => {
-          _send(this, { type: 'data' as const, data });
-        });
-        client.on('resize', (size) => {
-          _send(this, { type: 'resize' as const, ...size });
-        });
-        const { rows, columns } = session.terminalParams;
-        const state = session.activeTerminal?.getScreenState();
-        if (state) {
-          _send(this, { type: 'connect_success', rows, columns, ...state });
-        } else {
-          errorLog('wss_server._onMessage: connect no state:', session);
-          _send(this, { type: 'error', err: 'connect_failed' });
-        }
-        result = 'success';
-      } catch (e) {
-        if (e instanceof Error && e.message === 'conflict') {
-          _send(this, {
-            type: 'error' as const,
-            err: 'SESSION_ALREADY_CONNECTED',
+  try {
+    let result = 'unhandled';
+    if (!path) {
+      errorLog('wss_server._onMessage: no path for socket:', json);
+      result = 'no_path';
+    } else if (!type) {
+      errorLog('wss_server._onMessage: bad message:', json);
+      result = 'bad_message';
+    } else if (type === 'connect') {
+      const session = getSession(obj.name);
+      if (session) {
+        try {
+          const client = session.connectClient({ path, ...obj });
+          g_socketMap.set(this, { session, client });
+          client.on('disconnect', (event) => {
+            _send(this, { type: 'disconnect' as const, ...event });
+            this.close(1000, 'disconnect');
           });
-          result = 'already_connected';
-        } else {
-          _send(this, { type: 'error' as const, err: 'CONNECT_FAILED' });
-          result = 'connect_failed';
+          client.on('write', (data) => {
+            _send(this, { type: 'data' as const, data });
+          });
+          client.on('resize', (size) => {
+            _send(this, { type: 'resize' as const, ...size });
+          });
+          const { rows, columns } = session.terminalParams;
+          const state = session.activeTerminal?.getScreenState();
+          if (state) {
+            _send(this, { type: 'connect_success', rows, columns, ...state });
+          } else {
+            errorLog('wss_server._onMessage: connect no state:', session);
+            _send(this, { type: 'error', err: 'connect_failed' });
+          }
+          result = 'success';
+        } catch (e) {
+          if (e instanceof Error && e.message === 'conflict') {
+            _send(this, {
+              type: 'error' as const,
+              err: 'SESSION_ALREADY_CONNECTED',
+            });
+            result = 'already_connected';
+          } else {
+            _send(this, { type: 'error' as const, err: 'CONNECT_FAILED' });
+            result = 'connect_failed';
+          }
         }
+      } else {
+        result = 'session_not_found';
+        _send(this, { type: 'error' as const, err: 'session_not_found' });
+      }
+    } else if (type === 'write') {
+      const data = g_socketMap.get(this);
+      if (data) {
+        data.session.write(obj.data);
+        result = 'success';
+      } else {
+        _send(this, { type: 'error' as const, err: 'client_not_found' });
+        result = 'client_not_found';
+      }
+    } else if (type === 'resize') {
+      const data = g_socketMap.get(this);
+      if (data) {
+        data.session.resize(obj);
+        result = 'success';
+      } else {
+        _send(this, { type: 'error' as const, err: 'client_not_found' });
+        result = 'client_not_found';
+      }
+    } else if (type.startsWith('detach')) {
+      // hack for last case ;p
+      const data = g_socketMap.get(this);
+      if (data) {
+        data.session.detach(path);
+        result = 'success';
+      } else {
+        _send(this, { type: 'error' as const, err: 'client_not_found' });
+        result = 'client_not_found';
       }
     } else {
-      result = 'session_not_found';
-      _send(this, { type: 'error' as const, err: 'session_not_found' });
+      errorLog('wss_server._onMessage: unhandled', json);
+      result = 'unhandled';
     }
-  } else if (type === 'write') {
-    const data = g_socketMap.get(this);
-    if (data) {
-      data.session.write(obj.data);
-      result = 'success';
-    } else {
-      _send(this, { type: 'error' as const, err: 'client_not_found' });
-      result = 'client_not_found';
-    }
-  } else if (type === 'resize') {
-    const data = g_socketMap.get(this);
-    if (data) {
-      data.session.resize(obj);
-      result = 'success';
-    } else {
-      _send(this, { type: 'error' as const, err: 'client_not_found' });
-      result = 'client_not_found';
-    }
-  } else if (type.startsWith('detach')) {
-    // hack for last case ;p
-    const data = g_socketMap.get(this);
-    if (data) {
-      data.session.detach(path);
-      result = 'success';
-    } else {
-      _send(this, { type: 'error' as const, err: 'client_not_found' });
-      result = 'client_not_found';
-    }
-  } else {
-    errorLog('wss_server._onMessage: unhandled', json);
-    result = 'unhandled';
+    _log(this, `"MESSAGE ${type ?? 'unknown'} WS" ${result} - - -`);
+  } catch (e) {
+    errorLog('wss_server._onMessage: threw:', e);
+    const err = e instanceof Error ? e.message : 'unknown';
+    _send(this, { type: 'error', err });
   }
-  _log(this, `"MESSAGE ${type ?? 'unknown'} WS" ${result} - - -`);
 }
 function _onPing(this: WebSocket, _data: Buffer) {
   _log(this, `"PING WS" - - - -`);

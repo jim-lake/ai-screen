@@ -8,6 +8,7 @@ import { lineToString } from './xterm_serialize';
 
 import type {
   AnsiDisplayState,
+  BufferState,
   CursorState,
   TerminalJson,
 } from '@ai-screen/shared';
@@ -17,13 +18,11 @@ import type { DeepPartial } from '../tools/util';
 
 const VERY_LARGE = 10 * 1000 * 1000;
 const TARGET_TRIM = 100;
+const MAX_ROWS = 4095;
+const MAX_COLUMNS = 4095;
 
 let g_terminalNumber = 1;
 
-export interface BufferState {
-  cursor: CursorState;
-  buffer: string[];
-}
 export interface TerminalScreenState {
   normal: BufferState;
   alternate?: BufferState;
@@ -94,8 +93,13 @@ export class Terminal extends EventEmitter {
     this.pty.write(data);
   }
   public resize(params: { rows: number; columns: number }) {
-    this.pty.resize(params.columns, params.rows);
-    this._xterm.resize(params.columns, params.rows);
+    const { rows, columns } = params;
+    if (rows < 1 || columns < 1 || rows > MAX_ROWS || columns > MAX_COLUMNS) {
+      errorLog('terminal.resize: invalid resize:', params);
+      throw new Error('invalid_resize');
+    }
+    this.pty.resize(columns, rows);
+    this._xterm.resize(columns, rows);
   }
   public getScreenState(): TerminalScreenState {
     const normal = this._bufferState(this._xterm.buffer.normal);

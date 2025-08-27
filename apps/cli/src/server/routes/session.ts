@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { listSessions, Session, getSession } from '../../lib/session';
-import { log } from '../../tools/log';
+import { log, errorLog } from '../../tools/log';
 import {
   HttpError,
   requiredProp,
@@ -82,7 +82,12 @@ function _resizeSession(req: Request, res: Response) {
   if (!session) {
     throw new HttpError(404, 'session not found');
   }
-  session.resize({ rows, columns });
+  try {
+    session.resize({ rows, columns });
+  } catch (e) {
+    errorLog('session._resizeSession: threw:', e);
+    throw new HttpError(400, 'invalid resize');
+  }
   log(
     `server.session._resizeSession: resized session: ${name} ${columns}x${rows}`
   );

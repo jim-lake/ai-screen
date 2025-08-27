@@ -1,7 +1,7 @@
 import { Client, getClient } from './client';
 import { Terminal } from './terminal';
 
-import { errorLog } from '../tools/log';
+import { log, errorLog } from '../tools/log';
 
 import type { AnsiDisplayState, SessionJson } from '@ai-screen/shared';
 import type { ClientParams } from './client';
@@ -68,20 +68,20 @@ export class Session {
     } else {
       if (this.activeTerminal) {
         const state = this.activeTerminal.getScreenState();
-        client.changeTerminal(state);
+        client.changeTerminal(null, state);
       }
     }
     return client;
   }
   public resize(params: Size) {
-    this.terminalParams.rows = params.rows;
-    this.terminalParams.columns = params.columns;
     for (const terminal of this.terminals) {
       terminal.resize(params);
     }
     for (const client of this.clients) {
       client.resize(params);
     }
+    this.terminalParams.rows = params.rows;
+    this.terminalParams.columns = params.columns;
   }
   public write(data: string) {
     this.activeTerminal?.write(data);
@@ -101,11 +101,14 @@ export class Session {
   }
   public activateTerminal(index: number) {
     const new_term = this.terminals[index];
-    if (new_term) {
+    if (new_term && this.activeTerminal === new_term) {
+      log('Session.activeTerminal: no change');
+    } else if (new_term) {
+      const old_state = this.activeTerminal?.getAnsiDisplayState() ?? null;
       this.activeTerminal = new_term;
       const state = this.activeTerminal.getScreenState();
       for (const client of this.clients) {
-        client.changeTerminal(state);
+        client.changeTerminal(old_state, state);
       }
     } else {
       errorLog('Session.activeTerminal:  unknown terminal index:', index);

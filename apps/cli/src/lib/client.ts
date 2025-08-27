@@ -5,7 +5,11 @@ import { displayStateToAnsi } from '@ai-screen/shared';
 
 import { log, errorLog } from '../tools/log';
 
-import type { AnsiDisplayState, ClientJson } from '@ai-screen/shared';
+import type {
+  AnsiDisplayState,
+  BufferState,
+  ClientJson,
+} from '@ai-screen/shared';
 import type { Writable } from 'node:stream';
 import type { TerminalScreenState } from './terminal';
 
@@ -77,13 +81,22 @@ export class Client extends EventEmitter {
     this.stream?.destroy();
     this.emit('disconnect', result);
   }
-  public changeTerminal(state: TerminalScreenState) {
-    this.write(state.normal.buffer.join('\n'));
-    this.write(displayStateToAnsi({ cursor: state.normal.cursor }));
-    if (state.alternate) {
+  public changeTerminal(
+    old_state: AnsiDisplayState | null,
+    new_state: TerminalScreenState
+  ) {
+    if (old_state?.altScreen) {
+      this.write(displayStateToAnsi({ altScreen: false }));
+    }
+    this.write(displayStateToAnsi({ cursor: { x: 1, y: 999 } }));
+    const skip_rows = _calcSkipRows(new_state.normal);
+    log('client.changeTerminal: skip_rows:', skip_rows);
+    this.write(new_state.normal.buffer.join('\n'));
+    this.write(displayStateToAnsi({ cursor: new_state.normal.cursor }));
+    if (new_state.alternate) {
       this.write(displayStateToAnsi({ altScreen: true }));
-      this.write(state.alternate.buffer.join('\n'));
-      this.write(displayStateToAnsi({ cursor: state.alternate.cursor }));
+      this.write(new_state.alternate.buffer.join('\n'));
+      this.write(displayStateToAnsi({ cursor: new_state.alternate.cursor }));
     }
   }
   public resize(params: Size) {
@@ -117,3 +130,16 @@ export class Client extends EventEmitter {
   };
 }
 export default { listClients, getClient, Client };
+
+function _calcSkipRows(normal: BufferState) {
+  let i = 0;
+  for (; i < normal.buffer.length; i++) {
+    const line = normal.buffer[i];
+    if ((line?.length ?? 0) > 0) {
+      break;
+    } else if (normal.cursor.y >= i) {
+      break;
+    }
+  }
+  return i;
+}
