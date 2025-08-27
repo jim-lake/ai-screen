@@ -82,7 +82,7 @@ interface DisconnectParams {
 }
 export function disconnect(params: DisconnectParams) {
   const { sessionName } = params.session;
-  const webSocket = g_mountedMap.get(session.sessionName)?.webSocket;
+  const webSocket = g_mountedMap.get(sessionName)?.webSocket;
   if (webSocket) {
     _send(webSocket, { type: 'detach' as const });
   }
