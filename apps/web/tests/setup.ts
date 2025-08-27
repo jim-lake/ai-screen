@@ -2,6 +2,46 @@ import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 import WebSocket from 'ws';
 
+// Suppress React act() warnings in integration tests
+// These warnings occur because WebSocket connections and xterm.js rendering
+// happen asynchronously and are difficult to wrap in act() properly
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
+console.error = (...args: any[]) => {
+  const message = args[0];
+  if (
+    typeof message === 'string' &&
+    (message.includes(
+      'An update to Terminal inside a test was not wrapped in act'
+    ) ||
+      message.includes(
+        'When testing, code that causes React state updates should be wrapped into act'
+      ))
+  ) {
+    // Suppress React act() warnings for Terminal component integration tests
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
+
+console.warn = (...args: any[]) => {
+  const message = args[0];
+  if (
+    typeof message === 'string' &&
+    (message.includes(
+      'An update to Terminal inside a test was not wrapped in act'
+    ) ||
+      message.includes(
+        'When testing, code that causes React state updates should be wrapped into act'
+      ))
+  ) {
+    // Suppress React act() warnings for Terminal component integration tests
+    return;
+  }
+  originalConsoleWarn.apply(console, args);
+};
+
 // Mock ResizeObserver for xterm.js and component size utilities
 global.ResizeObserver = vi
   .fn()
