@@ -81,7 +81,11 @@ interface DisconnectParams {
   element: HTMLDivElement;
 }
 export function disconnect(params: DisconnectParams) {
-  log('connect_store.disconnect:', params);
+  const { sessionName } = params.session;
+  const webSocket = g_mountedMap.get(session.sessionName)?.webSocket;
+  if (webSocket) {
+    _send(webSocket, { type: 'detach' as const });
+  }
 }
 interface ResizeParams {
   session: SessionJson;

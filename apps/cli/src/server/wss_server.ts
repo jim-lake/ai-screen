@@ -141,6 +141,16 @@ function _onMessage(this: WebSocket, raw_data: Buffer) {
       _send(this, { type: 'error' as const, err: 'client_not_found' });
       result = 'client_not_found';
     }
+  } else if (type.startsWith('detach')) {
+    // hack for last case ;p
+    const data = g_socketMap.get(this);
+    if (data) {
+      data.session.detach(path);
+      result = 'success';
+    } else {
+      _send(this, { type: 'error' as const, err: 'client_not_found' });
+      result = 'client_not_found';
+    }
   } else {
     errorLog('wss_server._onMessage: unhandled', json);
     result = 'unhandled';
