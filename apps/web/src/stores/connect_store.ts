@@ -2,7 +2,6 @@ import { useCallback, useSyncExternalStore } from 'react';
 import EventEmitter from 'events';
 import { Terminal } from '@xterm/xterm';
 import { displayStateToAnsi, jsonParse } from '@ai-screen/shared';
-import { CustomRendererAddon } from '../components/xterm_custom_renderer_addon';
 
 import { createWebSocket } from '../tools/api';
 import { log, errorLog } from '../tools/log';

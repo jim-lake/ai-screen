@@ -66,11 +66,7 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     await act(async () => {
       render(<Terminal session={session} zoom='EXPAND' />);
     });
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'echo "Simple Test"\n'
-    );
+    await writeToSession(serverInfo.port, sessionName, 'echo "Simple Test"\n');
     await waitForTerminalOutput(300);
 
     const terminalInner = screen.getByTestId('terminal-inner');
