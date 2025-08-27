@@ -66,14 +66,7 @@ export function connect(params: ConnectParams) {
   if (mounted) {
     const { terminal, element: old_element, webSocket } = mounted;
     old_element?.remove();
-
-    // Create and load new addon - xterm.js will handle disposal automatically
-    const newCustomRendererAddon = new CustomRendererAddon();
-    terminal.loadAddon(newCustomRendererAddon);
-
-    // Open terminal in new element
     terminal.open(element);
-
     g_mountedMap.set(sessionName, { terminal, element, webSocket });
     _emit('update');
   } else if (g_elementMap.has(sessionName)) {
@@ -94,7 +87,6 @@ export function disconnect(params: DisconnectParams) {
   if (mounted) {
     const { webSocket } = mounted;
     _send(webSocket, { type: 'detach' as const });
-    // xterm.js will automatically dispose addons when terminal is disposed
   }
 }
 interface ResizeParams {
@@ -135,14 +127,9 @@ async function _create(params: ConnectParams) {
             ...terminalOptions,
           };
           terminal = new Terminal(opts);
+          //terminal.loadAddon(new CustomRendererAddon());
           const element = g_elementMap.get(sessionName) ?? null;
-
           if (element) {
-            // Create and load the custom renderer addon
-            const customRendererAddon = new CustomRendererAddon();
-            terminal.loadAddon(customRendererAddon);
-
-            // Open terminal normally - the addon will replace the renderer
             terminal.open(element);
           } else {
             errorLog('connect_store._create: no element!');
@@ -204,7 +191,6 @@ async function _create(params: ConnectParams) {
     errorLog('connect_store._create error:', e);
   } finally {
     g_elementMap.delete(sessionName);
-    // xterm.js will automatically dispose addons when terminal is disposed
     g_mountedMap.delete(sessionName);
   }
 }

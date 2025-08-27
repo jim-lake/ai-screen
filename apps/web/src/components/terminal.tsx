@@ -39,11 +39,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   scrollerInner: {
-    flex: 1,
-    //alignSelf: 'stretch',
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'flex-start',
-    //backgroundColor: 'black',
+    overflow: 'hidden',
   },
   inner: { display: 'block', padding: PADDING, backgroundColor: 'black' },
 });
