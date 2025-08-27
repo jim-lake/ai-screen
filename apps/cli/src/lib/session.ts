@@ -5,7 +5,11 @@ import { log, errorLog } from '../tools/log';
 
 import type { AnsiDisplayState, SessionJson } from '@ai-screen/shared';
 import type { ClientParams } from './client';
-import type { TerminalExitEvent, TerminalParams } from './terminal';
+import type {
+  TerminalExitEvent,
+  TerminalParams,
+  TerminalScreenState,
+} from './terminal';
 
 export interface SessionParams extends TerminalParams {
   name: string;
@@ -15,7 +19,11 @@ interface Size {
   rows: number;
   columns: number;
 }
-
+export interface ConnectResult {
+  client: Client;
+  state: TerminalScreenState | null;
+  created: boolean;
+}
 const g_sessionMap = new Map<string, Session>();
 
 export function listSessions() {
@@ -47,11 +55,11 @@ export class Session {
     const terminal = new Terminal(opts);
     terminal.on('data', this._onTerminalData.bind(this, terminal));
     terminal.on('exit', this._onTerminalExit.bind(this, terminal));
-    this.terminals.push(terminal);
-    this.activeTerminal = terminal;
+    const index = this.terminals.push(terminal) - 1;
+    this.activateTerminal(index);
     return terminal;
   }
-  public connectClient(params: ConnectParams) {
+  public connectClient(params: ConnectParams): ConnectResult {
     const { rows, columns, ...other } = params;
     if (params.exclusive) {
       if (this.clients.some((c) => c.exclusive)) {
@@ -62,16 +70,16 @@ export class Session {
       this.resize({ rows, columns });
     }
     const client = new Client(other);
-    this.clients.push(client);
-    if (this.terminals.length === 0) {
+    const created = this.terminals.length === 0;
+    if (created) {
       this.createTerminal(params);
-    } else {
-      if (this.activeTerminal) {
-        const state = this.activeTerminal.getScreenState();
-        client.changeTerminal(null, state);
-      }
     }
-    return client;
+    if (!this.activeTerminal) {
+      this.activateTerminal(0);
+    }
+    const state = this.activeTerminal?.getScreenState() ?? null;
+    this.clients.push(client);
+    return { client, state, created };
   }
   public resize(params: Size) {
     for (const terminal of this.terminals) {
@@ -111,7 +119,7 @@ export class Session {
         client.changeTerminal(old_state, state);
       }
     } else {
-      errorLog('Session.activeTerminal:  unknown terminal index:', index);
+      errorLog('Session.activeTerminal: unknown terminal index:', index);
     }
   }
   public close(state?: AnsiDisplayState) {

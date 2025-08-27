@@ -87,7 +87,7 @@ function _onMessage(this: WebSocket, raw_data: Buffer) {
       const session = getSession(obj.name);
       if (session) {
         try {
-          const client = session.connectClient({ path, ...obj });
+          const { client, state } = session.connectClient({ path, ...obj });
           g_socketMap.set(this, { session, client });
           client.on('disconnect', (event) => {
             _send(this, { type: 'disconnect' as const, ...event });
@@ -100,13 +100,12 @@ function _onMessage(this: WebSocket, raw_data: Buffer) {
             _send(this, { type: 'resize' as const, ...size });
           });
           const { rows, columns } = session.terminalParams;
-          const state = session.activeTerminal?.getScreenState();
-          if (state) {
-            _send(this, { type: 'connect_success', rows, columns, ...state });
-          } else {
-            errorLog('wss_server._onMessage: connect no state:', session);
-            _send(this, { type: 'error', err: 'connect_failed' });
-          }
+          _send(this, {
+            type: 'connect_success',
+            rows,
+            columns,
+            ...(state ?? {}),
+          });
           result = 'success';
         } catch (e) {
           if (e instanceof Error && e.message === 'conflict') {

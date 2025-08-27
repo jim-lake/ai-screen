@@ -132,8 +132,10 @@ async function _create(params: ConnectParams) {
             errorLog('connect_store._create: no element!');
           }
           data_dispose = terminal.onData(_onData);
-          terminal.write(obj.normal.buffer.join('\r\n'));
-          terminal.write(displayStateToAnsi({ cursor: obj.normal.cursor }));
+          if (obj.normal) {
+            terminal.write(obj.normal.buffer.join('\r\n'));
+            terminal.write(displayStateToAnsi({ cursor: obj.normal.cursor }));
+          }
           if (obj.alternate) {
             terminal.write(displayStateToAnsi({ altScreen: true }));
             terminal.write(obj.alternate.buffer.join('\r\n'));

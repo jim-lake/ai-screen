@@ -11,7 +11,7 @@ export type WsServerMessage =
       type: 'connect_success';
       rows: number;
       columns: number;
-      normal: BufferState;
+      normal?: BufferState;
       alternate?: BufferState;
     }
   | { type: 'error'; err: string }
