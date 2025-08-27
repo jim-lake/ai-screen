@@ -32,7 +32,10 @@ export async function startTestServer(): Promise<ServerInfo> {
     // Use the same pattern as CLI tests - spawn the test_server.ts helper
     const current_file = fileURLToPath(import.meta.url);
     const current_dir = dirname(current_file);
-    const test_server_path = join(current_dir, '../../cli/tests/helpers/test_server.ts');
+    const test_server_path = join(
+      current_dir,
+      '../../cli/tests/helpers/test_server.ts'
+    );
 
     const child = spawn('tsx', [test_server_path], {
       stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
@@ -193,7 +196,10 @@ export async function makeRequest(
   return { status: response.status, data };
 }
 
-export async function createTestSession(port: number, sessionName: string): Promise<SessionJson> {
+export async function createTestSession(
+  port: number,
+  sessionName: string
+): Promise<SessionJson> {
   const sessionData = {
     shell: '/bin/bash',
     cwd: process.cwd(),
@@ -211,7 +217,7 @@ export async function createTestSession(port: number, sessionName: string): Prom
   if (result.status !== 200) {
     throw new Error(`Failed to create session: ${result.status}`);
   }
-  
+
   // Create a terminal in the session since sessions don't auto-create terminals
   const terminalResult = await makeRequest(
     port,
@@ -222,19 +228,19 @@ export async function createTestSession(port: number, sessionName: string): Prom
   if (terminalResult.status !== 200) {
     throw new Error(`Failed to create terminal: ${terminalResult.status}`);
   }
-  
+
   // Get the updated session data that includes the terminal
   const sessionListResult = await makeRequest(port, 'GET', '/api/1/session');
   if (sessionListResult.status !== 200) {
     throw new Error(`Failed to get session list: ${sessionListResult.status}`);
   }
-  
+
   const sessions = sessionListResult.data.sessions as SessionJson[];
-  const updatedSession = sessions.find(s => s.sessionName === sessionName);
+  const updatedSession = sessions.find((s) => s.sessionName === sessionName);
   if (!updatedSession) {
     throw new Error(`Session ${sessionName} not found in session list`);
   }
-  
+
   return updatedSession;
 }
 

@@ -47,8 +47,9 @@ Only the following are mocked because they cannot work in test environment:
 4. **API module** - Only to redirect to test server port
 
 Everything else uses real implementations:
+
 - Session store logic
-- Connect store logic  
+- Connect store logic
 - Terminal state management
 - HTTP API calls
 - WebSocket connections (where possible)
@@ -78,22 +79,26 @@ npm test --watch
 ## Benefits of This Approach
 
 ### Real Integration Testing
+
 - Tests actual CLI server integration
 - Verifies real terminal command execution
 - Tests actual API endpoints and data flow
 - Validates real session management
 
 ### Minimal Test Brittleness
+
 - Fewer mocks mean fewer things to break when implementation changes
 - Tests verify actual behavior, not mock behavior
 - Real data provides more confidence in functionality
 
 ### Better Bug Detection
+
 - Tests catch integration issues between components
 - Real terminal output reveals edge cases
 - Actual server behavior is validated
 
 ### Easier Maintenance
+
 - Less mock setup and maintenance
 - Tests are closer to actual usage patterns
 - Easier to understand what's being tested
@@ -104,19 +109,19 @@ npm test --watch
 it('tests real terminal functionality', async () => {
   // Create real session
   const session = await createTestSession(serverInfo.port, 'test-session');
-  
+
   // Execute real commands
   await writeToSession(serverInfo.port, 'test-session', 'echo "hello"\n');
   await waitForTerminalOutput(100);
-  
+
   // Get real terminal state
   const terminalState = await getTerminalState(serverInfo.port, 'test-session');
-  
+
   // Test component with real data
   render(<Terminal session={{...session, activeTerminal: terminalState}} />);
-  
+
   // Verify real output is present
-  expect(terminalState.normal.buffer.some(line => 
+  expect(terminalState.normal.buffer.some(line =>
     line.includes('hello')
   )).toBe(true);
 });
@@ -128,10 +133,7 @@ When mocks are necessary, they simulate real behavior:
 
 ```typescript
 // Mock xterm to capture what would be written to real terminal
-const mockTerminal = {
-  write: vi.fn(),
-  _writtenContent: '',
-};
+const mockTerminal = { write: vi.fn(), _writtenContent: '' };
 
 mockTerminal.write.mockImplementation((data: string) => {
   mockTerminal._writtenContent += data;

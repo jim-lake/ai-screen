@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  vi,
+} from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import {
@@ -16,7 +24,7 @@ import SessionStore from '../src/stores/session_store';
 // Mock only the API module to point to our test server
 vi.mock('../src/tools/api', () => {
   let testPort = 6847;
-  
+
   return {
     default: {
       init: vi.fn(),
@@ -97,8 +105,8 @@ describe('Session Store - End-to-End Tests', () => {
     // Verify we got real session data
     expect(Array.isArray(result.current)).toBe(true);
     expect(result.current!.length).toBeGreaterThan(0);
-    
-    const session = result.current!.find(s => s.sessionName === sessionName);
+
+    const session = result.current!.find((s) => s.sessionName === sessionName);
     expect(session).toBeDefined();
     expect(session!.sessionName).toBe(sessionName);
     expect(session!.created).toBeDefined();
@@ -138,7 +146,7 @@ describe('Session Store - End-to-End Tests', () => {
     });
 
     const { result } = renderHook(() => SessionStore.useList());
-    
+
     await waitFor(() => {
       expect(result.current).not.toBeNull();
     });
@@ -159,7 +167,9 @@ describe('Session Store - End-to-End Tests', () => {
     });
 
     // Verify the new session is in the list
-    const newSession = result.current!.find(s => s.sessionName === newSessionName);
+    const newSession = result.current!.find(
+      (s) => s.sessionName === newSessionName
+    );
     expect(newSession).toBeDefined();
     expect(newSession!.sessionName).toBe(newSessionName);
   });
@@ -169,9 +179,13 @@ describe('Session Store - End-to-End Tests', () => {
     await createTestSession(serverInfo.port, sessionName);
 
     // Execute some commands to create terminal content
-    await writeToSession(serverInfo.port, sessionName, 'echo "Terminal content test"\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo "Terminal content test"\n'
+    );
     await waitForTerminalOutput(200);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'pwd\n');
     await waitForTerminalOutput(100);
 
@@ -187,7 +201,7 @@ describe('Session Store - End-to-End Tests', () => {
     });
 
     const session = result.current!;
-    
+
     // Verify session structure
     expect(session.activeTerminal).toBeDefined();
     if (session.activeTerminal) {
@@ -196,28 +210,38 @@ describe('Session Store - End-to-End Tests', () => {
       expect(Array.isArray(session.activeTerminal.normal.buffer)).toBe(true);
       expect(typeof session.activeTerminal.normal.cursor).toBe('object');
       expect(typeof session.activeTerminal.startY).toBe('number');
-      
+
       // Verify cursor properties
       const cursor = session.activeTerminal.normal.cursor;
       expect(typeof cursor.x).toBe('number');
       expect(typeof cursor.y).toBe('number');
       expect(typeof cursor.visible).toBe('boolean');
       expect(typeof cursor.blinking).toBe('boolean');
-      
+
       // Verify buffer contains our commands
       const buffer = session.activeTerminal.normal.buffer;
-      expect(buffer.some(line => line.includes('Terminal content test'))).toBe(true);
-      expect(buffer.some(line => line.includes('pwd'))).toBe(true);
+      expect(
+        buffer.some((line) => line.includes('Terminal content test'))
+      ).toBe(true);
+      expect(buffer.some((line) => line.includes('pwd'))).toBe(true);
     }
   });
 
   it('handles multiple sessions correctly', async () => {
     // Create multiple sessions
-    const sessionNames = ['multi-session-1', 'multi-session-2', 'multi-session-3'];
-    
+    const sessionNames = [
+      'multi-session-1',
+      'multi-session-2',
+      'multi-session-3',
+    ];
+
     for (const name of sessionNames) {
       await createTestSession(serverInfo.port, name);
-      await writeToSession(serverInfo.port, name, `echo "Content for ${name}"\n`);
+      await writeToSession(
+        serverInfo.port,
+        name,
+        `echo "Content for ${name}"\n`
+      );
       await waitForTerminalOutput(100);
     }
 
@@ -230,40 +254,46 @@ describe('Session Store - End-to-End Tests', () => {
 
     await waitFor(() => {
       expect(result.current).not.toBeNull();
-      expect(result.current!.length).toBeGreaterThanOrEqual(sessionNames.length);
+      expect(result.current!.length).toBeGreaterThanOrEqual(
+        sessionNames.length
+      );
     });
 
     // Verify all our sessions are present
     for (const name of sessionNames) {
-      const session = result.current!.find(s => s.sessionName === name);
+      const session = result.current!.find((s) => s.sessionName === name);
       expect(session).toBeDefined();
       expect(session!.sessionName).toBe(name);
     }
 
     // Test individual session hooks
     for (const name of sessionNames) {
-      const { result: sessionResult } = renderHook(() => SessionStore.useSession(name));
-      
+      const { result: sessionResult } = renderHook(() =>
+        SessionStore.useSession(name)
+      );
+
       await waitFor(() => {
         expect(sessionResult.current).toBeDefined();
       });
-      
+
       expect(sessionResult.current!.sessionName).toBe(name);
-      
+
       // Verify each session has terminal content
       if (sessionResult.current!.activeTerminal) {
         const buffer = sessionResult.current!.activeTerminal.normal.buffer;
-        expect(buffer.some(line => line.includes(`Content for ${name}`))).toBe(true);
+        expect(
+          buffer.some((line) => line.includes(`Content for ${name}`))
+        ).toBe(true);
       }
     }
   });
 
   it('handles session store reactivity correctly', async () => {
     const sessionName = 'reactivity-test-session';
-    
+
     // Start with empty list
     const { result } = renderHook(() => SessionStore.useList());
-    
+
     // Initial fetch
     await act(async () => {
       await SessionStore.fetch();
@@ -273,7 +303,9 @@ describe('Session Store - End-to-End Tests', () => {
       expect(result.current).not.toBeNull();
     });
 
-    const initialSessions = result.current!.filter(s => s.sessionName === sessionName);
+    const initialSessions = result.current!.filter(
+      (s) => s.sessionName === sessionName
+    );
     expect(initialSessions.length).toBe(0);
 
     // Create new session
@@ -285,12 +317,14 @@ describe('Session Store - End-to-End Tests', () => {
     });
 
     await waitFor(() => {
-      const updatedSessions = result.current!.filter(s => s.sessionName === sessionName);
+      const updatedSessions = result.current!.filter(
+        (s) => s.sessionName === sessionName
+      );
       expect(updatedSessions.length).toBe(1);
     });
 
     // Verify the session data is complete
-    const session = result.current!.find(s => s.sessionName === sessionName);
+    const session = result.current!.find((s) => s.sessionName === sessionName);
     expect(session).toBeDefined();
     expect(session!.sessionName).toBe(sessionName);
     expect(session!.terminals.length).toBeGreaterThan(0);
@@ -298,8 +332,10 @@ describe('Session Store - End-to-End Tests', () => {
 
   it('handles error cases gracefully', async () => {
     // Test with non-existent session
-    const { result } = renderHook(() => SessionStore.useSession('non-existent-session'));
-    
+    const { result } = renderHook(() =>
+      SessionStore.useSession('non-existent-session')
+    );
+
     await act(async () => {
       await SessionStore.fetch();
     });
@@ -339,7 +375,9 @@ describe('Session Store - End-to-End Tests', () => {
     // Data should be consistent
     expect(firstFetchData.sessionName).toBe(secondFetchData.sessionName);
     expect(firstFetchData.created).toBe(secondFetchData.created);
-    expect(firstFetchData.terminals.length).toBe(secondFetchData.terminals.length);
+    expect(firstFetchData.terminals.length).toBe(
+      secondFetchData.terminals.length
+    );
   });
 
   it('handles session with complex terminal state', async () => {
@@ -372,17 +410,17 @@ describe('Session Store - End-to-End Tests', () => {
 
     const session = result.current!;
     expect(session.activeTerminal).toBeDefined();
-    
+
     if (session.activeTerminal) {
       const buffer = session.activeTerminal.normal.buffer;
-      
+
       // Should have substantial content
       expect(buffer.length).toBeGreaterThan(10);
-      
+
       // Should contain evidence of our commands
-      expect(buffer.some(line => line.includes('ls -la'))).toBe(true);
-      expect(buffer.some(line => line.includes('echo'))).toBe(true);
-      
+      expect(buffer.some((line) => line.includes('ls -la'))).toBe(true);
+      expect(buffer.some((line) => line.includes('echo'))).toBe(true);
+
       // Cursor should be positioned reasonably
       const cursor = session.activeTerminal.normal.cursor;
       expect(cursor.x).toBeGreaterThanOrEqual(0);

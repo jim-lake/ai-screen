@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  vi,
+} from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import Terminal from '../src/components/terminal';
@@ -93,18 +101,22 @@ describe('Terminal Content Verification with Real Server Data', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Execute real commands on the server
-    await writeToSession(serverInfo.port, sessionName, 'echo "Hello Real World"\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo "Hello Real World"\n'
+    );
     await waitForTerminalOutput(200);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'ls -la\n');
     await waitForTerminalOutput(200);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'pwd\n');
     await waitForTerminalOutput(100);
 
     // Get real terminal state from server
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const sessionWithRealContent: SessionJson = {
       ...session,
       activeTerminal: terminalState,
@@ -147,7 +159,7 @@ describe('Terminal Content Verification with Real Server Data', () => {
 
     // Verify the DOM content is substantial and real
     expect(domTextContent.length).toBeGreaterThan(50);
-    
+
     // Verify real terminal state structure
     expect(terminalState.normal.buffer.length).toBeGreaterThan(3);
     expect(terminalState.normal.cursor).toBeDefined();
@@ -174,7 +186,7 @@ describe('Terminal Content Verification with Real Server Data', () => {
     }
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const sessionWithRealContent: SessionJson = {
       ...session,
       activeTerminal: terminalState,
@@ -228,17 +240,29 @@ describe('Terminal Content Verification with Real Server Data', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Execute commands that produce errors and special characters
-    await writeToSession(serverInfo.port, sessionName, 'cat /nonexistent/file.txt\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'cat /nonexistent/file.txt\n'
+    );
     await waitForTerminalOutput(200);
-    
-    await writeToSession(serverInfo.port, sessionName, 'echo "Special: !@#$%^&*()"\n');
+
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo "Special: !@#$%^&*()"\n'
+    );
     await waitForTerminalOutput(100);
-    
-    await writeToSession(serverInfo.port, sessionName, 'echo -e "\\033[31mRed\\033[0m"\n');
+
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo -e "\\033[31mRed\\033[0m"\n'
+    );
     await waitForTerminalOutput(100);
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const sessionWithRealContent: SessionJson = {
       ...session,
       activeTerminal: terminalState,
@@ -263,11 +287,13 @@ describe('Terminal Content Verification with Real Server Data', () => {
 
     // Verify the DOM contains real error messages
     expect(domTextContent).toContain('cat /nonexistent/file.txt');
-    expect(domTextContent.toLowerCase()).toMatch(/no such file|cannot access|not found/);
-    
+    expect(domTextContent.toLowerCase()).toMatch(
+      /no such file|cannot access|not found/
+    );
+
     // Verify special characters are preserved
     expect(domTextContent).toContain('!@#$%^&*()');
-    
+
     // Verify ANSI sequences or their content
     expect(domTextContent).toContain('Red');
 
@@ -283,20 +309,28 @@ describe('Terminal Content Verification with Real Server Data', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Create and manipulate real files
-    await writeToSession(serverInfo.port, sessionName, 'echo "test content" > temp-test.txt\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo "test content" > temp-test.txt\n'
+    );
     await waitForTerminalOutput(100);
-    
-    await writeToSession(serverInfo.port, sessionName, 'ls -la temp-test.txt\n');
+
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'ls -la temp-test.txt\n'
+    );
     await waitForTerminalOutput(200);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'cat temp-test.txt\n');
     await waitForTerminalOutput(100);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'rm temp-test.txt\n');
     await waitForTerminalOutput(100);
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const sessionWithRealContent: SessionJson = {
       ...session,
       activeTerminal: terminalState,

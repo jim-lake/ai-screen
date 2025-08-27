@@ -31,7 +31,9 @@ vi.mock('../src/stores/connect_store', () => ({
   connect: vi.fn(),
   disconnect: vi.fn(),
   resize: vi.fn(),
-  useTerminal: vi.fn(() => ({ options: { fontFamily: 'monospace', fontSize: 14 } })),
+  useTerminal: vi.fn(() => ({
+    options: { fontFamily: 'monospace', fontSize: 14 },
+  })),
   useTerminalSize: vi.fn(() => ({ rows: 24, columns: 80 })),
 }));
 
@@ -74,9 +76,13 @@ describe('End-to-End Integration Demo', () => {
     expect(typeof session.created).toBe('string');
 
     // 2. Execute real commands on the server
-    await writeToSession(serverInfo.port, sessionName, 'echo "Hello from real terminal!"\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo "Hello from real terminal!"\n'
+    );
     await waitForTerminalOutput(200);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'pwd\n');
     await waitForTerminalOutput(100);
 
@@ -87,7 +93,7 @@ describe('End-to-End Integration Demo', () => {
     expect(terminalState.terminalId).toBeGreaterThan(0);
     expect(Array.isArray(terminalState.normal.buffer)).toBe(true);
     expect(terminalState.normal.buffer.length).toBeGreaterThan(0);
-    
+
     // Verify our commands are in the buffer
     const bufferContent = terminalState.normal.buffer.join(' ');
     expect(bufferContent).toContain('echo "Hello from real terminal!"');
@@ -141,11 +147,15 @@ describe('End-to-End Integration Demo', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Execute a command that will produce an error
-    await writeToSession(serverInfo.port, sessionName, 'cat /nonexistent/file\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'cat /nonexistent/file\n'
+    );
     await waitForTerminalOutput(300); // Give more time for error to appear
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     // Verify the command was executed (even if error hasn't appeared yet)
     const bufferContent = terminalState.normal.buffer.join(' ');
     expect(bufferContent).toContain('cat /nonexistent/file');
@@ -162,7 +172,7 @@ describe('End-to-End Integration Demo', () => {
 
     const terminalInner = screen.getByTestId('terminal-inner');
     expect(terminalInner).toBeInTheDocument();
-    
+
     // Verify we have real terminal data structure
     expect(terminalState.normal.buffer.length).toBeGreaterThan(0);
     expect(typeof terminalState.normal.cursor.x).toBe('number');
@@ -173,17 +183,21 @@ describe('End-to-End Integration Demo', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Execute commands that produce multi-line output
-    await writeToSession(serverInfo.port, sessionName, 'echo -e "Line 1\\nLine 2\\nLine 3"\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo -e "Line 1\\nLine 2\\nLine 3"\n'
+    );
     await waitForTerminalOutput(200);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'ls -la | head -5\n');
     await waitForTerminalOutput(200);
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     // Verify multi-line content
     expect(terminalState.normal.buffer.length).toBeGreaterThan(5);
-    
+
     const bufferContent = terminalState.normal.buffer.join(' ');
     expect(bufferContent).toContain('Line 1');
     expect(bufferContent).toContain('Line 2');

@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  vi,
+} from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import Terminal from '../src/components/terminal';
@@ -44,7 +52,7 @@ describe('Terminal Component - End-to-End Tests', () => {
 
   beforeAll(async () => {
     serverInfo = await startTestServer();
-    
+
     // Initialize API with test server
     const api = await import('../src/tools/api');
     await api.default.init();
@@ -76,12 +84,16 @@ describe('Terminal Component - End-to-End Tests', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Execute a simple command
-    await writeToSession(serverInfo.port, sessionName, 'echo "Hello E2E Test"\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo "Hello E2E Test"\n'
+    );
     await waitForTerminalOutput(200);
 
     // Get the updated terminal state
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     // Update session with real terminal state
     const updatedSession: SessionJson = {
       ...session,
@@ -111,16 +123,20 @@ describe('Terminal Component - End-to-End Tests', () => {
     // Execute multiple commands
     await writeToSession(serverInfo.port, sessionName, 'pwd\n');
     await waitForTerminalOutput(100);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'ls -la\n');
     await waitForTerminalOutput(200);
-    
-    await writeToSession(serverInfo.port, sessionName, 'echo "Current directory: $(pwd)"\n');
+
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo "Current directory: $(pwd)"\n'
+    );
     await waitForTerminalOutput(100);
 
     // Get the updated terminal state
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const updatedSession: SessionJson = {
       ...session,
       activeTerminal: terminalState,
@@ -137,10 +153,12 @@ describe('Terminal Component - End-to-End Tests', () => {
 
     // Verify the terminal buffer contains all our commands
     const buffer = terminalState.normal.buffer;
-    expect(buffer.some(line => line.includes('pwd'))).toBe(true);
-    expect(buffer.some(line => line.includes('ls -la'))).toBe(true);
-    expect(buffer.some(line => line.includes('Current directory:'))).toBe(true);
-    
+    expect(buffer.some((line) => line.includes('pwd'))).toBe(true);
+    expect(buffer.some((line) => line.includes('ls -la'))).toBe(true);
+    expect(buffer.some((line) => line.includes('Current directory:'))).toBe(
+      true
+    );
+
     // Verify we have a reasonable amount of output
     expect(buffer.length).toBeGreaterThan(5);
   });
@@ -150,12 +168,16 @@ describe('Terminal Component - End-to-End Tests', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Create a test file and list it
-    await writeToSession(serverInfo.port, sessionName, 'echo "test content" > test-e2e.txt\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo "test content" > test-e2e.txt\n'
+    );
     await waitForTerminalOutput(100);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'ls -la test-e2e.txt\n');
     await waitForTerminalOutput(200);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'cat test-e2e.txt\n');
     await waitForTerminalOutput(100);
 
@@ -164,7 +186,7 @@ describe('Terminal Component - End-to-End Tests', () => {
     await waitForTerminalOutput(100);
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const updatedSession: SessionJson = {
       ...session,
       activeTerminal: terminalState,
@@ -180,11 +202,11 @@ describe('Terminal Component - End-to-End Tests', () => {
     });
 
     const buffer = terminalState.normal.buffer;
-    
+
     // Verify file operations are in the buffer
-    expect(buffer.some(line => line.includes('test-e2e.txt'))).toBe(true);
-    expect(buffer.some(line => line.includes('test content'))).toBe(true);
-    expect(buffer.some(line => line.includes('cat test-e2e.txt'))).toBe(true);
+    expect(buffer.some((line) => line.includes('test-e2e.txt'))).toBe(true);
+    expect(buffer.some((line) => line.includes('test content'))).toBe(true);
+    expect(buffer.some((line) => line.includes('cat test-e2e.txt'))).toBe(true);
   });
 
   it('handles error commands and displays error output', async () => {
@@ -192,14 +214,22 @@ describe('Terminal Component - End-to-End Tests', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Execute commands that will produce errors
-    await writeToSession(serverInfo.port, sessionName, 'cat nonexistent-file.txt\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'cat nonexistent-file.txt\n'
+    );
     await waitForTerminalOutput(200);
-    
-    await writeToSession(serverInfo.port, sessionName, 'ls /nonexistent-directory\n');
+
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'ls /nonexistent-directory\n'
+    );
     await waitForTerminalOutput(200);
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const updatedSession: SessionJson = {
       ...session,
       activeTerminal: terminalState,
@@ -215,13 +245,16 @@ describe('Terminal Component - End-to-End Tests', () => {
     });
 
     const buffer = terminalState.normal.buffer;
-    
+
     // Verify error messages are captured
-    expect(buffer.some(line => 
-      line.includes('No such file or directory') || 
-      line.includes('cannot access') ||
-      line.includes('not found')
-    )).toBe(true);
+    expect(
+      buffer.some(
+        (line) =>
+          line.includes('No such file or directory') ||
+          line.includes('cannot access') ||
+          line.includes('not found')
+      )
+    ).toBe(true);
   });
 
   it('displays cursor position correctly from real terminal state', async () => {
@@ -229,11 +262,15 @@ describe('Terminal Component - End-to-End Tests', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Execute a command that leaves cursor in a known state
-    await writeToSession(serverInfo.port, sessionName, 'echo -n "Cursor test: "');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo -n "Cursor test: "'
+    );
     await waitForTerminalOutput(100);
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const updatedSession: SessionJson = {
       ...session,
       activeTerminal: terminalState,
@@ -254,7 +291,7 @@ describe('Terminal Component - End-to-End Tests', () => {
     expect(typeof cursor.y).toBe('number');
     expect(typeof cursor.visible).toBe('boolean');
     expect(typeof cursor.blinking).toBe('boolean');
-    
+
     // Cursor should be positioned after our text
     expect(cursor.x).toBeGreaterThan(0);
     expect(cursor.y).toBeGreaterThanOrEqual(0);
@@ -265,7 +302,11 @@ describe('Terminal Component - End-to-End Tests', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Test different zoom modes
-    const zoomModes: Array<'SHRINK' | 'EXPAND' | 'FIT'> = ['SHRINK', 'EXPAND', 'FIT'];
+    const zoomModes: Array<'SHRINK' | 'EXPAND' | 'FIT'> = [
+      'SHRINK',
+      'EXPAND',
+      'FIT',
+    ];
 
     for (const zoom of zoomModes) {
       const { unmount } = render(<Terminal session={session} zoom={zoom} />);
@@ -284,17 +325,25 @@ describe('Terminal Component - End-to-End Tests', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Execute commands that produce ANSI escape sequences
-    await writeToSession(serverInfo.port, sessionName, 'echo -e "\\033[31mRed text\\033[0m"\n');
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo -e "\\033[31mRed text\\033[0m"\n'
+    );
     await waitForTerminalOutput(100);
-    
-    await writeToSession(serverInfo.port, sessionName, 'echo -e "\\033[1mBold text\\033[0m"\n');
+
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo -e "\\033[1mBold text\\033[0m"\n'
+    );
     await waitForTerminalOutput(100);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'ls --color=always\n');
     await waitForTerminalOutput(200);
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const updatedSession: SessionJson = {
       ...session,
       activeTerminal: terminalState,
@@ -310,13 +359,16 @@ describe('Terminal Component - End-to-End Tests', () => {
     });
 
     const buffer = terminalState.normal.buffer;
-    
+
     // Verify ANSI sequences or their effects are present
-    expect(buffer.some(line => 
-      line.includes('Red text') || 
-      line.includes('Bold text') ||
-      line.includes('\x1b[') // ANSI escape sequence
-    )).toBe(true);
+    expect(
+      buffer.some(
+        (line) =>
+          line.includes('Red text') ||
+          line.includes('Bold text') ||
+          line.includes('\x1b[') // ANSI escape sequence
+      )
+    ).toBe(true);
   });
 
   it('maintains terminal state consistency across re-renders', async () => {
@@ -326,19 +378,19 @@ describe('Terminal Component - End-to-End Tests', () => {
     // Execute some commands to create state
     await writeToSession(serverInfo.port, sessionName, 'echo "State test 1"\n');
     await waitForTerminalOutput(100);
-    
+
     const terminalState1 = await getTerminalState(serverInfo.port, sessionName);
-    
+
     await writeToSession(serverInfo.port, sessionName, 'echo "State test 2"\n');
     await waitForTerminalOutput(100);
-    
+
     const terminalState2 = await getTerminalState(serverInfo.port, sessionName);
 
     // Render with first state
     const { rerender } = render(
-      <Terminal 
-        session={{ ...session, activeTerminal: terminalState1 }} 
-        zoom='FIT' 
+      <Terminal
+        session={{ ...session, activeTerminal: terminalState1 }}
+        zoom='FIT'
       />
     );
 
@@ -349,9 +401,9 @@ describe('Terminal Component - End-to-End Tests', () => {
 
     // Re-render with updated state
     rerender(
-      <Terminal 
-        session={{ ...session, activeTerminal: terminalState2 }} 
-        zoom='FIT' 
+      <Terminal
+        session={{ ...session, activeTerminal: terminalState2 }}
+        zoom='FIT'
       />
     );
 
@@ -361,8 +413,12 @@ describe('Terminal Component - End-to-End Tests', () => {
     });
 
     // Verify both states have different content
-    expect(terminalState1.normal.buffer.length).toBeLessThanOrEqual(terminalState2.normal.buffer.length);
-    expect(terminalState2.normal.buffer.some(line => line.includes('State test 2'))).toBe(true);
+    expect(terminalState1.normal.buffer.length).toBeLessThanOrEqual(
+      terminalState2.normal.buffer.length
+    );
+    expect(
+      terminalState2.normal.buffer.some((line) => line.includes('State test 2'))
+    ).toBe(true);
   });
 
   it('handles long-running commands and output streaming', async () => {
@@ -370,13 +426,17 @@ describe('Terminal Component - End-to-End Tests', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     // Execute a command that produces multiple lines of output
-    await writeToSession(serverInfo.port, sessionName, 'for i in {1..5}; do echo "Line $i"; sleep 0.1; done\n');
-    
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'for i in {1..5}; do echo "Line $i"; sleep 0.1; done\n'
+    );
+
     // Wait for command to complete
     await waitForTerminalOutput(1000);
 
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     const updatedSession: SessionJson = {
       ...session,
       activeTerminal: terminalState,
@@ -392,13 +452,13 @@ describe('Terminal Component - End-to-End Tests', () => {
     });
 
     const buffer = terminalState.normal.buffer;
-    
+
     // Verify we captured multiple lines of output
-    const lineCount = buffer.filter(line => line.includes('Line ')).length;
+    const lineCount = buffer.filter((line) => line.includes('Line ')).length;
     expect(lineCount).toBeGreaterThanOrEqual(3); // Should have captured at least some lines
-    
+
     // Verify specific lines are present
-    expect(buffer.some(line => line.includes('Line 1'))).toBe(true);
-    expect(buffer.some(line => line.includes('Line 5'))).toBe(true);
+    expect(buffer.some((line) => line.includes('Line 1'))).toBe(true);
+    expect(buffer.some((line) => line.includes('Line 5'))).toBe(true);
   });
 });

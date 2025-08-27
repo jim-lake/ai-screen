@@ -31,7 +31,7 @@ describe('Debug Terminal Buffer', () => {
 
     // Get terminal state
     const terminalState = await getTerminalState(serverInfo.port, sessionName);
-    
+
     console.log('Terminal state:', JSON.stringify(terminalState, null, 2));
     console.log('Buffer contents:');
     terminalState.normal.buffer.forEach((line, index) => {
