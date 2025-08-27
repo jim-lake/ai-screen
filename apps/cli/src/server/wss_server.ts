@@ -49,7 +49,13 @@ function _onServerError(error: Error) {
   errorLog('wss_server._onServerError:', error);
 }
 function _onClose(this: WebSocket, code: number, reason: Buffer) {
-  log('wss_server._onClose:', code, reason);
+  const found = g_socketMap.get(this);
+  if (found) {
+    log('wss_server._onClose: session:', found.session.name, 'client:', found.client.path);
+    found.session.detach(found.client.path);
+  } else {
+    errorLog('wss_server._onClose: close but session not found');
+  }
   this.removeAllListeners();
   g_socketMap.delete(this);
   g_socketPathMap.delete(this);
