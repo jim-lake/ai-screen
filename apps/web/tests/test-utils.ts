@@ -307,7 +307,7 @@ export function getVisibleText(node: Node): string {
     if (!text.trim()) {
       return '';
     }
-    if (/^W{10,}$/.test(text)) {
+    if (/^(W{10,}|B{10,})$/i.test(text)) {
       return '';
     }
     return text + '\n';
