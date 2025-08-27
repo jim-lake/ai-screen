@@ -96,6 +96,318 @@ void test('HTTP Endpoints', async (t) => {
     assert.strictEqual(result.status, 400);
   });
 
+  // Create a terminal in the session before testing resize operations
+  await t.test('create terminal for resize tests', async () => {
+    const terminal_data = {
+      shell: '/bin/bash',
+      cwd: process.cwd(),
+      env: { ...process.env },
+    };
+
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/terminal',
+      terminal_data
+    );
+    assert.strictEqual(result.status, 200);
+
+    const terminal = result.data as TerminalJson;
+    assert.strictEqual(typeof terminal.terminalId, 'number');
+    assert.strictEqual(typeof terminal.normal, 'object');
+  });
+
+  // Comprehensive resize endpoint validation tests
+  await t.test('resize session with zero rows', async () => {
+    const resize_data = { rows: 0, columns: 80 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Zero rows should be rejected as invalid when terminal exists
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with zero columns', async () => {
+    const resize_data = { rows: 24, columns: 0 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Zero columns should be rejected as invalid when terminal exists
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with negative rows', async () => {
+    const resize_data = { rows: -10, columns: 80 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Negative rows should be rejected as invalid when terminal exists
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with negative columns', async () => {
+    const resize_data = { rows: 24, columns: -20 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Negative columns should be rejected as invalid when terminal exists
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with negative infinity rows', async () => {
+    const resize_data = { rows: -Infinity, columns: 80 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Infinity values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with negative infinity columns', async () => {
+    const resize_data = { rows: 24, columns: -Infinity };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Infinity values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with positive infinity rows', async () => {
+    const resize_data = { rows: Infinity, columns: 80 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Infinity values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with positive infinity columns', async () => {
+    const resize_data = { rows: 24, columns: Infinity };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Infinity values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with NaN rows', async () => {
+    const resize_data = { rows: NaN, columns: 80 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // NaN values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with NaN columns', async () => {
+    const resize_data = { rows: 24, columns: NaN };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // NaN values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with float rows', async () => {
+    const resize_data = { rows: 24.5, columns: 80 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Float values should be rejected (xterm only accepts integers)
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with float columns', async () => {
+    const resize_data = { rows: 24, columns: 80.7 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Float values should be rejected (xterm only accepts integers)
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with string rows', async () => {
+    const resize_data = { rows: '24', columns: 80 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // String numbers should be accepted (converted to integers)
+    assert.strictEqual(result.status, 200);
+  });
+
+  await t.test('resize session with string columns', async () => {
+    const resize_data = { rows: 24, columns: '80' };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // String numbers should be accepted (converted to integers)
+    assert.strictEqual(result.status, 200);
+  });
+
+  await t.test('resize session with null rows', async () => {
+    const resize_data = { rows: null, columns: 80 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Null values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with null columns', async () => {
+    const resize_data = { rows: 24, columns: null };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Null values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with undefined rows', async () => {
+    const resize_data = { rows: undefined, columns: 80 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Undefined values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with undefined columns', async () => {
+    const resize_data = { rows: 24, columns: undefined };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Undefined values should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  // Test boundary values
+  await t.test('resize session with minimum valid dimensions', async () => {
+    const resize_data = { rows: 1, columns: 1 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    assert.strictEqual(result.status, 200);
+  });
+
+  await t.test('resize session with large valid dimensions', async () => {
+    const resize_data = { rows: 1000, columns: 1000 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    assert.strictEqual(result.status, 200);
+  });
+
+  await t.test('resize session with very large dimensions', async () => {
+    const resize_data = { rows: 10000, columns: 10000 };
+    const result = await makeRequest(
+      'POST',
+      '/api/1/session/test-session/resize',
+      resize_data
+    );
+    // Very large dimensions should be rejected as invalid
+    assert.strictEqual(result.status, 400);
+  });
+
+  await t.test('resize session with typical terminal dimensions', async () => {
+    const test_cases = [
+      { rows: 24, columns: 80 }, // Standard terminal
+      { rows: 25, columns: 80 }, // DOS standard
+      { rows: 30, columns: 120 }, // Wide terminal
+      { rows: 50, columns: 132 }, // Large terminal
+      { rows: 43, columns: 80 }, // EGA standard
+    ];
+
+    for (const dimensions of test_cases) {
+      const result = await makeRequest(
+        'POST',
+        '/api/1/session/test-session/resize',
+        dimensions
+      );
+      assert.strictEqual(
+        result.status,
+        200,
+        `Failed for dimensions ${dimensions.rows}x${dimensions.columns}`
+      );
+    }
+  });
+
+  // Test server stability after invalid inputs
+  await t.test(
+    'server remains responsive after invalid resize attempts',
+    async () => {
+      // Send several invalid resize requests
+      const invalid_requests = [
+        { rows: -1, columns: -1 },
+        { rows: 0, columns: 0 },
+        { rows: NaN, columns: NaN },
+        { rows: Infinity, columns: -Infinity },
+      ];
+
+      for (const invalid_data of invalid_requests) {
+        await makeRequest(
+          'POST',
+          '/api/1/session/test-session/resize',
+          invalid_data
+        );
+      }
+
+      // Verify server is still responsive with a valid request
+      const status_result = await makeRequest('GET', '/status');
+      assert.strictEqual(status_result.status, 200);
+
+      // Verify session is still accessible
+      const session_result = await makeRequest('GET', '/api/1/session');
+      assert.strictEqual(session_result.status, 200);
+
+      // Verify we can still resize with valid dimensions
+      const valid_resize = await makeRequest(
+        'POST',
+        '/api/1/session/test-session/resize',
+        { rows: 25, columns: 85 }
+      );
+      assert.strictEqual(valid_resize.status, 200);
+    }
+  );
+
   await t.test('write to session', async () => {
     const write_data = { data: 'echo "hello world"\n' };
 
