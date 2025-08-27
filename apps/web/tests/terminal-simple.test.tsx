@@ -64,12 +64,17 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     const session = await createTestSession(serverInfo.port, sessionName);
 
     await act(async () => {
-      render(<Terminal session={session} zoom='FIT' />);
+      render(<Terminal session={session} zoom='EXPAND' />);
     });
+    await writeToSession(
+      serverInfo.port,
+      sessionName,
+      'echo "Simple Test"\n'
+    );
+    await waitForTerminalOutput(300);
 
     const terminalInner = screen.getByTestId('terminal-inner');
     expect(terminalInner).toBeInTheDocument();
-    await waitForTerminalOutput(300);
 
     const terminal = await getTerminalState(serverInfo.port, sessionName);
     console.log('terminal:', terminal);
