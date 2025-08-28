@@ -40,6 +40,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   scrollerInner: {
+    flex: 1,
+    alignSelf: 'stretch',
     flexDirection: 'column',
     alignItems: 'flex-start',
     overflow: 'hidden',
@@ -138,13 +140,8 @@ export default function Terminal(props: TerminalProps) {
         style={[styles.scroller, { overflow }]}
         contentContainerStyle={styles.scrollerInner}
       >
-        <View
-          style={styles.inner}
-          getDiv={element_ref}
-          data-testid='terminal-inner'
-        >
-          {terminal ? <XTermReactRenderer terminal={terminal} /> : null}
-        </View>
+        <View style={styles.inner} getDiv={element_ref}></View>
+        {terminal ? <XTermReactRenderer terminal={terminal} /> : null}
       </ScrollView>
     </View>
   );

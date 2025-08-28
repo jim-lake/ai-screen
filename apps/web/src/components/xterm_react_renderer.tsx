@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View, Text } from './base_components';
 import { Terminal } from '@xterm/xterm';
 
@@ -7,15 +7,18 @@ import { measureCharSize } from '../tools/measure';
 
 const styles = StyleSheet.create({
   xtermReactRenderer: {
-    position: 'relative',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
     height: 'calc(var(--term-rows) * var(--term-cell-height) * 1px)',
     width: 'calc(var(--term-columns) * var(--term-cell-width) * 1px)',
     fontFamily: 'var(--term-font)',
     fontSize: 'calc(var(--term-font-size) * 1px)',
     lineHeight: 'var(--term-line-height)',
-    pointerEvents: 'none',
+    //pointerEvents: 'none',
     zIndex: 10,
     flexDirection: 'column',
+    backgroundColor: 'black',
   },
   rows: {
     width: 'calc(var(--term-columns) * var(--term-cell-width) * 1px)',
@@ -56,6 +59,14 @@ const styles = StyleSheet.create({
   },
 });
 
+interface TerminalCore extends Terminal {
+  _core: {
+    _keyDown: (event: unknown) => boolean;
+    _keyUp: (event: unknown) => boolean;
+    _keyPress: (event: unknown) => boolean;
+    _inputEvent: (event: unknown) => boolean;
+  };
+}
 export interface XTermReactRendererProps {
   terminal: Terminal;
 }
@@ -66,7 +77,7 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
   const { rows } = terminal;
   const columns = terminal.cols;
   const { fontFamily, fontSize, lineHeight } = terminal.options;
-  console.log('render:', dirty);
+  const _term = terminal as TerminalCore;
 
   useEffect(() => {
     if (ref.current && fontFamily && fontSize && lineHeight) {
@@ -81,6 +92,22 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
     }
   }, [rows, columns, fontFamily, fontSize, lineHeight]);
 
+  function _onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    return _term._core._keyDown(e.nativeEvent);
+  }
+  function _onKeyUp(e: React.KeyboardEvent<HTMLDivElement>) {
+    return _term._core._keyUp(e.nativeEvent);
+  }
+  function _onKeyPress(e: React.KeyboardEvent<HTMLDivElement>) {
+    return _term._core._keyPress(e.nativeEvent);
+  }
+  function _onInput(e: React.InputEvent<HTMLDivElement>) {
+    return _term._core._inputEvent(e.nativeEvent);
+  }
+  function _onFocus() {
+    //terminal.focus();
+  }
+
   const lines: React.ReactNode[] = [];
 
   const buffer = terminal.buffer.active;
@@ -94,7 +121,18 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
     );
   }
   return (
-    <View getDiv={ref} style={styles.xtermReactRenderer}>
+    <View
+      getDiv={ref}
+      style={styles.xtermReactRenderer}
+      tabIndex={0}
+      onFocus={_onFocus}
+      onKeyDown={_onKeyDown}
+      onKeyUp={_onKeyUp}
+      onKeyPress={_onKeyPress}
+      onInput={_onInput}
+      data-testid='terminal-inner'
+      data-testid2={dirty ? '111' : ''}
+    >
       <View style={styles.rows}>{lines}</View>
     </View>
   );

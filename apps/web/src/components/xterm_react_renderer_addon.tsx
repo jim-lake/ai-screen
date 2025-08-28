@@ -73,10 +73,12 @@ class ReactRenderer implements IRenderer {
     return this._dimensions;
   }
   public get onRequestRedraw(): IEvent<IRequestRedrawEvent> {
-    console.log('onRequestRedraw:');
-    return (listener: (arg: IRequestRedrawEvent) => void): IDisposable => {
-      console.log('onRequestRedraw: listener:', listener);
-      return { dispose: () => {} };
+    return (_listener: (arg: IRequestRedrawEvent) => void): IDisposable => {
+      return {
+        dispose: () => {
+          //noop
+        },
+      };
     };
   }
   public dispose(): void {
@@ -94,20 +96,28 @@ class ReactRenderer implements IRenderer {
     this._updateDimensions();
     this.renderRows(0, this._terminal.rows - 1);
   }
-  public handleBlur(): void {}
-
-  public handleFocus(): void {}
-  public handleSelectionChanged(
-    start: [number, number] | undefined,
-    end: [number, number] | undefined,
-    columnSelectMode: boolean
-  ): void {
-    console.log('select:', start, end, columnSelectMode);
+  public handleBlur(): void {
+    // noop
   }
 
-  public handleCursorMove(): void {}
+  public handleFocus(): void {
+    // noop
+  }
+  public handleSelectionChanged(
+    _start: [number, number] | undefined,
+    _end: [number, number] | undefined,
+    _columnSelectMode: boolean
+  ): void {
+    // noop
+  }
 
-  public clear(): void {}
+  public handleCursorMove(): void {
+    // noop
+  }
+
+  public clear(): void {
+    // noop
+  }
 
   public renderRows(start: number, end: number): void {
     if (this._disposed) {
@@ -158,9 +168,6 @@ export class ReactRendererAddon implements ITerminalAddon, IDisposable {
   private _renderer?: ReactRenderer;
   private _terminal?: Terminal;
   private _openDispose?: IDisposable;
-  constructor() {
-    // noop
-  }
   public activate(terminal: Terminal): void {
     this._terminal = terminal;
     const terminalWithCore = terminal as TerminalCore;
