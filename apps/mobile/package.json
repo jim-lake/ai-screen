@@ -6,6 +6,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
+    "pretty": "prettier -u --write \"**/*\" --log-level warn",
     "start": "react-native start",
     "test": "jest"
   },

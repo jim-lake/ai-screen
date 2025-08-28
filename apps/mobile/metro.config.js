@@ -4,9 +4,7 @@ const path = require('path');
 const defaultConfig = getDefaultConfig(__dirname);
 
 const config = {
-  watchFolders: [
-    path.resolve(__dirname, '../..'),
-  ],
+  watchFolders: [path.resolve(__dirname, '../..')],
   resolver: {
     nodeModulesPaths: [
       path.resolve(__dirname, 'node_modules'),

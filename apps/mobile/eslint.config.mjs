@@ -4,10 +4,7 @@ export default [
   {
     files: ['src/**/*.js', 'src/**/*.ts', 'src/**/*.tsx'],
     languageOptions: {
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-      },
+      parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     },
     ...reactNative,
   },
