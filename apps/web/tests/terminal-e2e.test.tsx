@@ -24,7 +24,6 @@ import {
 import type { SessionJson } from '@ai-screen/shared';
 import Api from '../src/tools/api';
 
-// Mock Storage to inject test server URL
 vi.mock('../src/tools/storage', () => ({
   default: {
     getItem: vi.fn(async (key: string) => {
@@ -40,12 +39,10 @@ vi.mock('../src/tools/storage', () => ({
   },
 }));
 
-// Mock the measurement tools with realistic values
 vi.mock('../src/tools/measure', () => ({
   measureCharSize: vi.fn(() => ({ width: 8, height: 16 })),
 }));
 
-// Mock the component size hook
 vi.mock('../src/tools/component_size', () => ({
   useComponentSize: vi.fn(() => [vi.fn(), { width: 640, height: 384 }]),
 }));
@@ -79,7 +76,6 @@ describe('Terminal Component - End-to-End Tests', () => {
         render(<Terminal session={session} zoom='EXPAND' />);
       });
 
-      // Verify the terminal container is rendered
       const terminalInner = screen.getByTestId('terminal-inner');
       expect(terminalInner).toBeInTheDocument();
     })
@@ -102,7 +98,6 @@ describe('Terminal Component - End-to-End Tests', () => {
       });
       await waitForTerminalOutput(200);
 
-      // Execute a simple command
       await writeToSession(
         serverInfo.port,
         sessionName,
@@ -126,7 +121,6 @@ describe('Terminal Component - End-to-End Tests', () => {
         render(<Terminal session={session} zoom='EXPAND' />);
       });
 
-      // Execute multiple commands
       await writeToSession(serverInfo.port, sessionName, 'pwd\n');
       await waitForTerminalOutput(100);
 
@@ -145,7 +139,6 @@ describe('Terminal Component - End-to-End Tests', () => {
         expect(terminalInner).toBeInTheDocument();
       });
 
-      // Verify DOM content contains our commands
       const terminalInner = screen.getByTestId('terminal-inner');
       const textContent = getVisibleText(terminalInner);
 
@@ -166,7 +159,6 @@ describe('Terminal Component - End-to-End Tests', () => {
         render(<Terminal session={session} zoom='EXPAND' />);
       });
 
-      // Create a test file and list it
       await writeToSession(
         serverInfo.port,
         sessionName,
@@ -184,7 +176,6 @@ describe('Terminal Component - End-to-End Tests', () => {
       await writeToSession(serverInfo.port, sessionName, 'cat test-e2e.txt\n');
       await waitForTerminalOutput(100);
 
-      // Clean up
       await writeToSession(serverInfo.port, sessionName, 'rm test-e2e.txt\n');
       await waitForTerminalOutput(100);
 
@@ -208,7 +199,6 @@ describe('Terminal Component - End-to-End Tests', () => {
         render(<Terminal session={session} zoom='EXPAND' />);
       });
 
-      // Execute commands that will produce errors
       await writeToSession(
         serverInfo.port,
         sessionName,
@@ -246,7 +236,6 @@ describe('Terminal Component - End-to-End Tests', () => {
       });
       await waitForTerminalOutput(200);
 
-      // Execute a command that leaves cursor in a known state
       await writeToSession(
         serverInfo.port,
         sessionName,
@@ -268,7 +257,6 @@ describe('Terminal Component - End-to-End Tests', () => {
       const sessionName = 'e2e-test-session-7';
       const session = await createTestSession(serverInfo.port, sessionName);
 
-      // Test different zoom modes (excluding FIT which causes issues in test environment)
       const zoomModes: Array<'SHRINK' | 'EXPAND'> = ['SHRINK', 'EXPAND'];
 
       for (const zoom of zoomModes) {
@@ -294,7 +282,6 @@ describe('Terminal Component - End-to-End Tests', () => {
         render(<Terminal session={session} zoom='EXPAND' />);
       });
 
-      // Execute commands that produce ANSI escape sequences
       await writeToSession(
         serverInfo.port,
         sessionName,
@@ -330,10 +317,8 @@ describe('Terminal Component - End-to-End Tests', () => {
       const sessionName = 'e2e-test-session-9';
       const session = await createTestSession(serverInfo.port, sessionName);
 
-      // Render with initial state
       const { rerender } = render(<Terminal session={session} zoom='EXPAND' />);
 
-      // Execute some commands to create state
       await writeToSession(
         serverInfo.port,
         sessionName,
@@ -348,7 +333,6 @@ describe('Terminal Component - End-to-End Tests', () => {
       );
       await waitForTerminalOutput(100);
 
-      // Re-render with same session (component should handle updates internally)
       rerender(<Terminal session={session} zoom='EXPAND' />);
 
       const terminalInner = screen.getByTestId('terminal-inner');
@@ -370,14 +354,12 @@ describe('Terminal Component - End-to-End Tests', () => {
         render(<Terminal session={session} zoom='EXPAND' />);
       });
 
-      // Execute a command that produces multiple lines of output
       await writeToSession(
         serverInfo.port,
         sessionName,
         'for i in {1..5}; do echo "Line $i"; sleep 0.1; done\n'
       );
 
-      // Wait for command to complete
       await waitForTerminalOutput(1000);
 
       const terminalInner = screen.getByTestId('terminal-inner');
@@ -385,7 +367,6 @@ describe('Terminal Component - End-to-End Tests', () => {
 
       const textContent = getVisibleText(terminalInner);
 
-      // Verify we captured multiple lines of output
       const hasMultipleLines =
         textContent.includes('Line 1') && textContent.includes('Line 5');
       expect(hasMultipleLines).toBe(true);

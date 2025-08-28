@@ -28,7 +28,6 @@ describe('Debug Terminal Buffer', () => {
 
       console.log('Session created:', session);
 
-      // Execute a command
       await writeToSession(
         serverInfo.port,
         sessionName,
@@ -36,7 +35,6 @@ describe('Debug Terminal Buffer', () => {
       );
       await waitForTerminalOutput(500); // Wait longer
 
-      // Get terminal state
       const terminalState = await getTerminalState(
         serverInfo.port,
         sessionName
@@ -48,7 +46,6 @@ describe('Debug Terminal Buffer', () => {
         console.log(`  [${index}]: "${line}"`);
       });
 
-      // Just verify we got some data
       expect(terminalState.normal.buffer.length).toBeGreaterThan(0);
     })
   );

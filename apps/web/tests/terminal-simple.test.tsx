@@ -24,17 +24,14 @@ import {
 } from './test-utils';
 import type { SessionJson } from '@ai-screen/shared';
 
-// Mock the measurement tools
 vi.mock('../src/tools/measure', () => ({
   measureCharSize: vi.fn(() => ({ width: 8, height: 16 })),
 }));
 
-// Mock the component size hook
 vi.mock('../src/tools/component_size', () => ({
   useComponentSize: vi.fn(() => [vi.fn(), { width: 640, height: 384 }]),
 }));
 
-// Mock the setting store
 vi.mock('../src/stores/setting_store', () => ({
   useSetting: vi.fn((key: string) => {
     if (key === 'fontFamily') return 'monospace';
@@ -168,7 +165,6 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
         activeTerminal: terminalState,
       };
 
-      // Verify real cursor data
       expect(sessionWithRealData.activeTerminal!.normal.cursor).toBeDefined();
       const cursor = sessionWithRealData.activeTerminal!.normal.cursor;
 
@@ -257,7 +253,6 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
         render(<Terminal session={session} zoom='FIT' />);
       });
 
-      // Verify session structure matches expected format
       expect(session.sessionName).toBe(sessionName);
       expect(typeof session.created).toBe('string');
       expect(Array.isArray(session.clients)).toBe(true);
@@ -283,7 +278,6 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
       );
       await waitForTerminalOutput(100);
 
-      // Get updated state
       const updatedTerminalState = await getTerminalState(
         serverInfo.port,
         sessionName

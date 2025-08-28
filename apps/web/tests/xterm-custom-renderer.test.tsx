@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { XTermCustomRenderer } from '../src/components/xterm_custom_renderer';
 
-// Mock terminal interface for testing
 const createMockTerminal = () => ({
   rows: 24,
   cols: 80,
@@ -21,7 +20,6 @@ describe('XTermCustomRenderer', () => {
     container.style.fontSize = '14px';
     document.body.appendChild(container);
 
-    // Mock getBoundingClientRect for JSDOM
     container.getBoundingClientRect = () => ({
       width: 800,
       height: 600,
@@ -34,7 +32,6 @@ describe('XTermCustomRenderer', () => {
       toJSON: () => ({}),
     });
 
-    // Mock character measurement for test environment
     const originalCreateElement = document.createElement;
     document.createElement = function (tagName: string) {
       const element = originalCreateElement.call(this, tagName);
@@ -90,7 +87,6 @@ describe('XTermCustomRenderer', () => {
     const newDimensions = renderer.dimensions;
     expect(newDimensions).toBeDefined();
 
-    // Should have created row elements for the new size
     const rowContainer = container.querySelector('.xterm-custom-rows');
     expect(rowContainer?.children.length).toBe(30);
   });
@@ -136,10 +132,8 @@ describe('XTermCustomRenderer', () => {
   it('should clear selection when selection is undefined', () => {
     renderer.handleResize(80, 24);
 
-    // First set a selection
     renderer.handleSelectionChanged([0, 0], [10, 2], false);
 
-    // Then clear it
     renderer.handleSelectionChanged(undefined, undefined, false);
 
     const rowContainer = container.querySelector('.xterm-custom-rows');
@@ -175,7 +169,6 @@ describe('XTermCustomRenderer', () => {
   it('should handle device pixel ratio changes', () => {
     const originalRatio = window.devicePixelRatio;
 
-    // Mock a different device pixel ratio
     Object.defineProperty(window, 'devicePixelRatio', {
       writable: true,
       value: 2,
@@ -188,7 +181,6 @@ describe('XTermCustomRenderer', () => {
       dimensions.css.canvas.width
     );
 
-    // Restore original ratio
     Object.defineProperty(window, 'devicePixelRatio', {
       writable: true,
       value: originalRatio,

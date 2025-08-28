@@ -8,8 +8,6 @@ import {
   withTestLogging,
 } from './test-utils';
 
-// This test file is simplified to focus on basic integration
-// Full connect store testing requires complex WebSocket mocking that's beyond current scope
 
 describe('Connect Store - Basic Integration Tests', () => {
   let serverInfo: { port: number; pid: number };
@@ -25,8 +23,6 @@ describe('Connect Store - Basic Integration Tests', () => {
   it(
     'verifies server integration works for connect store testing',
     withTestLogging(async () => {
-      // This test just verifies the server integration is working
-      // More complex connect store tests would require extensive WebSocket mocking
       const sessionName = 'connect-integration-test';
       const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -34,7 +30,6 @@ describe('Connect Store - Basic Integration Tests', () => {
       expect(session.terminalParams.rows).toBe(24);
       expect(session.terminalParams.columns).toBe(80);
 
-      // Execute a command to verify the session is functional
       await writeToSession(
         serverInfo.port,
         sessionName,
@@ -42,8 +37,6 @@ describe('Connect Store - Basic Integration Tests', () => {
       );
       await waitForTerminalOutput(200);
 
-      // This confirms the basic server integration is working
-      // Full connect store tests would require mocking WebSocket connections
       expect(true).toBe(true);
     })
   );
