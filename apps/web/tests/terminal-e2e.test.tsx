@@ -104,7 +104,7 @@ describe('Terminal Component - End-to-End Tests', () => {
     );
     await waitForTerminalOutput(200);
 
-    const textContent = screen.getByTestId('terminal-inner').textContent;
+    const textContent = getVisibleText(screen.getByTestId('terminal-inner'));
     console.log('textContent:', textContent);
     expect(textContent).toContain('Hello E2E Test');
   });
@@ -138,7 +138,7 @@ describe('Terminal Component - End-to-End Tests', () => {
 
     // Verify DOM content contains our commands
     const terminalInner = screen.getByTestId('terminal-inner');
-    const textContent = terminalInner.textContent || '';
+    const textContent = getVisibleText(terminalInner);
 
     expect(textContent).toContain('pwd');
     expect(textContent).toContain('ls -la');

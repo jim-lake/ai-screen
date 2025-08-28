@@ -190,7 +190,7 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
 
     const terminalInner = screen.getByTestId('terminal-inner');
     expect(terminalInner).toBeInTheDocument();
-    const textContent = terminalInner.textContent;
+    const textContent = getVisibleText(terminalInner);
 
     expect(textContent.includes('Line 1')).toBe(true);
     expect(textContent.includes('Line 2')).toBe(true);
@@ -214,7 +214,7 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
 
     const terminalInner = screen.getByTestId('terminal-inner');
     expect(terminalInner).toBeInTheDocument();
-    const textContent = terminalInner.textContent;
+    const textContent = getVisibleText(terminalInner);
     expect(textContent.includes('nonexistent')).toBe(true);
   });
 

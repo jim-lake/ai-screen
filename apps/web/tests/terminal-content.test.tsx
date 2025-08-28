@@ -18,6 +18,7 @@ import {
   writeToSession,
   getTerminalState,
   waitForTerminalOutput,
+  getVisibleText,
 } from './test-utils';
 import type { SessionJson } from '@ai-screen/shared';
 
@@ -110,7 +111,7 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
 
     while (attempts < maxAttempts && domTextContent.length < 50) {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      domTextContent = terminalInner.textContent || '';
+      domTextContent = getVisibleText(terminalInner);
       attempts++;
     }
 
@@ -204,14 +205,14 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     // We need to wait for this process to complete
     await waitFor(
       () => {
-        const domText = terminalInner.textContent || '';
+        const domText = getVisibleText(terminalInner);
         return domText.length > 100; // Wait for substantial content
       },
       { timeout: 10000, interval: 200 } // Increased timeout and check interval
     );
 
     // Check the actual DOM text content rendered by xterm
-    const domTextContent = terminalInner.textContent || '';
+    const domTextContent = getVisibleText(terminalInner);
 
     console.log('Complex test DOM content length:', domTextContent.length);
     console.log(
@@ -268,14 +269,14 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     // Wait for xterm to render content to DOM
     await waitFor(
       () => {
-        const domText = terminalInner.textContent || '';
+        const domText = getVisibleText(terminalInner);
         return domText.length > 50; // Wait for substantial content
       },
       { timeout: 10000, interval: 200 } // Increased timeout and check interval
     );
 
     // Check the actual DOM text content rendered by xterm
-    const domTextContent = terminalInner.textContent || '';
+    const domTextContent = getVisibleText(terminalInner);
 
     console.log('Error test DOM content length:', domTextContent.length);
     console.log(
@@ -336,14 +337,14 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     // Wait for xterm to render content to DOM
     await waitFor(
       () => {
-        const domText = terminalInner.textContent || '';
+        const domText = getVisibleText(terminalInner);
         return domText.length > 80; // Wait for substantial content
       },
       { timeout: 10000, interval: 200 } // Increased timeout and check interval
     );
 
     // Check the actual DOM text content rendered by xterm
-    const domTextContent = terminalInner.textContent || '';
+    const domTextContent = getVisibleText(terminalInner);
 
     console.log('File ops test DOM content length:', domTextContent.length);
     console.log(
@@ -404,7 +405,7 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     // Wait for xterm to render content to DOM with longer timeout for WebSocket connection
     await waitFor(
       () => {
-        const domText = terminalInner.textContent || '';
+        const domText = getVisibleText(terminalInner);
         return domText.length > 50; // Wait for substantial content
       },
       { timeout: 10000, interval: 200 } // Increased timeout and check interval
@@ -415,7 +416,7 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     expect(terminalInner).toHaveAttribute('data-testid', 'terminal-inner');
 
     // Check the actual DOM text content rendered by xterm
-    const domTextContent = terminalInner.textContent || '';
+    const domTextContent = getVisibleText(terminalInner);
 
     console.log('WebSocket test DOM content length:', domTextContent.length);
     console.log(

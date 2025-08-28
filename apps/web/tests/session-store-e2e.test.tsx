@@ -17,6 +17,7 @@ import {
   writeToSession,
   waitForTerminalOutput,
   getServerInfo,
+  getVisibleText,
 } from './test-utils';
 
 // Import the actual session store - we want to test it without mocking
@@ -202,7 +203,7 @@ describe('Session Store - End-to-End Tests', () => {
       const terminalInner = container.querySelector(
         '[data-testid="terminal-inner"]'
       );
-      const domContent = terminalInner?.textContent || '';
+      const domContent = getVisibleText(terminalInner);
 
       // Verify that xterm has rendered our test content to the DOM
       const hasOurContent =
@@ -293,7 +294,7 @@ describe('Session Store - End-to-End Tests', () => {
         const terminalInner = container.querySelector(
           '[data-testid="terminal-inner"]'
         );
-        const domContent = terminalInner?.textContent || '';
+        const domContent = getVisibleText(terminalInner);
 
         // Verify that xterm has rendered our session-specific content to the DOM
         const hasOurContent =
@@ -454,7 +455,7 @@ describe('Session Store - End-to-End Tests', () => {
       const terminalInner = container.querySelector(
         '[data-testid="terminal-inner"]'
       );
-      const domContent = terminalInner?.textContent || '';
+      const domContent = getVisibleText(terminalInner);
 
       // Verify that xterm has rendered our complex test content to the DOM
       const hasOurContent =
