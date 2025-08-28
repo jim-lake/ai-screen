@@ -21,7 +21,7 @@ export class CustomRendererAddon implements ITerminalAddon, IDisposable {
   public activate(terminal: Terminal): void {
     const terminalWithCore = terminal as Terminal & TerminalCore;
     const core = terminalWithCore._core;
-    
+
     if (!terminal.element) {
       this.register(core.onWillOpen(() => this.activate(terminal)));
       return;
@@ -39,7 +39,7 @@ export class CustomRendererAddon implements ITerminalAddon, IDisposable {
         const service = terminalCore._renderService;
         service.setRenderer(terminalCore._createRenderer());
         service.handleResize(terminal.cols, terminal.rows);
-      }
+      },
     });
   }
 
@@ -49,7 +49,7 @@ export class CustomRendererAddon implements ITerminalAddon, IDisposable {
   }
 
   public dispose(): void {
-    this._disposables.forEach(d => d.dispose());
+    this._disposables.forEach((d) => d.dispose());
     this._disposables = [];
     this._renderer = undefined;
     this._terminal = undefined;

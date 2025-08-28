@@ -8,7 +8,6 @@ import {
   withTestLogging,
 } from './test-utils';
 
-
 describe('Connect Store - Basic Integration Tests', () => {
   let serverInfo: { port: number; pid: number };
 

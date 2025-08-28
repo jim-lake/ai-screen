@@ -31,7 +31,9 @@ export class XTermCustomRenderer implements IRenderer {
       return true;
     }
 
-    const terminalElement = (this._terminal as unknown as { element?: HTMLElement }).element;
+    const terminalElement = (
+      this._terminal as unknown as { element?: HTMLElement }
+    ).element;
     if (!terminalElement) {
       return false;
     }
@@ -40,12 +42,12 @@ export class XTermCustomRenderer implements IRenderer {
     if (!this._container) {
       this._container = document.createElement('div');
       this._container.className = 'xterm-custom-overlay';
+      const width = this._terminal.cols * this._dimensions.css.cell.width;
+      const height = this._terminal.rows * this._dimensions.css.cell.height;
       this._container.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        position: relative;
+        width: ${width}px;
+        height: ${height}px;
         pointer-events: none;
         z-index: 10;
       `;
@@ -164,26 +166,52 @@ export class XTermCustomRenderer implements IRenderer {
   }
 
   public handleResize(_cols: number, rows: number): void {
-    if (!this._ensureContainer()) {return;}
+    if (!this._ensureContainer()) {
+      return;
+    }
     this._dimensions = this._calculateDimensions();
+
+    // Update container size based on new dimensions
+    if (this._container) {
+      const width = this._terminal.cols * this._dimensions.css.cell.width;
+      const height = this._terminal.rows * this._dimensions.css.cell.height;
+      this._container.style.width = `${width}px`;
+      this._container.style.height = `${height}px`;
+    }
+
     this._ensureRowElements(rows);
     this._requestRedraw(0, rows - 1);
   }
 
   public handleCharSizeChanged(): void {
-    if (!this._ensureContainer()) {return;}
+    if (!this._ensureContainer()) {
+      return;
+    }
     this._dimensions = this._calculateDimensions();
+
+    // Update container size based on new dimensions
+    if (this._container) {
+      const width = this._terminal.cols * this._dimensions.css.cell.width;
+      const height = this._terminal.rows * this._dimensions.css.cell.height;
+      this._container.style.width = `${width}px`;
+      this._container.style.height = `${height}px`;
+    }
+
     this._setupStyles();
     this._requestRedraw(0, this._terminal.rows - 1);
   }
 
   public handleBlur(): void {
-    if (!this._ensureContainer() || !this._cursorElement) {return;}
+    if (!this._ensureContainer() || !this._cursorElement) {
+      return;
+    }
     this._cursorElement.style.opacity = '0.5';
   }
 
   public handleFocus(): void {
-    if (!this._ensureContainer() || !this._cursorElement) {return;}
+    if (!this._ensureContainer() || !this._cursorElement) {
+      return;
+    }
     this._cursorElement.style.opacity = '1';
   }
 
@@ -192,13 +220,15 @@ export class XTermCustomRenderer implements IRenderer {
     end: [number, number] | undefined,
     columnSelectMode: boolean
   ): void {
-    if (!this._ensureContainer() || !this._rowContainer) {return;}
+    if (!this._ensureContainer() || !this._rowContainer) {
+      return;
+    }
 
     // Clear existing selections
     const existingSelections = this._rowContainer.querySelectorAll(
       '.xterm-custom-selection, .xterm-custom-column-selection'
     );
-    existingSelections.forEach(el => el.remove());
+    existingSelections.forEach((el) => el.remove());
 
     // If no selection, return early
     if (!start || !end) {
@@ -211,10 +241,10 @@ export class XTermCustomRenderer implements IRenderer {
     // Create selection elements
     for (let row = startRow; row <= endRow; row++) {
       const selectionElement = document.createElement('div');
-      selectionElement.className = columnSelectMode 
-        ? 'xterm-custom-column-selection' 
+      selectionElement.className = columnSelectMode
+        ? 'xterm-custom-column-selection'
         : 'xterm-custom-selection';
-      
+
       selectionElement.style.cssText = `
         position: absolute;
         top: ${row * this._dimensions.css.cell.height}px;
@@ -230,12 +260,20 @@ export class XTermCustomRenderer implements IRenderer {
   }
 
   public handleCursorMove(): void {
-    if (!this._ensureContainer()) {return;}
+    if (!this._ensureContainer()) {
+      return;
+    }
     this._updateCursor();
   }
 
   public clear(): void {
-    if (!this._ensureContainer() || !this._rowContainer || !this._cursorElement) {return;}
+    if (
+      !this._ensureContainer() ||
+      !this._rowContainer ||
+      !this._cursorElement
+    ) {
+      return;
+    }
     this._rowContainer.innerHTML = '';
     this._cursorElement.style.display = 'none';
   }
@@ -256,10 +294,18 @@ export class XTermCustomRenderer implements IRenderer {
   }
 
   private _renderRow(y: number, buffer: unknown): void {
-    if (!this._rowContainer) {return;}
+    if (!this._rowContainer) {
+      return;
+    }
     const rowElement = this._rowContainer.children[y] as HTMLElement;
 
-    const line = (buffer as { getLine: (y: number) => { translateToString: (trim: boolean) => string } | null }).getLine(y);
+    const line = (
+      buffer as {
+        getLine: (
+          y: number
+        ) => { translateToString: (trim: boolean) => string } | null;
+      }
+    ).getLine(y);
     if (!line) {
       rowElement.innerHTML = '';
       return;
@@ -269,9 +315,16 @@ export class XTermCustomRenderer implements IRenderer {
   }
 
   private _calculateDimensions(): IRenderDimensions {
-    const terminalElement = (this._terminal as unknown as { element?: HTMLElement }).element;
-    const containerRect = terminalElement?.getBoundingClientRect() ?? { width: 800, height: 600 };
-    const computedStyle = terminalElement ? window.getComputedStyle(terminalElement) : { fontSize: '12px', fontFamily: 'monospace', lineHeight: '1.2' };
+    const terminalElement = (
+      this._terminal as unknown as { element?: HTMLElement }
+    ).element;
+    const containerRect = terminalElement?.getBoundingClientRect() ?? {
+      width: 800,
+      height: 600,
+    };
+    const computedStyle = terminalElement
+      ? window.getComputedStyle(terminalElement)
+      : { fontSize: '12px', fontFamily: 'monospace', lineHeight: '1.2' };
     const fontSize = parseFloat(computedStyle.fontSize) || 12;
     const fontFamily = computedStyle.fontFamily || 'monospace';
     const lineHeightValue = parseFloat(computedStyle.lineHeight);
@@ -332,8 +385,10 @@ export class XTermCustomRenderer implements IRenderer {
   }
 
   private _ensureRowElements(rows: number): void {
-    if (!this._rowContainer) {return;}
-    
+    if (!this._rowContainer) {
+      return;
+    }
+
     const currentRows = this._rowContainer.children.length;
 
     if (currentRows < rows) {
@@ -358,8 +413,10 @@ export class XTermCustomRenderer implements IRenderer {
   }
 
   private _updateCursor(): void {
-    if (!this._cursorElement) {return;}
-    
+    if (!this._cursorElement) {
+      return;
+    }
+
     const buffer = this._terminal.buffer.active;
     this._cursorX = buffer.cursorX;
     this._cursorY = buffer.cursorY;

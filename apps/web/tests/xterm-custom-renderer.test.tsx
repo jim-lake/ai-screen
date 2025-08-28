@@ -6,13 +6,7 @@ const createMockTerminal = () => ({
   cols: 80,
   options: { cursorBlink: true },
   element: null as HTMLElement | null,
-  buffer: {
-    active: {
-      cursorX: 0,
-      cursorY: 0,
-      getLine: () => null,
-    },
-  },
+  buffer: { active: { cursorX: 0, cursorY: 0, getLine: () => null } },
 });
 
 describe('XTermCustomRenderer', () => {
@@ -194,13 +188,17 @@ describe('XTermCustomRenderer', () => {
 
   it('should dispose properly and remove all custom elements', () => {
     renderer.renderRows(0, 5); // Create DOM structure
-    
-    const initialCustomElements = container.querySelectorAll('.xterm-custom-overlay, .xterm-custom-rows, .xterm-custom-cursor');
+
+    const initialCustomElements = container.querySelectorAll(
+      '.xterm-custom-overlay, .xterm-custom-rows, .xterm-custom-cursor'
+    );
     expect(initialCustomElements.length).toBeGreaterThan(0);
 
     renderer.dispose();
 
-    const remainingCustomElements = container.querySelectorAll('.xterm-custom-overlay, .xterm-custom-rows, .xterm-custom-cursor');
+    const remainingCustomElements = container.querySelectorAll(
+      '.xterm-custom-overlay, .xterm-custom-rows, .xterm-custom-cursor'
+    );
     expect(remainingCustomElements.length).toBe(0);
   });
 
@@ -228,7 +226,7 @@ describe('XTermCustomRenderer', () => {
   it('should handle missing terminal element gracefully', () => {
     terminal.element = null;
     const rendererWithoutElement = new XTermCustomRenderer(terminal as any);
-    
+
     // Should not throw errors when terminal element is missing
     expect(() => {
       rendererWithoutElement.renderRows(0, 5);
@@ -236,7 +234,7 @@ describe('XTermCustomRenderer', () => {
       rendererWithoutElement.handleFocus();
       rendererWithoutElement.clear();
     }).not.toThrow();
-    
+
     rendererWithoutElement.dispose();
   });
 });

@@ -1,16 +1,25 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  vi,
+} from 'vitest';
 import { render, cleanup, screen } from '@testing-library/react';
 import { act } from 'react';
 import Terminal from '../src/components/terminal';
 import Api from '../src/tools/api';
-import { 
-  createTestSession, 
-  writeToSession, 
+import {
+  createTestSession,
+  writeToSession,
   waitForTerminalOutput,
   startTestServer,
   stopTestServer,
   getVisibleText,
-  withTestLogging 
+  withTestLogging,
 } from './test-utils';
 
 describe('Custom Renderer Integration', () => {
@@ -35,7 +44,8 @@ describe('Custom Renderer Integration', () => {
     cleanup();
   });
 
-  it('should use custom renderer and create expected DOM structure', 
+  it(
+    'should use custom renderer and create expected DOM structure',
     withTestLogging(async () => {
       const sessionName = 'test-custom-renderer';
       const session = await createTestSession(serverInfo.port, sessionName);
@@ -46,14 +56,20 @@ describe('Custom Renderer Integration', () => {
       await waitForTerminalOutput(300);
 
       // Execute a command to trigger rendering
-      await writeToSession(serverInfo.port, sessionName, 'echo "Testing custom renderer"\n');
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "Testing custom renderer"\n'
+      );
       await waitForTerminalOutput(300);
 
       const terminalInner = screen.getByTestId('terminal-inner');
       expect(terminalInner).toBeInTheDocument();
 
       // Verify custom renderer elements exist
-      const customOverlay = terminalInner.querySelector('.xterm-custom-overlay');
+      const customOverlay = terminalInner.querySelector(
+        '.xterm-custom-overlay'
+      );
       const customRows = terminalInner.querySelector('.xterm-custom-rows');
       const customCursor = terminalInner.querySelector('.xterm-custom-cursor');
 
@@ -71,7 +87,8 @@ describe('Custom Renderer Integration', () => {
     })
   );
 
-  it('should handle multiple commands with custom renderer', 
+  it(
+    'should handle multiple commands with custom renderer',
     withTestLogging(async () => {
       const sessionName = 'test-custom-renderer-multi';
       const session = await createTestSession(serverInfo.port, sessionName);
@@ -82,17 +99,27 @@ describe('Custom Renderer Integration', () => {
       await waitForTerminalOutput(300);
 
       // Execute multiple commands
-      await writeToSession(serverInfo.port, sessionName, 'echo "First command"\n');
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "First command"\n'
+      );
       await waitForTerminalOutput(300);
 
-      await writeToSession(serverInfo.port, sessionName, 'echo "Second command"\n');
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "Second command"\n'
+      );
       await waitForTerminalOutput(300);
 
       const terminalInner = screen.getByTestId('terminal-inner');
       expect(terminalInner).toBeInTheDocument();
 
       // Verify custom renderer is still working
-      const customOverlay = terminalInner.querySelector('.xterm-custom-overlay');
+      const customOverlay = terminalInner.querySelector(
+        '.xterm-custom-overlay'
+      );
       const customRows = terminalInner.querySelector('.xterm-custom-rows');
 
       expect(customOverlay).toBeTruthy();

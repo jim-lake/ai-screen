@@ -342,11 +342,10 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
       expect(domTextContent.length).toBeGreaterThan(80);
       expect(domTextContent.trim()).not.toBe('');
 
-      const hasCustomRendererContent =
-        expect(
-          domTextContent.includes('FILE_TEST_START') ||
-            domTextContent.length > 500
-        ).toBe(true);
+      const hasCustomRendererContent = expect(
+        domTextContent.includes('FILE_TEST_START') ||
+          domTextContent.length > 500
+      ).toBe(true);
 
       expect(terminalInner).toHaveAttribute('data-testid', 'terminal-inner');
     })
