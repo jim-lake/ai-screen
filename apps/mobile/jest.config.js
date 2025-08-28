@@ -1,1 +1,4 @@
-module.exports = { preset: 'react-native' };
+module.exports = {
+  preset: 'react-native',
+  roots: ['<rootDir>/tests']
+};
