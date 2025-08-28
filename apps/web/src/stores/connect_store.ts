@@ -2,7 +2,7 @@ import { useCallback, useSyncExternalStore } from 'react';
 import EventEmitter from 'events';
 import { Terminal } from '@xterm/xterm';
 import { displayStateToAnsi, jsonParse } from '@ai-screen/shared';
-import { CustomRendererAddon } from '../components/xterm_custom_renderer_addon';
+import { ReactRendererAddon } from '../components/xterm_react_renderer_addon';
 
 import { createWebSocket } from '../tools/api';
 import { log, errorLog } from '../tools/log';
@@ -127,7 +127,7 @@ async function _create(params: ConnectParams) {
             ...terminalOptions,
           };
           terminal = new Terminal(opts);
-          terminal.loadAddon(new CustomRendererAddon());
+          terminal.loadAddon(new ReactRendererAddon(sessionName));
           const element = g_elementMap.get(sessionName) ?? null;
           if (element) {
             terminal.open(element);

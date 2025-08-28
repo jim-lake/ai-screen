@@ -63,8 +63,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
       const sessionName = 'simple-test-session-1';
       const session = await createTestSession(serverInfo.port, sessionName);
 
+      let renderResult: any;
       await act(async () => {
-        render(<Terminal session={session} zoom='EXPAND' />);
+        renderResult = render(<Terminal session={session} zoom='EXPAND' />);
       });
       await writeToSession(
         serverInfo.port,
@@ -72,6 +73,11 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
         'echo "Simple Test"\n'
       );
       await waitForTerminalOutput(300);
+
+      // Force React to re-render for React renderer
+      await act(async () => {
+        renderResult.rerender(<Terminal session={session} zoom='EXPAND' />);
+      });
 
       const terminalInner = screen.getByTestId('terminal-inner');
       expect(terminalInner).toBeInTheDocument();
@@ -90,8 +96,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     withTestLogging(async () => {
       const sessionName = 'simple-test-session-3';
       const session = await createTestSession(serverInfo.port, sessionName);
+      let renderResult: any;
       await act(async () => {
-        render(<Terminal session={session} zoom='EXPAND' />);
+        renderResult = render(<Terminal session={session} zoom='EXPAND' />);
       });
       await waitForTerminalOutput(300);
 
@@ -104,6 +111,11 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
 
       await writeToSession(serverInfo.port, sessionName, 'pwd\n');
       await waitForTerminalOutput(200);
+
+      // Force React to re-render for React renderer
+      await act(async () => {
+        renderResult.rerender(<Terminal session={session} zoom='EXPAND' />);
+      });
 
       const terminalInner = screen.getByTestId('terminal-inner');
       expect(terminalInner).toBeInTheDocument();
@@ -182,8 +194,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     withTestLogging(async () => {
       const sessionName = 'simple-test-session-7';
       const session = await createTestSession(serverInfo.port, sessionName);
+      let renderResult: any;
       await act(async () => {
-        render(<Terminal session={session} zoom='EXPAND' />);
+        renderResult = render(<Terminal session={session} zoom='EXPAND' />);
       });
       await waitForTerminalOutput(100);
 
@@ -198,6 +211,11 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
         await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
         await waitForTerminalOutput(100);
       }
+
+      // Force React to re-render for React renderer
+      await act(async () => {
+        renderResult.rerender(<Terminal session={session} zoom='EXPAND' />);
+      });
 
       const terminalState = await getTerminalState(
         serverInfo.port,
@@ -224,8 +242,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     withTestLogging(async () => {
       const sessionName = 'simple-test-session-8';
       const session = await createTestSession(serverInfo.port, sessionName);
+      let renderResult: any;
       await act(async () => {
-        render(<Terminal session={session} zoom='EXPAND' />);
+        renderResult = render(<Terminal session={session} zoom='EXPAND' />);
       });
       await waitForTerminalOutput(300);
 
@@ -235,6 +254,11 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
         'cat /nonexistent/file\n'
       );
       await waitForTerminalOutput(300);
+
+      // Force React to re-render for React renderer
+      await act(async () => {
+        renderResult.rerender(<Terminal session={session} zoom='EXPAND' />);
+      });
 
       const terminalInner = screen.getByTestId('terminal-inner');
       expect(terminalInner).toBeInTheDocument();
