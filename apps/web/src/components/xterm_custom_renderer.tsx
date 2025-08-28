@@ -245,38 +245,14 @@ export class XTermCustomRenderer implements IRenderer {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    const buffer = this._terminal.buffer?.active;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!buffer) {
-      this._ensureRowElements(this._terminal.rows);
-      for (let y = start; y <= end; y++) {
-        this._renderEmptyRow(y);
-      }
-      return;
-    }
-
+    const buffer = this._terminal.buffer.active;
     this._ensureRowElements(this._terminal.rows);
 
-    try {
-      for (let y = start; y <= end; y++) {
-        this._renderRow(y, buffer);
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn('Custom renderer failed:', error);
-      for (let y = start; y <= end; y++) {
-        this._renderEmptyRow(y);
-      }
+    for (let y = start; y <= end; y++) {
+      this._renderRow(y, buffer);
     }
 
     this._updateCursor();
-  }
-
-  private _renderEmptyRow(y: number): void {
-    if (!this._rowContainer) {return;}
-    const rowElement = this._rowContainer.children[y] as HTMLElement;
-    rowElement.innerHTML = '&nbsp;'.repeat(this._terminal.cols);
   }
 
   private _renderRow(y: number, buffer: unknown): void {
@@ -384,16 +360,9 @@ export class XTermCustomRenderer implements IRenderer {
   private _updateCursor(): void {
     if (!this._cursorElement) {return;}
     
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    const buffer = this._terminal.buffer?.active;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!buffer) {
-      this._cursorX = 0;
-      this._cursorY = 0;
-    } else {
-      this._cursorX = buffer.cursorX;
-      this._cursorY = buffer.cursorY;
-    }
+    const buffer = this._terminal.buffer.active;
+    this._cursorX = buffer.cursorX;
+    this._cursorY = buffer.cursorY;
 
     const x = this._cursorX * this._dimensions.css.cell.width;
     const y = this._cursorY * this._dimensions.css.cell.height;

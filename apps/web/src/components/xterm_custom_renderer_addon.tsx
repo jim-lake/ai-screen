@@ -1,7 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-shadow */
 import { Terminal } from '@xterm/xterm';
 import type { ITerminalAddon, IDisposable } from '@xterm/xterm';
 import { XTermCustomRenderer } from './xterm_custom_renderer';
+
+interface TerminalCore {
+  _core: {
+    onWillOpen: (callback: () => void) => IDisposable;
+    _renderService: {
+      setRenderer: (renderer: unknown) => void;
+      handleResize: (cols: number, rows: number) => void;
+    };
+    _createRenderer: () => unknown;
+  };
+}
 
 export class CustomRendererAddon implements ITerminalAddon, IDisposable {
   private _renderer?: XTermCustomRenderer;
@@ -9,24 +19,26 @@ export class CustomRendererAddon implements ITerminalAddon, IDisposable {
   private _disposables: IDisposable[] = [];
 
   public activate(terminal: Terminal): void {
-    const core = (terminal as any)._core;
+    const terminalWithCore = terminal as Terminal & TerminalCore;
+    const core = terminalWithCore._core;
+    
     if (!terminal.element) {
       this.register(core.onWillOpen(() => this.activate(terminal)));
       return;
     }
 
     this._terminal = terminal;
-    const unsafeCore = core;
-    const renderService = unsafeCore._renderService;
+    const renderService = core._renderService;
 
     this._renderer = this.register(new XTermCustomRenderer(terminal));
     renderService.setRenderer(this._renderer);
 
     this.register({
       dispose: () => {
-        const renderService = (this._terminal as any)._core._renderService;
-        renderService.setRenderer((this._terminal as any)._core._createRenderer());
-        renderService.handleResize(terminal.cols, terminal.rows);
+        const terminalCore = (this._terminal as Terminal & TerminalCore)._core;
+        const service = terminalCore._renderService;
+        service.setRenderer(terminalCore._createRenderer());
+        service.handleResize(terminal.cols, terminal.rows);
       }
     });
   }

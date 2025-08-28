@@ -6,6 +6,13 @@ const createMockTerminal = () => ({
   cols: 80,
   options: { cursorBlink: true },
   element: null as HTMLElement | null,
+  buffer: {
+    active: {
+      cursorX: 0,
+      cursorY: 0,
+      getLine: () => null,
+    },
+  },
 });
 
 describe('XTermCustomRenderer', () => {
