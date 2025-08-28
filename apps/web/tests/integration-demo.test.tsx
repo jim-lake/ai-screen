@@ -19,6 +19,12 @@ vi.mock('@xterm/xterm', () => {
     options: { fontFamily: 'monospace', fontSize: 14 },
     rows: 24,
     cols: 80,
+    buffer: {
+      active: {
+        length: 24,
+        getLine: vi.fn(() => ({ translateToString: () => '' })),
+      },
+    },
     open: vi.fn(),
     write: vi.fn(),
     resize: vi.fn(),
@@ -34,6 +40,12 @@ vi.mock('../src/stores/connect_store', () => ({
   resize: vi.fn(),
   useTerminal: vi.fn(() => ({
     options: { fontFamily: 'monospace', fontSize: 14 },
+    buffer: {
+      active: {
+        length: 24,
+        getLine: vi.fn(() => ({ translateToString: () => '' })),
+      },
+    },
   })),
   useTerminalSize: vi.fn(() => ({ rows: 24, columns: 80 })),
 }));
