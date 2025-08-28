@@ -69,285 +69,327 @@ describe('Terminal Component - End-to-End Tests', () => {
     vi.clearAllMocks();
   });
 
-  it('renders terminal with real session data from server', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-1';
-    const session = await createTestSession(serverInfo.port, sessionName);
+  it(
+    'renders terminal with real session data from server',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-1';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    await act(async () => {
-      render(<Terminal session={session} zoom='EXPAND' />);
-    });
+      await act(async () => {
+        render(<Terminal session={session} zoom='EXPAND' />);
+      });
 
-    // Verify the terminal container is rendered
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
-  }));
-
-  it('displays real terminal output after executing commands', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-2';
-    const session = await createTestSession(serverInfo.port, sessionName);
-
-    await act(async () => {
-      render(<Terminal session={session} zoom='EXPAND' />);
-    });
-    await waitForTerminalOutput(200);
-
-    await waitFor(() => {
+      // Verify the terminal container is rendered
       const terminalInner = screen.getByTestId('terminal-inner');
       expect(terminalInner).toBeInTheDocument();
-    });
-    await waitForTerminalOutput(200);
+    })
+  );
 
-    // Execute a simple command
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'echo "Hello E2E Test"\n'
-    );
-    await waitForTerminalOutput(200);
+  it(
+    'displays real terminal output after executing commands',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-2';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    const textContent = getVisibleText(screen.getByTestId('terminal-inner'));
-    console.log('textContent:', textContent);
-    expect(textContent).toContain('Hello E2E Test');
-  }));
+      await act(async () => {
+        render(<Terminal session={session} zoom='EXPAND' />);
+      });
+      await waitForTerminalOutput(200);
 
-  it('handles multiple commands and complex output', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-3';
-    const session = await createTestSession(serverInfo.port, sessionName);
+      await waitFor(() => {
+        const terminalInner = screen.getByTestId('terminal-inner');
+        expect(terminalInner).toBeInTheDocument();
+      });
+      await waitForTerminalOutput(200);
 
-    await act(async () => {
-      render(<Terminal session={session} zoom='EXPAND' />);
-    });
+      // Execute a simple command
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "Hello E2E Test"\n'
+      );
+      await waitForTerminalOutput(200);
 
-    // Execute multiple commands
-    await writeToSession(serverInfo.port, sessionName, 'pwd\n');
-    await waitForTerminalOutput(100);
+      const textContent = getVisibleText(screen.getByTestId('terminal-inner'));
+      console.log('textContent:', textContent);
+      expect(textContent).toContain('Hello E2E Test');
+    })
+  );
 
-    await writeToSession(serverInfo.port, sessionName, 'ls -la\n');
-    await waitForTerminalOutput(200);
+  it(
+    'handles multiple commands and complex output',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-3';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'echo "Current directory: $(pwd)"\n'
-    );
-    await waitForTerminalOutput(100);
+      await act(async () => {
+        render(<Terminal session={session} zoom='EXPAND' />);
+      });
 
-    await waitFor(() => {
-      const terminalInner = screen.getByTestId('terminal-inner');
-      expect(terminalInner).toBeInTheDocument();
-    });
+      // Execute multiple commands
+      await writeToSession(serverInfo.port, sessionName, 'pwd\n');
+      await waitForTerminalOutput(100);
 
-    // Verify DOM content contains our commands
-    const terminalInner = screen.getByTestId('terminal-inner');
-    const textContent = getVisibleText(terminalInner);
+      await writeToSession(serverInfo.port, sessionName, 'ls -la\n');
+      await waitForTerminalOutput(200);
 
-    expect(textContent).toContain('pwd');
-    expect(textContent).toContain('ls -la');
-    expect(textContent).toContain('Current directory:');
-    expect(textContent.length).toBeGreaterThan(50);
-  }));
-
-  it('displays file listing output correctly', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-4';
-    const session = await createTestSession(serverInfo.port, sessionName);
-
-    await act(async () => {
-      render(<Terminal session={session} zoom='EXPAND' />);
-    });
-
-    // Create a test file and list it
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'echo "test content" > test-e2e.txt\n'
-    );
-    await waitForTerminalOutput(100);
-
-    await writeToSession(serverInfo.port, sessionName, 'ls -la test-e2e.txt\n');
-    await waitForTerminalOutput(200);
-
-    await writeToSession(serverInfo.port, sessionName, 'cat test-e2e.txt\n');
-    await waitForTerminalOutput(100);
-
-    // Clean up
-    await writeToSession(serverInfo.port, sessionName, 'rm test-e2e.txt\n');
-    await waitForTerminalOutput(100);
-
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
-
-    const textContent = getVisibleText(terminalInner);
-    expect(textContent).toContain('test-e2e.txt');
-    expect(textContent).toContain('test content');
-    expect(textContent).toContain('cat test-e2e.txt');
-  }));
-
-  it('handles error commands and displays error output', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-5';
-    const session = await createTestSession(serverInfo.port, sessionName);
-
-    await act(async () => {
-      render(<Terminal session={session} zoom='EXPAND' />);
-    });
-
-    // Execute commands that will produce errors
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'cat nonexistent-file.txt\n'
-    );
-    await waitForTerminalOutput(200);
-
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'ls /nonexistent-directory\n'
-    );
-    await waitForTerminalOutput(200);
-
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
-
-    const textContent = getVisibleText(terminalInner);
-    const hasErrorMessage =
-      textContent.includes('No such file or directory') ||
-      textContent.includes('cannot access') ||
-      textContent.includes('not found');
-    expect(hasErrorMessage).toBe(true);
-  }));
-
-  it('displays cursor position correctly from real terminal state', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-6';
-    const session = await createTestSession(serverInfo.port, sessionName);
-
-    await act(async () => {
-      render(<Terminal session={session} zoom='EXPAND' />);
-    });
-    await waitForTerminalOutput(200);
-
-    // Execute a command that leaves cursor in a known state
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'echo -n "Cursor test: "'
-    );
-    await waitForTerminalOutput(300);
-
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
-
-    const textContent = getVisibleText(terminalInner);
-    expect(textContent.length).toBeGreaterThan(0);
-  }));
-
-  it('handles terminal resize operations with real server', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-7';
-    const session = await createTestSession(serverInfo.port, sessionName);
-
-    // Test different zoom modes (excluding FIT which causes issues in test environment)
-    const zoomModes: Array<'SHRINK' | 'EXPAND'> = ['SHRINK', 'EXPAND'];
-
-    for (const zoom of zoomModes) {
-      const { unmount } = render(<Terminal session={session} zoom={zoom} />);
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "Current directory: $(pwd)"\n'
+      );
+      await waitForTerminalOutput(100);
 
       await waitFor(() => {
         const terminalInner = screen.getByTestId('terminal-inner');
         expect(terminalInner).toBeInTheDocument();
       });
 
-      unmount();
-    }
-  }));
+      // Verify DOM content contains our commands
+      const terminalInner = screen.getByTestId('terminal-inner');
+      const textContent = getVisibleText(terminalInner);
 
-  it('processes real ANSI escape sequences from terminal output', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-8';
-    const session = await createTestSession(serverInfo.port, sessionName);
+      expect(textContent).toContain('pwd');
+      expect(textContent).toContain('ls -la');
+      expect(textContent).toContain('Current directory:');
+      expect(textContent.length).toBeGreaterThan(50);
+    })
+  );
 
-    await act(async () => {
-      render(<Terminal session={session} zoom='EXPAND' />);
-    });
+  it(
+    'displays file listing output correctly',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-4';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    // Execute commands that produce ANSI escape sequences
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'echo -e "\\033[31mRed text\\033[0m"\n'
-    );
-    await waitForTerminalOutput(100);
+      await act(async () => {
+        render(<Terminal session={session} zoom='EXPAND' />);
+      });
 
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'echo -e "\\033[1mBold text\\033[0m"\n'
-    );
-    await waitForTerminalOutput(100);
+      // Create a test file and list it
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "test content" > test-e2e.txt\n'
+      );
+      await waitForTerminalOutput(100);
 
-    await writeToSession(serverInfo.port, sessionName, 'ls --color=always\n');
-    await waitForTerminalOutput(200);
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'ls -la test-e2e.txt\n'
+      );
+      await waitForTerminalOutput(200);
 
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
+      await writeToSession(serverInfo.port, sessionName, 'cat test-e2e.txt\n');
+      await waitForTerminalOutput(100);
 
-    const textContent = getVisibleText(terminalInner);
-    const hasAnsiContent =
-      textContent.includes('Red text') ||
-      textContent.includes('Bold text') ||
-      textContent.includes('ls --color=always');
-    expect(hasAnsiContent).toBe(true);
-  }));
+      // Clean up
+      await writeToSession(serverInfo.port, sessionName, 'rm test-e2e.txt\n');
+      await waitForTerminalOutput(100);
 
-  it('maintains terminal state consistency across re-renders', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-9';
-    const session = await createTestSession(serverInfo.port, sessionName);
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
 
-    // Render with initial state
-    const { rerender } = render(<Terminal session={session} zoom='EXPAND' />);
+      const textContent = getVisibleText(terminalInner);
+      expect(textContent).toContain('test-e2e.txt');
+      expect(textContent).toContain('test content');
+      expect(textContent).toContain('cat test-e2e.txt');
+    })
+  );
 
-    // Execute some commands to create state
-    await writeToSession(serverInfo.port, sessionName, 'echo "State test 1"\n');
-    await waitForTerminalOutput(100);
+  it(
+    'handles error commands and displays error output',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-5';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    await writeToSession(serverInfo.port, sessionName, 'echo "State test 2"\n');
-    await waitForTerminalOutput(100);
+      await act(async () => {
+        render(<Terminal session={session} zoom='EXPAND' />);
+      });
 
-    // Re-render with same session (component should handle updates internally)
-    rerender(<Terminal session={session} zoom='EXPAND' />);
+      // Execute commands that will produce errors
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'cat nonexistent-file.txt\n'
+      );
+      await waitForTerminalOutput(200);
 
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'ls /nonexistent-directory\n'
+      );
+      await waitForTerminalOutput(200);
 
-    const textContent = getVisibleText(terminalInner);
-    expect(textContent).toContain('State test 1');
-    expect(textContent).toContain('State test 2');
-  }));
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
 
-  it('handles long-running commands and output streaming', withTestLogging(async () => {
-    const sessionName = 'e2e-test-session-10';
-    const session = await createTestSession(serverInfo.port, sessionName);
+      const textContent = getVisibleText(terminalInner);
+      const hasErrorMessage =
+        textContent.includes('No such file or directory') ||
+        textContent.includes('cannot access') ||
+        textContent.includes('not found');
+      expect(hasErrorMessage).toBe(true);
+    })
+  );
 
-    await act(async () => {
-      render(<Terminal session={session} zoom='EXPAND' />);
-    });
+  it(
+    'displays cursor position correctly from real terminal state',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-6';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    // Execute a command that produces multiple lines of output
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'for i in {1..5}; do echo "Line $i"; sleep 0.1; done\n'
-    );
+      await act(async () => {
+        render(<Terminal session={session} zoom='EXPAND' />);
+      });
+      await waitForTerminalOutput(200);
 
-    // Wait for command to complete
-    await waitForTerminalOutput(1000);
+      // Execute a command that leaves cursor in a known state
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo -n "Cursor test: "'
+      );
+      await waitForTerminalOutput(300);
 
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
 
-    const textContent = getVisibleText(terminalInner);
+      const textContent = getVisibleText(terminalInner);
+      expect(textContent.length).toBeGreaterThan(0);
+    })
+  );
 
-    // Verify we captured multiple lines of output
-    const hasMultipleLines =
-      textContent.includes('Line 1') && textContent.includes('Line 5');
-    expect(hasMultipleLines).toBe(true);
-    expect(textContent.length).toBeGreaterThan(50);
-  }));
+  it(
+    'handles terminal resize operations with real server',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-7';
+      const session = await createTestSession(serverInfo.port, sessionName);
+
+      // Test different zoom modes (excluding FIT which causes issues in test environment)
+      const zoomModes: Array<'SHRINK' | 'EXPAND'> = ['SHRINK', 'EXPAND'];
+
+      for (const zoom of zoomModes) {
+        const { unmount } = render(<Terminal session={session} zoom={zoom} />);
+
+        await waitFor(() => {
+          const terminalInner = screen.getByTestId('terminal-inner');
+          expect(terminalInner).toBeInTheDocument();
+        });
+
+        unmount();
+      }
+    })
+  );
+
+  it(
+    'processes real ANSI escape sequences from terminal output',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-8';
+      const session = await createTestSession(serverInfo.port, sessionName);
+
+      await act(async () => {
+        render(<Terminal session={session} zoom='EXPAND' />);
+      });
+
+      // Execute commands that produce ANSI escape sequences
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo -e "\\033[31mRed text\\033[0m"\n'
+      );
+      await waitForTerminalOutput(100);
+
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo -e "\\033[1mBold text\\033[0m"\n'
+      );
+      await waitForTerminalOutput(100);
+
+      await writeToSession(serverInfo.port, sessionName, 'ls --color=always\n');
+      await waitForTerminalOutput(200);
+
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
+
+      const textContent = getVisibleText(terminalInner);
+      const hasAnsiContent =
+        textContent.includes('Red text') ||
+        textContent.includes('Bold text') ||
+        textContent.includes('ls --color=always');
+      expect(hasAnsiContent).toBe(true);
+    })
+  );
+
+  it(
+    'maintains terminal state consistency across re-renders',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-9';
+      const session = await createTestSession(serverInfo.port, sessionName);
+
+      // Render with initial state
+      const { rerender } = render(<Terminal session={session} zoom='EXPAND' />);
+
+      // Execute some commands to create state
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "State test 1"\n'
+      );
+      await waitForTerminalOutput(100);
+
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "State test 2"\n'
+      );
+      await waitForTerminalOutput(100);
+
+      // Re-render with same session (component should handle updates internally)
+      rerender(<Terminal session={session} zoom='EXPAND' />);
+
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
+
+      const textContent = getVisibleText(terminalInner);
+      expect(textContent).toContain('State test 1');
+      expect(textContent).toContain('State test 2');
+    })
+  );
+
+  it(
+    'handles long-running commands and output streaming',
+    withTestLogging(async () => {
+      const sessionName = 'e2e-test-session-10';
+      const session = await createTestSession(serverInfo.port, sessionName);
+
+      await act(async () => {
+        render(<Terminal session={session} zoom='EXPAND' />);
+      });
+
+      // Execute a command that produces multiple lines of output
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'for i in {1..5}; do echo "Line $i"; sleep 0.1; done\n'
+      );
+
+      // Wait for command to complete
+      await waitForTerminalOutput(1000);
+
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
+
+      const textContent = getVisibleText(terminalInner);
+
+      // Verify we captured multiple lines of output
+      const hasMultipleLines =
+        textContent.includes('Line 1') && textContent.includes('Line 5');
+      expect(hasMultipleLines).toBe(true);
+      expect(textContent.length).toBeGreaterThan(50);
+    })
+  );
 });

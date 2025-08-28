@@ -20,26 +20,36 @@ describe('Debug Terminal Buffer', () => {
     await stopTestServer();
   });
 
-  it('shows what is actually in the terminal buffer', withTestLogging(async () => {
-    const sessionName = 'debug-session';
-    const session = await createTestSession(serverInfo.port, sessionName);
+  it(
+    'shows what is actually in the terminal buffer',
+    withTestLogging(async () => {
+      const sessionName = 'debug-session';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    console.log('Session created:', session);
+      console.log('Session created:', session);
 
-    // Execute a command
-    await writeToSession(serverInfo.port, sessionName, 'echo "Hello Debug"\n');
-    await waitForTerminalOutput(500); // Wait longer
+      // Execute a command
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "Hello Debug"\n'
+      );
+      await waitForTerminalOutput(500); // Wait longer
 
-    // Get terminal state
-    const terminalState = await getTerminalState(serverInfo.port, sessionName);
+      // Get terminal state
+      const terminalState = await getTerminalState(
+        serverInfo.port,
+        sessionName
+      );
 
-    console.log('Terminal state:', JSON.stringify(terminalState, null, 2));
-    console.log('Buffer contents:');
-    terminalState.normal.buffer.forEach((line, index) => {
-      console.log(`  [${index}]: "${line}"`);
-    });
+      console.log('Terminal state:', JSON.stringify(terminalState, null, 2));
+      console.log('Buffer contents:');
+      terminalState.normal.buffer.forEach((line, index) => {
+        console.log(`  [${index}]: "${line}"`);
+      });
 
-    // Just verify we got some data
-    expect(terminalState.normal.buffer.length).toBeGreaterThan(0);
-  }));
+      // Just verify we got some data
+      expect(terminalState.normal.buffer.length).toBeGreaterThan(0);
+    })
+  );
 });

@@ -21,7 +21,7 @@ export class CustomRendererAddon implements ITerminalAddon, IDisposable {
   }
 
   private _setupCustomRenderer(terminal: Terminal): void {
-    const {element} = terminal;
+    const { element } = terminal;
     if (!element) {
       // Try again later if element is not ready
       setTimeout(() => {
@@ -60,7 +60,9 @@ export class CustomRendererAddon implements ITerminalAddon, IDisposable {
   }
 
   private _setupEventListeners(terminal: Terminal): void {
-    if (!this._renderer) {return;}
+    if (!this._renderer) {
+      return;
+    }
 
     // Listen for data events to trigger rendering
     this._dataDisposable = terminal.onData(() => {

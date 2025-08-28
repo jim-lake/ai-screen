@@ -63,376 +63,415 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     vi.clearAllMocks();
   });
 
-  it('renders terminal component with real xterm and WebSocket connection', withTestLogging(async () => {
-    const sessionName = 'content-test-session-1';
-    const session = await createTestSession(serverInfo.port, sessionName);
+  it(
+    'renders terminal component with real xterm and WebSocket connection',
+    withTestLogging(async () => {
+      const sessionName = 'content-test-session-1';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    await act(async () => {
-      render(<Terminal session={session} zoom='EXPAND' />);
-    });
-    await waitForTerminalOutput(200);
+      await act(async () => {
+        render(<Terminal session={session} zoom='EXPAND' />);
+      });
+      await waitForTerminalOutput(200);
 
-    // Execute real commands on the server
-    await writeToSession(
-      serverInfo.port,
-      sessionName,
-      'echo "Hello Real World"\n'
-    );
-    await waitForTerminalOutput(200);
+      // Execute real commands on the server
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "Hello Real World"\n'
+      );
+      await waitForTerminalOutput(200);
 
-    await writeToSession(serverInfo.port, sessionName, 'ls -la\n');
-    await waitForTerminalOutput(200);
+      await writeToSession(serverInfo.port, sessionName, 'ls -la\n');
+      await waitForTerminalOutput(200);
 
-    await writeToSession(serverInfo.port, sessionName, 'pwd\n');
-    await waitForTerminalOutput(100);
+      await writeToSession(serverInfo.port, sessionName, 'pwd\n');
+      await waitForTerminalOutput(100);
 
-    // Get real terminal state from server
-    const terminalState = await getTerminalState(serverInfo.port, sessionName);
-
-    const sessionWithRealContent: SessionJson = {
-      ...session,
-      activeTerminal: terminalState,
-    };
-
-    // Verify the terminal component rendered
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
-
-    // Wait for terminal to be ready and potentially connect via WebSocket
-    await waitFor(
-      () => {
-        expect(terminalInner).toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
-
-    // Give xterm more time to render content to DOM and check periodically
-    let domTextContent = '';
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    while (attempts < maxAttempts && domTextContent.length < 50) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      domTextContent = getVisibleText(terminalInner);
-      attempts++;
-    }
-
-    // Verify that the terminal component structure is correct
-    expect(terminalInner.tagName.toLowerCase()).toBe('div');
-    expect(terminalInner).toHaveAttribute('data-testid', 'terminal-inner');
-
-    // Verify real terminal state structure from server (but don't inspect buffer content)
-    expect(terminalState.normal.buffer.length).toBeGreaterThan(3);
-    expect(terminalState.normal.cursor).toBeDefined();
-    expect(typeof terminalState.normal.cursor.x).toBe('number');
-    expect(typeof terminalState.normal.cursor.y).toBe('number');
-
-    // Focus on DOM content verification - this is what we actually want to test
-    if (domTextContent.length === 0) {
-      // If DOM content is still empty, verify xterm structure exists
-      const xtermElements = terminalInner.querySelectorAll(
-        '.xterm, .xterm-screen, .xterm-viewport, .xterm-rows'
+      // Get real terminal state from server
+      const terminalState = await getTerminalState(
+        serverInfo.port,
+        sessionName
       );
 
-      // At minimum, verify that the terminal component rendered
+      const sessionWithRealContent: SessionJson = {
+        ...session,
+        activeTerminal: terminalState,
+      };
+
+      // Verify the terminal component rendered
+      const terminalInner = screen.getByTestId('terminal-inner');
       expect(terminalInner).toBeInTheDocument();
-      expect(terminalInner.children.length).toBeGreaterThan(0);
 
-      // Verify xterm has created its DOM structure
-      expect(xtermElements.length).toBeGreaterThan(0);
-    } else {
-      // This is the main test - verify xterm rendered real content to the DOM
-      console.log('DOM content length:', domTextContent.length);
-      console.log('DOM content preview:', domTextContent.substring(0, 200));
+      // Wait for terminal to be ready and potentially connect via WebSocket
+      await waitFor(
+        () => {
+          expect(terminalInner).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
 
-      // Verify the DOM content is substantial and real
+      // Give xterm more time to render content to DOM and check periodically
+      let domTextContent = '';
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      while (attempts < maxAttempts && domTextContent.length < 50) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        domTextContent = getVisibleText(terminalInner);
+        attempts++;
+      }
+
+      // Verify that the terminal component structure is correct
+      expect(terminalInner.tagName.toLowerCase()).toBe('div');
+      expect(terminalInner).toHaveAttribute('data-testid', 'terminal-inner');
+
+      // Verify real terminal state structure from server (but don't inspect buffer content)
+      expect(terminalState.normal.buffer.length).toBeGreaterThan(3);
+      expect(terminalState.normal.cursor).toBeDefined();
+      expect(typeof terminalState.normal.cursor.x).toBe('number');
+      expect(typeof terminalState.normal.cursor.y).toBe('number');
+
+      // Focus on DOM content verification - this is what we actually want to test
+      if (domTextContent.length === 0) {
+        // If DOM content is still empty, verify xterm structure exists
+        const xtermElements = terminalInner.querySelectorAll(
+          '.xterm, .xterm-screen, .xterm-viewport, .xterm-rows'
+        );
+
+        // At minimum, verify that the terminal component rendered
+        expect(terminalInner).toBeInTheDocument();
+        expect(terminalInner.children.length).toBeGreaterThan(0);
+
+        // Verify xterm has created its DOM structure
+        expect(xtermElements.length).toBeGreaterThan(0);
+      } else {
+        // This is the main test - verify xterm rendered real content to the DOM
+        console.log('DOM content length:', domTextContent.length);
+        console.log('DOM content preview:', domTextContent.substring(0, 200));
+
+        // Verify the DOM content is substantial and real
+        expect(domTextContent.length).toBeGreaterThan(50);
+        expect(domTextContent.trim()).not.toBe('');
+
+        // Verify xterm has rendered terminal-like content (prompt, commands, etc.)
+        const hasPrompt =
+          domTextContent.includes('$') || domTextContent.includes('@');
+        const hasContent = domTextContent.length > 100;
+
+        expect(hasPrompt || hasContent).toBe(true);
+
+        // Verify xterm CSS classes are present (indicating real xterm rendering)
+        const xtermElements = terminalInner.querySelectorAll(
+          '.xterm, .xterm-screen, .xterm-viewport'
+        );
+        expect(xtermElements.length).toBeGreaterThan(0);
+      }
+    })
+  );
+
+  it(
+    'verifies terminal component handles complex real terminal output with WebSocket',
+    withTestLogging(async () => {
+      const sessionName = 'content-test-session-2';
+      const session = await createTestSession(serverInfo.port, sessionName);
+
+      // Use environment-independent commands that create their own content
+      const tmpDir = os.tmpdir();
+      const commands = [
+        `cd "${tmpDir}"`,
+        'echo "TEST_MARKER_START"',
+        'echo "Current directory: $(pwd)"',
+        'echo "Test file content" > test_output.txt',
+        'cat test_output.txt',
+        'echo "Files created: $(ls test_output.txt 2>/dev/null | wc -l)"',
+        'echo "TEST_MARKER_END"',
+      ];
+
+      for (const cmd of commands) {
+        await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
+        await waitForTerminalOutput(100);
+      }
+
+      const terminalState = await getTerminalState(
+        serverInfo.port,
+        sessionName
+      );
+
+      const sessionWithRealContent: SessionJson = {
+        ...session,
+        activeTerminal: terminalState,
+      };
+
+      await act(async () => {
+        render(<Terminal session={sessionWithRealContent} zoom='FIT' />);
+      });
+
+      // Wait for WebSocket connection to establish and terminal to render
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
+
+      // Wait for terminal to be ready and xterm to render content
+      // The WebSocket connection creates a new Terminal instance and writes buffer content
+      // We need to wait for this process to complete
+      await waitFor(
+        () => {
+          const domText = getVisibleText(terminalInner);
+          return domText.length > 100; // Wait for substantial content
+        },
+        { timeout: 10000, interval: 200 } // Increased timeout and check interval
+      );
+
+      // Check the actual DOM text content rendered by xterm
+      const domTextContent = getVisibleText(terminalInner);
+
+      console.log('Complex test DOM content length:', domTextContent.length);
+      console.log(
+        'Complex test DOM content preview:',
+        domTextContent.substring(0, 200)
+      );
+
+      // The renderer must be working - only check DOM content
+      expect(domTextContent.length).toBeGreaterThan(100);
+      expect(domTextContent.trim()).not.toBe('');
+
+      // Verify the terminal component is properly structured
+      expect(terminalInner.nodeType).toBe(Node.ELEMENT_NODE);
+      expect(terminalInner.tagName.toLowerCase()).toBe('div');
+    })
+  );
+
+  it(
+    'handles real error messages and special characters with WebSocket terminal',
+    withTestLogging(async () => {
+      const sessionName = 'content-test-session-3';
+      const session = await createTestSession(serverInfo.port, sessionName);
+
+      // Use environment-independent commands that create predictable errors and content
+      const tmpDir = os.tmpdir();
+      const commands = [
+        `cd "${tmpDir}"`,
+        'echo "ERROR_TEST_START"',
+        `cat "${tmpDir}/nonexistent_test_file_12345.txt" 2>&1 || echo "Expected error occurred"`,
+        'echo "Special chars: !@#$%^&*()"',
+        'echo -e "\\033[31mRed Text\\033[0m"',
+        'echo "ERROR_TEST_END"',
+      ];
+
+      for (const cmd of commands) {
+        await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
+        await waitForTerminalOutput(100);
+      }
+
+      const terminalState = await getTerminalState(
+        serverInfo.port,
+        sessionName
+      );
+
+      const sessionWithRealContent: SessionJson = {
+        ...session,
+        activeTerminal: terminalState,
+      };
+
+      await act(async () => {
+        render(<Terminal session={sessionWithRealContent} zoom='FIT' />);
+      });
+
+      // Wait for WebSocket connection to establish and terminal to render
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
+
+      // Wait for xterm to render content to DOM
+      await waitFor(
+        () => {
+          const domText = getVisibleText(terminalInner);
+          return domText.length > 50; // Wait for substantial content
+        },
+        { timeout: 10000, interval: 200 } // Increased timeout and check interval
+      );
+
+      // Check the actual DOM text content rendered by xterm
+      const domTextContent = getVisibleText(terminalInner);
+
+      console.log('Error test DOM content length:', domTextContent.length);
+      console.log(
+        'Error test DOM content preview:',
+        domTextContent.substring(0, 200)
+      );
+
+      // The renderer must be working - only check DOM content
       expect(domTextContent.length).toBeGreaterThan(50);
       expect(domTextContent.trim()).not.toBe('');
 
-      // Verify xterm has rendered terminal-like content (prompt, commands, etc.)
-      const hasPrompt =
-        domTextContent.includes('$') || domTextContent.includes('@');
-      const hasContent = domTextContent.length > 100;
+      // Verify terminal has rendered content (DOM-based testing approach)
+      expect(
+        domTextContent.includes('ERROR_TEST_START') ||
+          domTextContent.length > 500
+      ).toBe(true);
+    })
+  );
 
-      expect(hasPrompt || hasContent).toBe(true);
+  it(
+    'handles real file operations and directory listings with WebSocket terminal',
+    withTestLogging(async () => {
+      const sessionName = 'content-test-session-4';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-      // Verify xterm CSS classes are present (indicating real xterm rendering)
-      const xtermElements = terminalInner.querySelectorAll(
-        '.xterm, .xterm-screen, .xterm-viewport'
+      // Create and manipulate files in temp directory with predictable names
+      const tmpDir = os.tmpdir();
+      const commands = [
+        `cd "${tmpDir}"`,
+        'echo "FILE_TEST_START"',
+        'echo "test file content for DOM verification" > ai_screen_test_file.txt',
+        'ls -la ai_screen_test_file.txt',
+        'cat ai_screen_test_file.txt',
+        'echo "File size: $(wc -c < ai_screen_test_file.txt) bytes"',
+        'rm ai_screen_test_file.txt',
+        'echo "FILE_TEST_END"',
+      ];
+
+      for (const cmd of commands) {
+        await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
+        await waitForTerminalOutput(100);
+      }
+
+      const terminalState = await getTerminalState(
+        serverInfo.port,
+        sessionName
       );
-      expect(xtermElements.length).toBeGreaterThan(0);
-    }
-  }));
 
-  it('verifies terminal component handles complex real terminal output with WebSocket', withTestLogging(async () => {
-    const sessionName = 'content-test-session-2';
-    const session = await createTestSession(serverInfo.port, sessionName);
+      const sessionWithRealContent: SessionJson = {
+        ...session,
+        activeTerminal: terminalState,
+      };
 
-    // Use environment-independent commands that create their own content
-    const tmpDir = os.tmpdir();
-    const commands = [
-      `cd "${tmpDir}"`,
-      'echo "TEST_MARKER_START"',
-      'echo "Current directory: $(pwd)"',
-      'echo "Test file content" > test_output.txt',
-      'cat test_output.txt',
-      'echo "Files created: $(ls test_output.txt 2>/dev/null | wc -l)"',
-      'echo "TEST_MARKER_END"',
-    ];
+      await act(async () => {
+        render(<Terminal session={sessionWithRealContent} zoom='FIT' />);
+      });
 
-    for (const cmd of commands) {
-      await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
-      await waitForTerminalOutput(100);
-    }
+      // Wait for WebSocket connection to establish and terminal to render
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const terminalState = await getTerminalState(serverInfo.port, sessionName);
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
 
-    const sessionWithRealContent: SessionJson = {
-      ...session,
-      activeTerminal: terminalState,
-    };
+      // Wait for xterm to render content to DOM
+      await waitFor(
+        () => {
+          const domText = getVisibleText(terminalInner);
+          return domText.length > 80; // Wait for substantial content
+        },
+        { timeout: 10000, interval: 200 } // Increased timeout and check interval
+      );
 
-    await act(async () => {
-      render(<Terminal session={sessionWithRealContent} zoom='FIT' />);
-    });
+      // Check the actual DOM text content rendered by xterm
+      const domTextContent = getVisibleText(terminalInner);
 
-    // Wait for WebSocket connection to establish and terminal to render
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log('File ops test DOM content length:', domTextContent.length);
+      console.log(
+        'File ops test DOM content preview:',
+        domTextContent.substring(0, 200)
+      );
 
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
+      // The renderer must be working - only check DOM content
+      expect(domTextContent.length).toBeGreaterThan(80);
+      expect(domTextContent.trim()).not.toBe('');
 
-    // Wait for terminal to be ready and xterm to render content
-    // The WebSocket connection creates a new Terminal instance and writes buffer content
-    // We need to wait for this process to complete
-    await waitFor(
-      () => {
-        const domText = getVisibleText(terminalInner);
-        return domText.length > 100; // Wait for substantial content
-      },
-      { timeout: 10000, interval: 200 } // Increased timeout and check interval
-    );
+      // Verify xterm has rendered our custom renderer content
+      const hasCustomRendererContent =
+        // Verify terminal has rendered content (DOM-based testing approach)
+        expect(
+          domTextContent.includes('FILE_TEST_START') ||
+            domTextContent.length > 500
+        ).toBe(true);
 
-    // Check the actual DOM text content rendered by xterm
-    const domTextContent = getVisibleText(terminalInner);
+      // Verify terminal component rendered correctly
+      expect(terminalInner).toHaveAttribute('data-testid', 'terminal-inner');
+    })
+  );
 
-    console.log('Complex test DOM content length:', domTextContent.length);
-    console.log(
-      'Complex test DOM content preview:',
-      domTextContent.substring(0, 200)
-    );
+  it(
+    'verifies terminal component integrates with real xterm and WebSocket',
+    withTestLogging(async () => {
+      const sessionName = 'content-test-session-5';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    // The renderer must be working - only check DOM content
-    expect(domTextContent.length).toBeGreaterThan(100);
-    expect(domTextContent.trim()).not.toBe('');
+      // Execute environment-independent commands
+      const tmpDir = os.tmpdir();
+      const commands = [
+        `cd "${tmpDir}"`,
+        'echo "WEBSOCKET_TEST_START"',
+        'echo "Testing WebSocket integration with xterm"',
+        'echo "Current timestamp: $(date +%s)"',
+        'echo "WEBSOCKET_TEST_END"',
+      ];
 
-    // Verify the terminal component is properly structured
-    expect(terminalInner.nodeType).toBe(Node.ELEMENT_NODE);
-    expect(terminalInner.tagName.toLowerCase()).toBe('div');
-  }));
+      for (const cmd of commands) {
+        await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
+        await waitForTerminalOutput(100);
+      }
 
-  it('handles real error messages and special characters with WebSocket terminal', withTestLogging(async () => {
-    const sessionName = 'content-test-session-3';
-    const session = await createTestSession(serverInfo.port, sessionName);
+      const terminalState = await getTerminalState(
+        serverInfo.port,
+        sessionName
+      );
 
-    // Use environment-independent commands that create predictable errors and content
-    const tmpDir = os.tmpdir();
-    const commands = [
-      `cd "${tmpDir}"`,
-      'echo "ERROR_TEST_START"',
-      `cat "${tmpDir}/nonexistent_test_file_12345.txt" 2>&1 || echo "Expected error occurred"`,
-      'echo "Special chars: !@#$%^&*()"',
-      'echo -e "\\033[31mRed Text\\033[0m"',
-      'echo "ERROR_TEST_END"',
-    ];
+      const sessionWithRealContent: SessionJson = {
+        ...session,
+        activeTerminal: terminalState,
+      };
 
-    for (const cmd of commands) {
-      await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
-      await waitForTerminalOutput(100);
-    }
+      await act(async () => {
+        render(<Terminal session={sessionWithRealContent} zoom='FIT' />);
+      });
 
-    const terminalState = await getTerminalState(serverInfo.port, sessionName);
+      // Wait for WebSocket connection to establish and terminal to render
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const sessionWithRealContent: SessionJson = {
-      ...session,
-      activeTerminal: terminalState,
-    };
+      const terminalInner = screen.getByTestId('terminal-inner');
+      expect(terminalInner).toBeInTheDocument();
 
-    await act(async () => {
-      render(<Terminal session={sessionWithRealContent} zoom='FIT' />);
-    });
+      // Wait for xterm to render content to DOM with longer timeout for WebSocket connection
+      await waitFor(
+        () => {
+          const domText = getVisibleText(terminalInner);
+          return domText.length > 50; // Wait for substantial content
+        },
+        { timeout: 10000, interval: 200 } // Increased timeout and check interval
+      );
 
-    // Wait for WebSocket connection to establish and terminal to render
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Verify the terminal component structure
+      expect(terminalInner.tagName.toLowerCase()).toBe('div');
+      expect(terminalInner).toHaveAttribute('data-testid', 'terminal-inner');
 
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
+      // Check the actual DOM text content rendered by xterm
+      const domTextContent = getVisibleText(terminalInner);
 
-    // Wait for xterm to render content to DOM
-    await waitFor(
-      () => {
-        const domText = getVisibleText(terminalInner);
-        return domText.length > 50; // Wait for substantial content
-      },
-      { timeout: 10000, interval: 200 } // Increased timeout and check interval
-    );
+      console.log('WebSocket test DOM content length:', domTextContent.length);
+      console.log(
+        'WebSocket test DOM content preview:',
+        domTextContent.substring(0, 200)
+      );
 
-    // Check the actual DOM text content rendered by xterm
-    const domTextContent = getVisibleText(terminalInner);
+      // The renderer must be working - only check DOM content
+      expect(domTextContent.length).toBeGreaterThan(20);
+      expect(domTextContent.trim()).not.toBe('');
 
-    console.log('Error test DOM content length:', domTextContent.length);
-    console.log(
-      'Error test DOM content preview:',
-      domTextContent.substring(0, 200)
-    );
+      // Verify xterm has rendered our custom renderer content
+      // Verify terminal has rendered content (DOM-based testing approach)
+      expect(
+        domTextContent.includes('WEBSOCKET_TEST_START') ||
+          domTextContent.length > 500
+      ).toBe(true);
 
-    // The renderer must be working - only check DOM content
-    expect(domTextContent.length).toBeGreaterThan(50);
-    expect(domTextContent.trim()).not.toBe('');
-
-    // Verify terminal has rendered content (DOM-based testing approach)
-    expect(domTextContent.includes('ERROR_TEST_START') || domTextContent.length > 500).toBe(true);
-  }));
-
-  it('handles real file operations and directory listings with WebSocket terminal', withTestLogging(async () => {
-    const sessionName = 'content-test-session-4';
-    const session = await createTestSession(serverInfo.port, sessionName);
-
-    // Create and manipulate files in temp directory with predictable names
-    const tmpDir = os.tmpdir();
-    const commands = [
-      `cd "${tmpDir}"`,
-      'echo "FILE_TEST_START"',
-      'echo "test file content for DOM verification" > ai_screen_test_file.txt',
-      'ls -la ai_screen_test_file.txt',
-      'cat ai_screen_test_file.txt',
-      'echo "File size: $(wc -c < ai_screen_test_file.txt) bytes"',
-      'rm ai_screen_test_file.txt',
-      'echo "FILE_TEST_END"',
-    ];
-
-    for (const cmd of commands) {
-      await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
-      await waitForTerminalOutput(100);
-    }
-
-    const terminalState = await getTerminalState(serverInfo.port, sessionName);
-
-    const sessionWithRealContent: SessionJson = {
-      ...session,
-      activeTerminal: terminalState,
-    };
-
-    await act(async () => {
-      render(<Terminal session={sessionWithRealContent} zoom='FIT' />);
-    });
-
-    // Wait for WebSocket connection to establish and terminal to render
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
-
-    // Wait for xterm to render content to DOM
-    await waitFor(
-      () => {
-        const domText = getVisibleText(terminalInner);
-        return domText.length > 80; // Wait for substantial content
-      },
-      { timeout: 10000, interval: 200 } // Increased timeout and check interval
-    );
-
-    // Check the actual DOM text content rendered by xterm
-    const domTextContent = getVisibleText(terminalInner);
-
-    console.log('File ops test DOM content length:', domTextContent.length);
-    console.log(
-      'File ops test DOM content preview:',
-      domTextContent.substring(0, 200)
-    );
-
-    // The renderer must be working - only check DOM content
-    expect(domTextContent.length).toBeGreaterThan(80);
-    expect(domTextContent.trim()).not.toBe('');
-
-    // Verify xterm has rendered our custom renderer content
-    const hasCustomRendererContent =
-    // Verify terminal has rendered content (DOM-based testing approach)
-    expect(domTextContent.includes('FILE_TEST_START') || domTextContent.length > 500).toBe(true);
-
-    // Verify terminal component rendered correctly
-    expect(terminalInner).toHaveAttribute('data-testid', 'terminal-inner');
-  }));
-
-  it('verifies terminal component integrates with real xterm and WebSocket', withTestLogging(async () => {
-    const sessionName = 'content-test-session-5';
-    const session = await createTestSession(serverInfo.port, sessionName);
-
-    // Execute environment-independent commands
-    const tmpDir = os.tmpdir();
-    const commands = [
-      `cd "${tmpDir}"`,
-      'echo "WEBSOCKET_TEST_START"',
-      'echo "Testing WebSocket integration with xterm"',
-      'echo "Current timestamp: $(date +%s)"',
-      'echo "WEBSOCKET_TEST_END"',
-    ];
-
-    for (const cmd of commands) {
-      await writeToSession(serverInfo.port, sessionName, `${cmd}\n`);
-      await waitForTerminalOutput(100);
-    }
-
-    const terminalState = await getTerminalState(serverInfo.port, sessionName);
-
-    const sessionWithRealContent: SessionJson = {
-      ...session,
-      activeTerminal: terminalState,
-    };
-
-    await act(async () => {
-      render(<Terminal session={sessionWithRealContent} zoom='FIT' />);
-    });
-
-    // Wait for WebSocket connection to establish and terminal to render
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const terminalInner = screen.getByTestId('terminal-inner');
-    expect(terminalInner).toBeInTheDocument();
-
-    // Wait for xterm to render content to DOM with longer timeout for WebSocket connection
-    await waitFor(
-      () => {
-        const domText = getVisibleText(terminalInner);
-        return domText.length > 50; // Wait for substantial content
-      },
-      { timeout: 10000, interval: 200 } // Increased timeout and check interval
-    );
-
-    // Verify the terminal component structure
-    expect(terminalInner.tagName.toLowerCase()).toBe('div');
-    expect(terminalInner).toHaveAttribute('data-testid', 'terminal-inner');
-
-    // Check the actual DOM text content rendered by xterm
-    const domTextContent = getVisibleText(terminalInner);
-
-    console.log('WebSocket test DOM content length:', domTextContent.length);
-    console.log(
-      'WebSocket test DOM content preview:',
-      domTextContent.substring(0, 200)
-    );
-
-    // The renderer must be working - only check DOM content
-    expect(domTextContent.length).toBeGreaterThan(20);
-    expect(domTextContent.trim()).not.toBe('');
-
-    // Verify xterm has rendered our custom renderer content
-    // Verify terminal has rendered content (DOM-based testing approach)
-    expect(domTextContent.includes('WEBSOCKET_TEST_START') || domTextContent.length > 500).toBe(true);
-
-    // Verify terminal state structure
-    expect(terminalState.normal.cursor.x).toBeGreaterThanOrEqual(0);
-    expect(terminalState.normal.cursor.y).toBeGreaterThanOrEqual(0);
-    expect(terminalState.normal.buffer.length).toBeGreaterThan(0);
-  }));
+      // Verify terminal state structure
+      expect(terminalState.normal.cursor.x).toBeGreaterThanOrEqual(0);
+      expect(terminalState.normal.cursor.y).toBeGreaterThanOrEqual(0);
+      expect(terminalState.normal.buffer.length).toBeGreaterThan(0);
+    })
+  );
 });

@@ -22,22 +22,29 @@ describe('Connect Store - Basic Integration Tests', () => {
     await stopTestServer();
   });
 
-  it('verifies server integration works for connect store testing', withTestLogging(async () => {
-    // This test just verifies the server integration is working
-    // More complex connect store tests would require extensive WebSocket mocking
-    const sessionName = 'connect-integration-test';
-    const session = await createTestSession(serverInfo.port, sessionName);
+  it(
+    'verifies server integration works for connect store testing',
+    withTestLogging(async () => {
+      // This test just verifies the server integration is working
+      // More complex connect store tests would require extensive WebSocket mocking
+      const sessionName = 'connect-integration-test';
+      const session = await createTestSession(serverInfo.port, sessionName);
 
-    expect(session.sessionName).toBe(sessionName);
-    expect(session.terminalParams.rows).toBe(24);
-    expect(session.terminalParams.columns).toBe(80);
+      expect(session.sessionName).toBe(sessionName);
+      expect(session.terminalParams.rows).toBe(24);
+      expect(session.terminalParams.columns).toBe(80);
 
-    // Execute a command to verify the session is functional
-    await writeToSession(serverInfo.port, sessionName, 'echo "connect test"\n');
-    await waitForTerminalOutput(200);
+      // Execute a command to verify the session is functional
+      await writeToSession(
+        serverInfo.port,
+        sessionName,
+        'echo "connect test"\n'
+      );
+      await waitForTerminalOutput(200);
 
-    // This confirms the basic server integration is working
-    // Full connect store tests would require mocking WebSocket connections
-    expect(true).toBe(true);
-  }));
+      // This confirms the basic server integration is working
+      // Full connect store tests would require mocking WebSocket connections
+      expect(true).toBe(true);
+    })
+  );
 });

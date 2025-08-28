@@ -22,11 +22,16 @@ class TestLogger {
   }
 
   private interceptConsole() {
-    console.log = (...args) => this.log('log', 'console', args[0], ...args.slice(1));
-    console.error = (...args) => this.log('error', 'console', args[0], ...args.slice(1));
-    console.warn = (...args) => this.log('warn', 'console', args[0], ...args.slice(1));
-    console.info = (...args) => this.log('info', 'console', args[0], ...args.slice(1));
-    console.debug = (...args) => this.log('debug', 'console', args[0], ...args.slice(1));
+    console.log = (...args) =>
+      this.log('log', 'console', args[0], ...args.slice(1));
+    console.error = (...args) =>
+      this.log('error', 'console', args[0], ...args.slice(1));
+    console.warn = (...args) =>
+      this.log('warn', 'console', args[0], ...args.slice(1));
+    console.info = (...args) =>
+      this.log('info', 'console', args[0], ...args.slice(1));
+    console.debug = (...args) =>
+      this.log('debug', 'console', args[0], ...args.slice(1));
   }
 
   log(level: string, source: string, message: string, ...args: any[]) {
@@ -37,9 +42,9 @@ class TestLogger {
       message,
       args,
     };
-    
+
     this.logs.push(entry);
-    
+
     if (this.verbose) {
       this.originalConsole[level as keyof typeof this.originalConsole]?.(
         `[${source}] ${message}`,
@@ -54,9 +59,9 @@ class TestLogger {
 
   dumpLogs() {
     if (this.logs.length === 0) return;
-    
+
     this.originalConsole.log('\n=== TEST LOGS ===');
-    this.logs.forEach(entry => {
+    this.logs.forEach((entry) => {
       const time = new Date(entry.timestamp).toISOString();
       this.originalConsole.log(
         `[${time}] [${entry.source}] [${entry.level.toUpperCase()}] ${entry.message}`,
