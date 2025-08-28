@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-shadow */
 import { Terminal } from '@xterm/xterm';
 import type { ITerminalAddon, IDisposable } from '@xterm/xterm';
 import { XTermCustomRenderer } from './xterm_custom_renderer';
@@ -15,7 +16,7 @@ export class CustomRendererAddon implements ITerminalAddon, IDisposable {
     }
 
     this._terminal = terminal;
-    const unsafeCore = core as any;
+    const unsafeCore = core;
     const renderService = unsafeCore._renderService;
 
     this._renderer = this.register(new XTermCustomRenderer(terminal));
