@@ -178,15 +178,3 @@
 .video-overlay.faded {
   opacity: 0;
 }
-
-/* XTerm React Renderer Styles */
-@keyframes xterm-cursor-blink {
-  0%,
-  50% {
-    opacity: 1;
-  }
-  51%,
-  100% {
-    opacity: 0;
-  }
-}

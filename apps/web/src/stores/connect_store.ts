@@ -127,7 +127,7 @@ async function _create(params: ConnectParams) {
             ...terminalOptions,
           };
           terminal = new Terminal(opts);
-          terminal.loadAddon(new ReactRendererAddon(sessionName));
+          terminal.loadAddon(new ReactRendererAddon());
           const element = g_elementMap.get(sessionName) ?? null;
           if (element) {
             terminal.open(element);

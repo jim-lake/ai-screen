@@ -1,41 +1,46 @@
+import { useEffect, useRef } from 'react';
 import { StyleSheet, View, Text } from './base_components';
-import { useXTermReactRenderer } from './xterm_renderer_callbacks';
+import { Terminal } from '@xterm/xterm';
 
-interface XTermReactRendererProps {
-  sessionName: string;
-  dimensions: {
-    cellWidth: number;
-    cellHeight: number;
-    cols: number;
-    rows: number;
-  };
-}
+import { useRenderUpdate } from './xterm_react_renderer_addon';
+import { measureCharSize } from '../tools/measure';
 
 const styles = StyleSheet.create({
-  overlay: {
+  xtermReactRenderer: {
     position: 'relative',
-    fontFamily: 'inherit',
-    fontSize: 'inherit',
-    lineHeight: 'inherit',
+    height: 'calc(var(--term-rows) * var(--term-cell-height) * 1px)',
+    width: 'calc(var(--term-columns) * var(--term-cell-width) * 1px)',
+    fontFamily: 'var(--term-font)',
+    fontSize: 'calc(var(--term-font-size) * 1px)',
+    lineHeight: 'var(--term-line-height)',
     pointerEvents: 'none',
     zIndex: 10,
+    flexDirection: 'column',
   },
   rows: {
-    position: 'relative',
+    width: 'calc(var(--term-columns) * var(--term-cell-width) * 1px)',
     fontFamily: 'inherit',
     fontSize: 'inherit',
     lineHeight: 'inherit',
-    whiteSpace: 'pre',
-    overflow: 'hidden',
+    flexDirection: 'column',
   },
-  row: { whiteSpace: 'pre', overflow: 'hidden', position: 'relative' },
+  row: {
+    width: 'calc(var(--term-columns) * var(--term-cell-width) * 1px)',
+    height: 'calc(var(--term-cell-height) * 1px)',
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
+    lineHeight: 'inherit',
+    color: 'white',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    flexDirection: 'row',
+  },
   cursor: {
     position: 'absolute',
     backgroundColor: '#ffffff',
     color: '#000000',
     zIndex: 1,
     pointerEvents: 'none',
-    animation: 'xterm-cursor-blink 1s infinite',
   },
   selection: {
     position: 'absolute',
@@ -51,107 +56,46 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function XTermReactRenderer({
-  sessionName,
-  dimensions,
-}: XTermReactRendererProps) {
-  const { lines, cursor, selection, focused } =
-    useXTermReactRenderer(sessionName);
+export interface XTermReactRendererProps {
+  terminal: Terminal;
+}
+export default function XTermReactRenderer(props: XTermReactRendererProps) {
+  const { terminal } = props;
+  const ref = useRef<HTMLDivElement>(null);
+  const dirty = useRenderUpdate(terminal);
+  const { rows } = terminal;
+  const columns = terminal.cols;
+  const { fontFamily, fontSize, lineHeight } = terminal.options;
+  console.log('render:', dirty);
 
-  const containerWidth = dimensions.cols * dimensions.cellWidth;
-  const containerHeight = dimensions.rows * dimensions.cellHeight;
-
-  // Render terminal lines
-  const renderLines = () => {
-    const elements = [];
-    for (let i = 0; i < dimensions.rows; i++) {
-      const line = lines.find((l) => l.y === i);
-      const content = line?.content ?? '';
-      elements.push(
-        <Text
-          key={i}
-          className='xterm-custom-row'
-          style={[styles.row, { height: dimensions.cellHeight }]}
-        >
-          {content}
-        </Text>
-      );
+  useEffect(() => {
+    if (ref.current && fontFamily && fontSize && lineHeight) {
+      const size = measureCharSize({ fontFamily, fontSize, lineHeight });
+      ref.current.style.setProperty('--term-cell-height', String(size.height));
+      ref.current.style.setProperty('--term-cell-width', String(size.width));
+      ref.current.style.setProperty('--term-font', fontFamily);
+      ref.current.style.setProperty('--term-font-size', String(fontSize));
+      ref.current.style.setProperty('--term-line-height', String(lineHeight));
+      ref.current.style.setProperty('--term-rows', String(rows));
+      ref.current.style.setProperty('--term-columns', String(columns));
     }
-    return elements;
-  };
+  }, [rows, columns, fontFamily, fontSize, lineHeight]);
 
-  // Render cursor
-  const renderCursor = () => {
-    if (!cursor.visible) {
-      return null;
-    }
+  const lines: React.ReactNode[] = [];
 
-    return (
-      <View
-        key='cursor'
-        className='xterm-custom-cursor'
-        style={[
-          styles.cursor,
-          {
-            left: cursor.x * dimensions.cellWidth,
-            top: cursor.y * dimensions.cellHeight,
-            width: dimensions.cellWidth,
-            height: dimensions.cellHeight,
-            opacity: focused ? 1 : 0.5,
-          },
-        ]}
-      />
+  const buffer = terminal.buffer.active;
+  let i = Math.max(0, buffer.length - rows);
+  for (; i < buffer.length; i++) {
+    const line = buffer.getLine(i);
+    lines.push(
+      <Text key={i} style={styles.row}>
+        {line?.translateToString() ?? ''}
+      </Text>
     );
-  };
-
-  // Render selection
-  const renderSelection = () => {
-    if (!selection.start || !selection.end) {
-      return null;
-    }
-
-    const [startCol, startRow] = selection.start;
-    const [endCol, endRow] = selection.end;
-    const elements = [];
-
-    for (let row = startRow; row <= endRow; row++) {
-      elements.push(
-        <View
-          key={`selection-${row}`}
-          className={
-            selection.columnMode
-              ? 'xterm-custom-column-selection'
-              : 'xterm-custom-selection'
-          }
-          style={[
-            selection.columnMode ? styles.columnSelection : styles.selection,
-            {
-              top: row * dimensions.cellHeight,
-              left: startCol * dimensions.cellWidth,
-              width: (endCol - startCol + 1) * dimensions.cellWidth,
-              height: dimensions.cellHeight,
-            },
-          ]}
-        />
-      );
-    }
-
-    return elements;
-  };
-
+  }
   return (
-    <View
-      className='xterm-custom-overlay'
-      style={[
-        styles.overlay,
-        { width: containerWidth, height: containerHeight },
-      ]}
-    >
-      <View className='xterm-custom-rows' style={styles.rows}>
-        {renderLines()}
-      </View>
-      {renderSelection()}
-      {renderCursor()}
+    <View getDiv={ref} style={styles.xtermReactRenderer}>
+      <View style={styles.rows}>{lines}</View>
     </View>
   );
 }
