@@ -233,8 +233,19 @@ export class XTermCustomRenderer implements IRenderer {
 
     this._ensureRowElements(this._terminal.rows);
 
-    for (let y = start; y <= end; y++) {
-      this._renderRow(y, buffer);
+    try {
+      for (let y = start; y <= end; y++) {
+        this._renderRow(y, buffer);
+      }
+    } catch (error) {
+      // If rendering fails, fall back to empty rows
+      console.warn(
+        'Custom renderer failed, falling back to empty rows:',
+        error
+      );
+      for (let y = start; y <= end; y++) {
+        this._renderEmptyRow(y);
+      }
     }
 
     this._updateCursor();
@@ -251,11 +262,18 @@ export class XTermCustomRenderer implements IRenderer {
     y: number,
     buffer: {
       ydisp: number;
-      lines: { get(index: number): IBufferLine | undefined };
+      lines?: { get(index: number): IBufferLine | undefined };
     }
   ): void {
     const rowElement = this._rowContainer.children[y] as HTMLElement;
     // rowElement is guaranteed to exist since we call _ensureRowElements before this
+
+    // Check if buffer has lines property and it's accessible
+    if (!buffer.lines || typeof buffer.lines.get !== 'function') {
+      // If we can't access buffer lines, render empty row
+      rowElement.innerHTML = '&nbsp;'.repeat(this._terminal.cols);
+      return;
+    }
 
     const bufferY = buffer.ydisp + y;
     const line = buffer.lines.get(bufferY);
