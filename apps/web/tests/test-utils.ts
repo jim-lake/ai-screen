@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import type { ChildProcess } from 'node:child_process';
 import type { SessionJson, TerminalJson } from '@ai-screen/shared';
+import { testLogger } from './test-logger';
 
 interface ServerInfo {
   port: number;
@@ -49,13 +50,15 @@ export async function startTestServer(): Promise<ServerInfo> {
     }, 10000);
 
     child.stdout?.on('data', (data: Buffer) => {
-      server_output += data.toString();
-      process.stdout.write(data);
+      const output = data.toString();
+      server_output += output;
+      testLogger.log('info', 'server', output.trim());
     });
 
     child.stderr?.on('data', (data: Buffer) => {
-      server_output += data.toString();
-      process.stderr.write(data);
+      const output = data.toString();
+      server_output += output;
+      testLogger.log('error', 'server', output.trim());
     });
 
     child.on('message', (message: unknown) => {
@@ -326,4 +329,19 @@ export function getVisibleText(node: Node): string {
   }
 
   return '';
+}
+
+export function withTestLogging<T extends any[], R>(
+  testFn: (...args: T) => R | Promise<R>
+) {
+  return async (...args: T): Promise<R> => {
+    testLogger.clear();
+    try {
+      const result = await testFn(...args);
+      return result;
+    } catch (error) {
+      testLogger.dumpLogs();
+      throw error;
+    }
+  };
 }

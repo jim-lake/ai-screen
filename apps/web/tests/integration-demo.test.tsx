@@ -10,6 +10,7 @@ import {
   getTerminalState,
   waitForTerminalOutput,
   getVisibleText,
+  withTestLogging,
 } from './test-utils';
 import type { SessionJson } from '@ai-screen/shared';
 
@@ -65,7 +66,7 @@ describe('End-to-End Integration Demo', () => {
     await stopTestServer();
   });
 
-  it('demonstrates end-to-end testing with real CLI server', async () => {
+  it('demonstrates end-to-end testing with real CLI server', withTestLogging(async () => {
     // 1. Create a real session on the CLI server
     const sessionName = 'demo-session';
     const session = await createTestSession(serverInfo.port, sessionName);
@@ -115,9 +116,9 @@ describe('End-to-End Integration Demo', () => {
         }),
       })
     );
-  });
+  }));
 
-  it('demonstrates real error handling', async () => {
+  it('demonstrates real error handling', withTestLogging(async () => {
     const sessionName = 'error-demo-session';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -142,9 +143,9 @@ describe('End-to-End Integration Demo', () => {
     const textContent = getVisibleText(terminalInner);
     // Since xterm is mocked, we may not get the actual content, so just verify basic structure
     expect(textContent.length).toBeGreaterThanOrEqual(0);
-  });
+  }));
 
-  it('demonstrates real multi-line command output', async () => {
+  it('demonstrates real multi-line command output', withTestLogging(async () => {
     const sessionName = 'multiline-demo-session';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -172,5 +173,5 @@ describe('End-to-End Integration Demo', () => {
     const textContent = getVisibleText(terminalInner);
     // Since xterm is mocked, we may not get the actual content, so just verify basic structure
     expect(textContent.length).toBeGreaterThanOrEqual(0);
-  });
+  }));
 });

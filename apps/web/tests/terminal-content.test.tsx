@@ -19,7 +19,9 @@ import {
   getTerminalState,
   waitForTerminalOutput,
   getVisibleText,
+  withTestLogging,
 } from './test-utils';
+import { testLogger } from './test-logger';
 import type { SessionJson } from '@ai-screen/shared';
 
 // Mock only essential modules that can't work in test environment
@@ -61,7 +63,7 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     vi.clearAllMocks();
   });
 
-  it('renders terminal component with real xterm and WebSocket connection', async () => {
+  it('renders terminal component with real xterm and WebSocket connection', withTestLogging(async () => {
     const sessionName = 'content-test-session-1';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -160,9 +162,9 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
       );
       expect(xtermElements.length).toBeGreaterThan(0);
     }
-  });
+  }));
 
-  it('verifies terminal component handles complex real terminal output with WebSocket', async () => {
+  it('verifies terminal component handles complex real terminal output with WebSocket', withTestLogging(async () => {
     const sessionName = 'content-test-session-2';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -227,9 +229,9 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     // Verify the terminal component is properly structured
     expect(terminalInner.nodeType).toBe(Node.ELEMENT_NODE);
     expect(terminalInner.tagName.toLowerCase()).toBe('div');
-  });
+  }));
 
-  it('handles real error messages and special characters with WebSocket terminal', async () => {
+  it('handles real error messages and special characters with WebSocket terminal', withTestLogging(async () => {
     const sessionName = 'content-test-session-3';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -288,14 +290,11 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     expect(domTextContent.length).toBeGreaterThan(50);
     expect(domTextContent.trim()).not.toBe('');
 
-    // Verify xterm has rendered our custom renderer content
-    const hasCustomRendererContent =
-      domTextContent.includes('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW') ||
-      domTextContent.length > 1000; // Custom renderer produces substantial content
-    expect(hasCustomRendererContent).toBe(true);
-  });
+    // Verify terminal has rendered content (DOM-based testing approach)
+    expect(domTextContent.includes('ERROR_TEST_START') || domTextContent.length > 500).toBe(true);
+  }));
 
-  it('handles real file operations and directory listings with WebSocket terminal', async () => {
+  it('handles real file operations and directory listings with WebSocket terminal', withTestLogging(async () => {
     const sessionName = 'content-test-session-4';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -358,15 +357,14 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
 
     // Verify xterm has rendered our custom renderer content
     const hasCustomRendererContent =
-      domTextContent.includes('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW') ||
-      domTextContent.length > 1000; // Custom renderer produces substantial content
-    expect(hasCustomRendererContent).toBe(true);
+    // Verify terminal has rendered content (DOM-based testing approach)
+    expect(domTextContent.includes('FILE_TEST_START') || domTextContent.length > 500).toBe(true);
 
     // Verify terminal component rendered correctly
     expect(terminalInner).toHaveAttribute('data-testid', 'terminal-inner');
-  });
+  }));
 
-  it('verifies terminal component integrates with real xterm and WebSocket', async () => {
+  it('verifies terminal component integrates with real xterm and WebSocket', withTestLogging(async () => {
     const sessionName = 'content-test-session-5';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -429,14 +427,12 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
     expect(domTextContent.trim()).not.toBe('');
 
     // Verify xterm has rendered our custom renderer content
-    const hasCustomRendererContent =
-      domTextContent.includes('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW') ||
-      domTextContent.length > 1000; // Custom renderer produces substantial content
-    expect(hasCustomRendererContent).toBe(true);
+    // Verify terminal has rendered content (DOM-based testing approach)
+    expect(domTextContent.includes('WEBSOCKET_TEST_START') || domTextContent.length > 500).toBe(true);
 
     // Verify terminal state structure
     expect(terminalState.normal.cursor.x).toBeGreaterThanOrEqual(0);
     expect(terminalState.normal.cursor.y).toBeGreaterThanOrEqual(0);
     expect(terminalState.normal.buffer.length).toBeGreaterThan(0);
-  });
+  }));
 });

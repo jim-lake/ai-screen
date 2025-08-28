@@ -10,7 +10,8 @@
     "ts-check": "tsc -p tsconfig.app.json --noEmit",
     "lint": "eslint src --fix",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:verbose": "TEST_VERBOSE=true vitest run"
   },
   "dependencies": {
     "@ai-screen/shared": "*",

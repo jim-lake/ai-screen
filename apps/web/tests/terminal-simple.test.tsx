@@ -20,6 +20,7 @@ import {
   waitForTerminalOutput,
   getServerInfo,
   getVisibleText,
+  withTestLogging,
 } from './test-utils';
 import type { SessionJson } from '@ai-screen/shared';
 
@@ -59,7 +60,7 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     vi.clearAllMocks();
   });
 
-  it('renders terminal component with real session data', async () => {
+  it('renders terminal component with real session data', withTestLogging(async () => {
     const sessionName = 'simple-test-session-1';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -78,9 +79,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     const textContent = getVisibleText(terminalInner);
     console.log('textContent:', textContent);
     expect(textContent.length).toBeGreaterThan(0);
-  });
+  }));
 
-  it('displays terminal content from real server session', async () => {
+  it('displays terminal content from real server session', withTestLogging(async () => {
     const sessionName = 'simple-test-session-3';
     const session = await createTestSession(serverInfo.port, sessionName);
     await act(async () => {
@@ -105,9 +106,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     expect(textContent).toContain('echo "Real terminal test"');
     expect(textContent).toContain('Real terminal test');
     expect(textContent).toContain('pwd');
-  });
+  }));
 
-  it('handles different zoom modes with real session data', async () => {
+  it('handles different zoom modes with real session data', withTestLogging(async () => {
     const sessionName = 'simple-test-session-4';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -125,9 +126,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
 
       unmount();
     }
-  });
+  }));
 
-  it('handles real terminal state with cursor information', async () => {
+  it('handles real terminal state with cursor information', withTestLogging(async () => {
     const sessionName = 'simple-test-session-6';
     const session = await createTestSession(serverInfo.port, sessionName);
     await act(async () => {
@@ -159,9 +160,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     expect(typeof cursor.blinking).toBe('boolean');
     expect(cursor.x).toBeGreaterThanOrEqual(0);
     expect(cursor.y).toBeGreaterThanOrEqual(0);
-  });
+  }));
 
-  it('processes real with multiple lines', async () => {
+  it('processes real with multiple lines', withTestLogging(async () => {
     const sessionName = 'simple-test-session-7';
     const session = await createTestSession(serverInfo.port, sessionName);
     await act(async () => {
@@ -195,9 +196,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     expect(textContent.includes('Line 1')).toBe(true);
     expect(textContent.includes('Line 2')).toBe(true);
     expect(textContent.includes('Line 3')).toBe(true);
-  });
+  }));
 
-  it('handles real session with error output', async () => {
+  it('handles real session with error output', withTestLogging(async () => {
     const sessionName = 'simple-test-session-8';
     const session = await createTestSession(serverInfo.port, sessionName);
     await act(async () => {
@@ -216,9 +217,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     expect(terminalInner).toBeInTheDocument();
     const textContent = getVisibleText(terminalInner);
     expect(textContent.includes('nonexistent')).toBe(true);
-  });
+  }));
 
-  it('maintains session structure integrity with real data', async () => {
+  it('maintains session structure integrity with real data', withTestLogging(async () => {
     const sessionName = 'simple-test-session-9';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -235,9 +236,9 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     expect(session.terminalParams.rows).toBeGreaterThan(0);
     expect(session.terminalParams.columns).toBeGreaterThan(0);
     expect(session.terminals.length).toBeGreaterThan(0);
-  });
+  }));
 
-  it('handles session updates with changing terminal state', async () => {
+  it('handles session updates with changing terminal state', withTestLogging(async () => {
     const sessionName = 'simple-test-session-10';
     const session = await createTestSession(serverInfo.port, sessionName);
     render(<Terminal session={session} zoom='FIT' />);
@@ -260,5 +261,5 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
     };
     const terminalInner = screen.getByTestId('terminal-inner');
     expect(terminalInner).toBeInTheDocument();
-  });
+  }));
 });

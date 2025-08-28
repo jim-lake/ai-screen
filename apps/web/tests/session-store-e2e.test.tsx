@@ -18,6 +18,7 @@ import {
   waitForTerminalOutput,
   getServerInfo,
   getVisibleText,
+  withTestLogging,
 } from './test-utils';
 
 // Import the actual session store - we want to test it without mocking
@@ -43,7 +44,7 @@ describe('Session Store - End-to-End Tests', () => {
     vi.clearAllMocks();
   });
 
-  it('fetches real session list from server', async () => {
+  it('fetches real session list from server', withTestLogging(async () => {
     // Create a test session on the server
     const sessionName = 'store-test-session-1';
     await createTestSession(serverInfo.port, sessionName);
@@ -73,9 +74,9 @@ describe('Session Store - End-to-End Tests', () => {
     expect(session!.sessionName).toBe(sessionName);
     expect(session!.created).toBeDefined();
     expect(Array.isArray(session!.terminals)).toBe(true);
-  });
+  }));
 
-  it('useSession hook returns correct session from real data', async () => {
+  it('useSession hook returns correct session from real data', withTestLogging(async () => {
     const sessionName = 'store-test-session-2';
     await createTestSession(serverInfo.port, sessionName);
 
@@ -99,9 +100,9 @@ describe('Session Store - End-to-End Tests', () => {
     expect(typeof result.current!.terminalParams).toBe('object');
     expect(result.current!.terminalParams.rows).toBeGreaterThan(0);
     expect(result.current!.terminalParams.columns).toBeGreaterThan(0);
-  });
+  }));
 
-  it('detects session updates when new sessions are created', async () => {
+  it('detects session updates when new sessions are created', withTestLogging(async () => {
     // Initial fetch
     await act(async () => {
       await SessionStore.fetch();
@@ -134,9 +135,9 @@ describe('Session Store - End-to-End Tests', () => {
     );
     expect(newSession).toBeDefined();
     expect(newSession!.sessionName).toBe(newSessionName);
-  });
+  }));
 
-  it('handles session with active terminal data', async () => {
+  it('handles session with active terminal data', withTestLogging(async () => {
     const sessionName = 'store-test-session-4';
     await createTestSession(serverInfo.port, sessionName);
 
@@ -214,9 +215,9 @@ describe('Session Store - End-to-End Tests', () => {
       expect(hasOurContent).toBe(true);
       expect(domContent.trim()).not.toBe('');
     }
-  });
+  }));
 
-  it('handles multiple sessions correctly', async () => {
+  it('handles multiple sessions correctly', withTestLogging(async () => {
     // Create multiple sessions
     const sessionNames = [
       'multi-session-1',
@@ -305,9 +306,9 @@ describe('Session Store - End-to-End Tests', () => {
         expect(hasOurContent).toBe(true);
       }
     }
-  });
+  }));
 
-  it('handles session store reactivity correctly', async () => {
+  it('handles session store reactivity correctly', withTestLogging(async () => {
     const sessionName = 'reactivity-test-session';
 
     // Start with empty list
@@ -347,9 +348,9 @@ describe('Session Store - End-to-End Tests', () => {
     expect(session).toBeDefined();
     expect(session!.sessionName).toBe(sessionName);
     expect(session!.terminals.length).toBeGreaterThan(0);
-  });
+  }));
 
-  it('handles error cases gracefully', async () => {
+  it('handles error cases gracefully', withTestLogging(async () => {
     // Test with non-existent session
     const { result } = renderHook(() =>
       SessionStore.useSession('non-existent-session')
@@ -361,9 +362,9 @@ describe('Session Store - End-to-End Tests', () => {
 
     // Should return undefined for non-existent session
     expect(result.current).toBeUndefined();
-  });
+  }));
 
-  it('maintains session data consistency across multiple fetches', async () => {
+  it('maintains session data consistency across multiple fetches', withTestLogging(async () => {
     const sessionName = 'consistency-test-session';
     await createTestSession(serverInfo.port, sessionName);
 
@@ -397,9 +398,9 @@ describe('Session Store - End-to-End Tests', () => {
     expect(firstFetchData.terminals.length).toBe(
       secondFetchData.terminals.length
     );
-  });
+  }));
 
-  it('handles session with complex terminal state', async () => {
+  it('handles session with complex terminal state', withTestLogging(async () => {
     const sessionName = 'complex-state-session';
     await createTestSession(serverInfo.port, sessionName);
 
@@ -473,5 +474,5 @@ describe('Session Store - End-to-End Tests', () => {
       expect(cursor.x).toBeGreaterThanOrEqual(0);
       expect(cursor.y).toBeGreaterThanOrEqual(0);
     }
-  });
+  }));
 });

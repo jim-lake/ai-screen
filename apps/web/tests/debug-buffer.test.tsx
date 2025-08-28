@@ -6,6 +6,7 @@ import {
   writeToSession,
   getTerminalState,
   waitForTerminalOutput,
+  withTestLogging,
 } from './test-utils';
 
 describe('Debug Terminal Buffer', () => {
@@ -19,7 +20,7 @@ describe('Debug Terminal Buffer', () => {
     await stopTestServer();
   });
 
-  it('shows what is actually in the terminal buffer', async () => {
+  it('shows what is actually in the terminal buffer', withTestLogging(async () => {
     const sessionName = 'debug-session';
     const session = await createTestSession(serverInfo.port, sessionName);
 
@@ -40,5 +41,5 @@ describe('Debug Terminal Buffer', () => {
 
     // Just verify we got some data
     expect(terminalState.normal.buffer.length).toBeGreaterThan(0);
-  });
+  }));
 });

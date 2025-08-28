@@ -5,6 +5,7 @@ import {
   createTestSession,
   writeToSession,
   waitForTerminalOutput,
+  withTestLogging,
 } from './test-utils';
 
 // This test file is simplified to focus on basic integration
@@ -21,7 +22,7 @@ describe('Connect Store - Basic Integration Tests', () => {
     await stopTestServer();
   });
 
-  it('verifies server integration works for connect store testing', async () => {
+  it('verifies server integration works for connect store testing', withTestLogging(async () => {
     // This test just verifies the server integration is working
     // More complex connect store tests would require extensive WebSocket mocking
     const sessionName = 'connect-integration-test';
@@ -38,5 +39,5 @@ describe('Connect Store - Basic Integration Tests', () => {
     // This confirms the basic server integration is working
     // Full connect store tests would require mocking WebSocket connections
     expect(true).toBe(true);
-  });
+  }));
 });
