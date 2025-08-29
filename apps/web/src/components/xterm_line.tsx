@@ -20,15 +20,16 @@ export interface LineProps {
   line: IBufferLine;
   version: number;
 }
-export const Line = React.memo(function Line(props: LineProps) {
-  const spans = useMemo(() => _lineToSpans(props.line), [props.line]);
-  return <Text style={styles.line}>
-            {spans.length > 0 ? spans : ' '}
-          </Text>;
-}, (old_props, new_props) => old_props.version === new_props.version);
+export const Line = React.memo(
+  function Line(props: LineProps) {
+    const spans = useMemo(() => _lineToSpans(props.line), [props.line]);
+    return <Text style={styles.line}>{spans.length > 0 ? spans : ' '}</Text>;
+  },
+  (old_props, new_props) => old_props.version === new_props.version
+);
 
 export function EmptyLine() {
-  return <Text style={styles.line}>{' '}</Text>;
+  return <Text style={styles.line}> </Text>;
 }
 
 interface ColorState {

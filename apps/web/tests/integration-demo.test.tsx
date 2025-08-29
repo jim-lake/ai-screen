@@ -76,7 +76,6 @@ describe('End-to-End Integration Demo', () => {
 
       const textContent = getVisibleText(terminalInner);
       expect(textContent.length).toBeGreaterThanOrEqual(0);
-
     })
   );
 

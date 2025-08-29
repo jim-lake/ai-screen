@@ -69,7 +69,7 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
   const terminal_lines: React.ReactNode[] = [];
   const buffer = terminal.buffer.active;
   const base_y = terminal.buffer.active.baseY;
-  for (let i = rows - 1 ; i >= 0 ; i--) {
+  for (let i = rows - 1; i >= 0; i--) {
     const line = buffer.getLine(i + base_y);
     if (line) {
       const version = row_version_list[i] ?? 0;

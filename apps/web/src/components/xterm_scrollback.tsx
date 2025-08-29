@@ -11,7 +11,7 @@ export default function XTermScrollback(props: XTermScrollbackProps) {
   const scroll = useScrollLines(terminal);
   const lines: React.ReactNode[] = [];
   const buffer = terminal.buffer.normal;
-  for (let i = scroll - 1 ; i >= 0 ; i--) {
+  for (let i = scroll - 1; i >= 0; i--) {
     const line = buffer.getLine(i);
     if (line) {
       lines.push(<Line key={`scroll${i}`} line={line} version={0} />);
@@ -25,14 +25,15 @@ function useScrollLines(terminal: Terminal) {
   const _get = useCallback(() => {
     return terminal.buffer.normal.baseY;
   }, [terminal]);
-  const _sub = useCallback((callback: () => void) => {
-    const obj = terminal.onScroll(() => {
-      callback();
-    });
-    return () => {
-      obj.dispose();
-    };
-  },
+  const _sub = useCallback(
+    (callback: () => void) => {
+      const obj = terminal.onScroll(() => {
+        callback();
+      });
+      return () => {
+        obj.dispose();
+      };
+    },
     [terminal]
   );
   return useSyncExternalStore(_sub, _get);

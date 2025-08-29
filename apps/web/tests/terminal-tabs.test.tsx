@@ -7,7 +7,7 @@ describe('Terminal Tab Handling', () => {
     // Test that our CSS approach preserves whitespace correctly
     const TestComponent = () => (
       <div style={{ whiteSpace: 'pre', fontFamily: 'monospace' }}>
-        <span>col1    col2    col3</span>
+        <span>{'col1    col2    col3'}</span>
       </div>
     );
 
@@ -20,7 +20,7 @@ describe('Terminal Tab Handling', () => {
     // Test that tab-expanded content (spaces) is preserved
     const TestComponent = () => (
       <div style={{ whiteSpace: 'pre', fontFamily: 'monospace' }}>
-        <span>a        b</span>
+        <span>{'a        b'}</span>
       </div>
     );
 
@@ -33,7 +33,7 @@ describe('Terminal Tab Handling', () => {
     // Test that internal whitespace is not collapsed
     const TestComponent = () => (
       <div style={{ whiteSpace: 'pre', fontFamily: 'monospace' }}>
-        <span>start   middle   end</span>
+        <span>{'start   middle   end'}</span>
       </div>
     );
 

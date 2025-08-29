@@ -120,7 +120,7 @@ class ReactRenderer implements IRenderer {
     }
     const old = g_versionMap.get(this._terminal);
     const new_list = old ? old.slice() : [];
-    for (let i = start ; i <= end ; i++) {
+    for (let i = start; i <= end; i++) {
       new_list[i] = (new_list[i] ?? 0) + 1;
     }
     g_versionMap.set(this._terminal, new_list);
