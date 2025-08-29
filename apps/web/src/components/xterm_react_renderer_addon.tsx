@@ -125,7 +125,6 @@ class ReactRenderer implements IRenderer {
     }
     g_versionMap.set(this._terminal, new_list);
     _emit(this._terminal);
-    console.log("renderRows:", start, end);
   }
 
   private _updateDimensions(): IRenderDimensions {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text } from './base_components';
 import type { IBufferLine, IBufferCell } from '@xterm/xterm';
 
@@ -21,7 +21,7 @@ export interface LineProps {
   version: number;
 }
 export const Line = React.memo(function Line(props: LineProps) {
-  const spans = useMemo(() => _lineToSpans(props.line), [props.version]);
+  const spans = useMemo(() => _lineToSpans(props.line), [props.line]);
   return <Text style={styles.line}>
             {spans.length > 0 ? spans : ' '}
           </Text>;

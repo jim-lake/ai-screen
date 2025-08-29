@@ -13,42 +13,7 @@ import {
   withTestLogging,
 } from './test-utils';
 import type { SessionJson } from '@ai-screen/shared';
-
-vi.mock('@xterm/xterm', () => {
-  const mockTerminal = {
-    options: { fontFamily: 'monospace', fontSize: 14 },
-    rows: 24,
-    cols: 80,
-    buffer: {
-      active: {
-        length: 24,
-        getLine: vi.fn(() => ({ translateToString: () => '' })),
-      },
-    },
-    open: vi.fn(),
-    write: vi.fn(),
-    resize: vi.fn(),
-    onData: vi.fn(() => ({ dispose: vi.fn() })),
-    dispose: vi.fn(),
-  };
-  return { Terminal: vi.fn(() => mockTerminal) };
-});
-
-vi.mock('../src/stores/connect_store', () => ({
-  connect: vi.fn(),
-  disconnect: vi.fn(),
-  resize: vi.fn(),
-  useTerminal: vi.fn(() => ({
-    options: { fontFamily: 'monospace', fontSize: 14 },
-    buffer: {
-      active: {
-        length: 24,
-        getLine: vi.fn(() => ({ translateToString: () => '' })),
-      },
-    },
-  })),
-  useTerminalSize: vi.fn(() => ({ rows: 24, columns: 80 })),
-}));
+import Api from '../src/tools/api';
 
 vi.mock('../src/stores/setting_store', () => ({
   useSetting: vi.fn((key: string) => {
@@ -71,6 +36,8 @@ describe('End-to-End Integration Demo', () => {
 
   beforeAll(async () => {
     serverInfo = await startTestServer();
+    Api.init();
+    Api.setCustomBaseUrl(`http://localhost:${serverInfo.port}`);
   });
 
   afterAll(async () => {
@@ -110,17 +77,6 @@ describe('End-to-End Integration Demo', () => {
       const textContent = getVisibleText(terminalInner);
       expect(textContent.length).toBeGreaterThanOrEqual(0);
 
-      const { connect } = await import('../src/stores/connect_store');
-      expect(vi.mocked(connect)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          session: expect.objectContaining({ sessionName: sessionName }),
-          element: expect.any(HTMLDivElement),
-          terminalOptions: expect.objectContaining({
-            fontFamily: 'monospace',
-            fontSize: 14,
-          }),
-        })
-      );
     })
   );
 

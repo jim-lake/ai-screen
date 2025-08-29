@@ -148,7 +148,7 @@ async function _create(params: ConnectParams) {
               displayStateToAnsi({ cursor: obj.alternate.cursor })
             );
           }
-          window.terminal = terminal;
+          (globalThis as { terminal?: unknown }).terminal = terminal;
           g_mountedMap.set(sessionName, { element, terminal, webSocket: ws });
           _emit('update');
           log('connect_store._create: success:', obj.rows, obj.columns);

@@ -120,8 +120,8 @@ export default function Terminal(props: TerminalProps) {
         // zoom === 'EXPAND'
         terminal.options.fontSize = fontSize;
         const delta_w = avail_width - char_size.width * old_cols;
-        const overflow_x = delta_w < 0 ? 'scroll' : 'hidden';
-        setOverflowX(overflow_x);
+        const newOverflowX = delta_w < 0 ? 'scroll' : 'hidden';
+        setOverflowX(newOverflowX);
       }
     }
   }, [

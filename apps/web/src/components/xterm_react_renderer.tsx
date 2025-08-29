@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useMemo } from 'react';
-import { StyleSheet, View, Text } from './base_components';
+import React, { useEffect, useRef } from 'react';
+import { StyleSheet, View } from './base_components';
 import { Terminal } from '@xterm/xterm';
-import type { IBufferLine, IBufferCell } from '@xterm/xterm';
 
 import { Line, EmptyLine } from './xterm_line';
 import XTermScrollback from './xterm_scrollback';
