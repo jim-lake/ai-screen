@@ -98,6 +98,7 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
       }
     }
     return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [terminal.buffer.active, rows, dirty]);
 
   function _onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
@@ -290,10 +291,15 @@ function _lineToSpans(line: IBufferLine): React.ReactNode[] {
     return [];
   }
 
+  // Find the last cell with non-space content or with background color
   let lastNonSpaceIndex = -1;
   for (let i = 0; i < line.length; i++) {
     const cell = line.getCell(i);
-    if (cell?.getChars().trim() !== '') {
+    const chars = cell?.getChars() ?? ' ';
+    const hasBgColor = cell?.getBgColorMode() !== 0;
+
+    // Keep if it's not a space, or if it's a space with background color
+    if (chars !== ' ' || hasBgColor) {
       lastNonSpaceIndex = i;
     }
   }
