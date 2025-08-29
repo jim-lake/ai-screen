@@ -120,6 +120,7 @@ class ReactRenderer implements IRenderer {
   }
 
   public renderRows(start: number, end: number): void {
+    console.log('renderRows:', start, end);
     if (this._disposed) {
       return;
     }

@@ -120,9 +120,7 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
       expect(typeof terminalState.normal.cursor.y).toBe('number');
 
       if (domTextContent.length === 0) {
-        const terminalElements = terminalInner.querySelectorAll(
-          'div, span'
-        );
+        const terminalElements = terminalInner.querySelectorAll('div, span');
 
         expect(terminalInner).toBeInTheDocument();
         expect(terminalInner.children.length).toBeGreaterThan(0);
@@ -141,9 +139,7 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
 
         expect(hasPrompt || hasContent).toBe(true);
 
-        const terminalElements = terminalInner.querySelectorAll(
-          'div, span'
-        );
+        const terminalElements = terminalInner.querySelectorAll('div, span');
         expect(terminalElements.length).toBeGreaterThan(0);
       }
     })
