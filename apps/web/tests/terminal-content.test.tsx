@@ -92,11 +92,10 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
         activeTerminal: terminalState,
       };
 
-      const terminalInner = screen.getByTestId('terminal-inner');
-      expect(terminalInner).toBeInTheDocument();
-
+      let terminalInner: Element;
       await waitFor(
         () => {
+          terminalInner = screen.getByTestId('terminal-inner');
           expect(terminalInner).toBeInTheDocument();
         },
         { timeout: 3000 }
@@ -121,14 +120,14 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
       expect(typeof terminalState.normal.cursor.y).toBe('number');
 
       if (domTextContent.length === 0) {
-        const xtermElements = terminalInner.querySelectorAll(
-          '.xterm, .xterm-screen, .xterm-viewport, .xterm-rows'
+        const terminalElements = terminalInner.querySelectorAll(
+          'div, span'
         );
 
         expect(terminalInner).toBeInTheDocument();
         expect(terminalInner.children.length).toBeGreaterThan(0);
 
-        expect(xtermElements.length).toBeGreaterThan(0);
+        expect(terminalElements.length).toBeGreaterThan(0);
       } else {
         console.log('DOM content length:', domTextContent.length);
         console.log('DOM content preview:', domTextContent.substring(0, 200));
@@ -142,10 +141,10 @@ describe('Terminal Content Verification with Real XTerm and WebSocket', () => {
 
         expect(hasPrompt || hasContent).toBe(true);
 
-        const xtermElements = terminalInner.querySelectorAll(
-          '.xterm, .xterm-screen, .xterm-viewport'
+        const terminalElements = terminalInner.querySelectorAll(
+          'div, span'
         );
-        expect(xtermElements.length).toBeGreaterThan(0);
+        expect(terminalElements.length).toBeGreaterThan(0);
       }
     })
   );

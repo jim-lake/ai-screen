@@ -7,7 +7,7 @@ import {
   beforeEach,
   vi,
 } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import Terminal from '../src/components/terminal';
 import Api from '../src/tools/api';
@@ -142,8 +142,10 @@ describe('Terminal Component - Simple Tests with Real Data', () => {
       for (const zoom of zoomModes) {
         const { unmount } = render(<Terminal session={session} zoom={zoom} />);
 
-        const terminalInner = screen.getByTestId('terminal-inner');
-        expect(terminalInner).toBeInTheDocument();
+        await waitFor(() => {
+          const terminalInner = screen.getByTestId('terminal-inner');
+          expect(terminalInner).toBeInTheDocument();
+        });
 
         unmount();
       }

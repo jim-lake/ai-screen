@@ -76,8 +76,10 @@ describe('Terminal Component - End-to-End Tests', () => {
         render(<Terminal session={session} zoom='EXPAND' />);
       });
 
-      const terminalInner = screen.getByTestId('terminal-inner');
-      expect(terminalInner).toBeInTheDocument();
+      await waitFor(() => {
+        const terminalInner = screen.getByTestId('terminal-inner');
+        expect(terminalInner).toBeInTheDocument();
+      });
     })
   );
 
