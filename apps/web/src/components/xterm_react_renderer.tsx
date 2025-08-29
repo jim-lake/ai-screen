@@ -234,15 +234,25 @@ function _getSpanStyle(state: ColorState): React.CSSProperties {
   const bgColor = _colorToCSS(state.bgColorMode, state.bgColor);
 
   if (state.inverse) {
+    // For inverse, swap foreground and background colors
     if (fgColor) {
       style.backgroundColor = fgColor;
     }
     if (bgColor) {
       style.color = bgColor;
     }
+    // Default inverse colors when no colors are set
     if (!fgColor && !bgColor) {
       style.backgroundColor = '#ffffff';
       style.color = '#000000';
+    }
+    // If only foreground color is set, use default background for text color
+    if (fgColor && !bgColor) {
+      style.color = '#000000';
+    }
+    // If only background color is set, use default foreground for background
+    if (!fgColor && bgColor) {
+      style.backgroundColor = '#ffffff';
     }
   } else {
     if (fgColor) {
@@ -291,16 +301,18 @@ function _lineToSpans(line: IBufferLine): React.ReactNode[] {
     return [];
   }
 
-  // Find the last cell with non-space content or with background color
+  // Find the last cell with meaningful content
   let lastNonSpaceIndex = -1;
   for (let i = 0; i < line.length; i++) {
     const cell = line.getCell(i);
-    const raw_chars = cell?.getChars() ?? '';
-    const chars = raw_chars.length > 0 ? raw_chars : ' ';
+    const chars = cell?.getChars() ?? ' ';
     const hasBgColor = cell?.getBgColorMode() !== 0;
+    const hasFgColor = cell?.getFgColorMode() !== 0;
+    const isInverse = cell?.isInverse() ?? false;
 
-    // Keep if it's not a space, or if it's a space with background color
-    if (chars !== ' ' || hasBgColor) {
+    // Keep if it's not a space, or if it's a space with background color,
+    // or if it's an inverse space with foreground color (which becomes background)
+    if (chars !== ' ' || hasBgColor || (isInverse && hasFgColor)) {
       lastNonSpaceIndex = i;
     }
   }
