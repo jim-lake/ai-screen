@@ -35,16 +35,18 @@ const styles = StyleSheet.create({
   scroller: {
     position: 'absolute',
     inset: 0,
-    overflow: 'hidden',
+    overflowX: 'hidden',
+    overflowY: 'scroll',
+    flexDirection: 'column-reverse',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
   scrollerInner: {
-    flex: 1,
+    //flex: 1,
     alignSelf: 'stretch',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    overflow: 'hidden',
+    //overflow: 'hidden',
   },
   inner: {
     display: 'block',
@@ -67,7 +69,7 @@ export default function Terminal(props: TerminalProps) {
   const fontFamily = useSetting('fontFamily', 'string') ?? DEFAULT_FONT_FAMILY;
   const fontSize = useSetting('fontSize', 'number') ?? DEFAULT_FONT_SIZE;
   const [container_ref, container_size] = useComponentSize<HTMLDivElement>();
-  const [overflow, setOverflow] = useState('hidden');
+  const [overflow_x, setOverflowX] = useState('hidden');
 
   useEffect(() => {
     const element = element_ref.current;
@@ -107,21 +109,19 @@ export default function Terminal(props: TerminalProps) {
         }
 
         terminal.options.fontSize = new_font_size;
-        setOverflow('hidden');
+        setOverflowX('hidden');
       } else if (zoom === 'FIT') {
         terminal.options.fontSize = fontSize;
         const new_columns = Math.floor(avail_width / char_size.width);
         const new_rows = Math.floor(avail_height / char_size.height);
         resize({ session, columns: new_columns, rows: new_rows });
-        setOverflow('hidden');
+        setOverflowX('hidden');
       } else {
         // zoom === 'EXPAND'
         terminal.options.fontSize = fontSize;
         const delta_w = avail_width - char_size.width * old_cols;
-        const delta_h = avail_height - char_size.height * old_rows;
         const overflow_x = delta_w < 0 ? 'scroll' : 'hidden';
-        const overflow_y = delta_h < 0 ? 'scroll' : 'hidden';
-        setOverflow(overflow_x + ' ' + overflow_y);
+        setOverflowX(overflow_x);
       }
     }
   }, [
@@ -130,19 +130,19 @@ export default function Terminal(props: TerminalProps) {
     container_size,
     fontFamily,
     fontSize,
-    setOverflow,
+    setOverflowX,
     session,
   ]);
 
   return (
     <View getDiv={container_ref} style={[styles.terminal, props.style]}>
       <ScrollView
-        style={[styles.scroller, { overflow }]}
+        style={[styles.scroller, { overflowX: overflow_x }]}
         contentContainerStyle={styles.scrollerInner}
       >
-        <View style={styles.inner} getDiv={element_ref}></View>
         {terminal ? <XTermReactRenderer terminal={terminal} /> : null}
       </ScrollView>
+      <View style={styles.inner} getDiv={element_ref}></View>
     </View>
   );
 }

@@ -170,7 +170,7 @@ export function lineToString(line: IBufferLine): string {
 
   for (let i = 0; i < line.length; i++) {
     const cell = line.getCell(i);
-    if (cell?.getChars().trim() !== '') {
+    if (cell?.getChars().trim() !== '' || cell?.getBgColorMode() !== 0 || cell?.isInverse()) {
       last_non_space_index = i;
     }
   }

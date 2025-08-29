@@ -22,14 +22,9 @@ interface TerminalCore extends Terminal {
   };
 }
 
-export interface TerminalDirty {
-  rowSet: Set<number>;
-  cursor: boolean;
-}
-
 let g_terminalCount = 0;
 const g_terminalLabelMap = new Map<Terminal, string>();
-const g_updateMap = new Map<Terminal, TerminalDirty>();
+const g_versionMap = new Map<Terminal, number[]>();
 const g_eventEmitter = new EventEmitter();
 
 function _getTerminalLabel(terminal: Terminal): string {
@@ -43,9 +38,9 @@ function _getTerminalLabel(terminal: Terminal): string {
 function _emit(terminal: Terminal) {
   g_eventEmitter.emit(_getTerminalLabel(terminal));
 }
-export function useRenderUpdate(terminal: Terminal) {
+export function useRowVersion(terminal: Terminal) {
   const _get = useCallback(() => {
-    return g_updateMap.get(terminal);
+    return g_versionMap.get(terminal);
   }, [terminal]);
   const _sub = useCallback(
     (callback: () => void) => {
@@ -123,16 +118,14 @@ class ReactRenderer implements IRenderer {
     if (this._disposed) {
       return;
     }
-    const old = g_updateMap.get(this._terminal);
-    const new_dirty = {
-      rowSet: old?.rowSet ?? new Set<number>(),
-      cursor: old?.cursor ?? false,
-    };
-    for (let i = start; i <= end; i++) {
-      new_dirty.rowSet.add(i);
+    const old = g_versionMap.get(this._terminal);
+    const new_list = old ? old.slice() : [];
+    for (let i = start ; i <= end ; i++) {
+      new_list[i] = (new_list[i] ?? 0) + 1;
     }
-    g_updateMap.set(this._terminal, new_dirty);
+    g_versionMap.set(this._terminal, new_list);
     _emit(this._terminal);
+    console.log("renderRows:", start, end);
   }
 
   private _updateDimensions(): IRenderDimensions {
