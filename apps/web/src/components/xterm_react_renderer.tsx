@@ -7,6 +7,8 @@ import XTermScrollback from './xterm_scrollback';
 import { useRowVersion } from './xterm_react_renderer_addon';
 import { measureCharSize } from '../tools/measure';
 
+import type { SessionJson } from '@ai-screen/shared';
+
 const styles = StyleSheet.create({
   xtermReactRenderer: {
     minHeight: 'calc(var(--term-rows) * var(--term-cell-height) * 1px)',
@@ -39,11 +41,10 @@ interface TerminalCore extends Terminal {
     _inputEvent: (event: unknown) => boolean;
   };
 }
-
 export interface XTermReactRendererProps {
   terminal: Terminal;
+  session: SessionJson;
 }
-
 export default function XTermReactRenderer(props: XTermReactRendererProps) {
   const { terminal } = props;
   const ref = useRef<HTMLDivElement>(null);

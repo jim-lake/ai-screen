@@ -140,7 +140,9 @@ export default function Terminal(props: TerminalProps) {
         style={[styles.scroller, { overflowX: overflow_x }]}
         contentContainerStyle={styles.scrollerInner}
       >
-        {terminal ? <XTermReactRenderer terminal={terminal} /> : null}
+        {terminal ? (
+          <XTermReactRenderer terminal={terminal} session={session} />
+        ) : null}
       </ScrollView>
       <View style={styles.inner} getDiv={element_ref}></View>
     </View>

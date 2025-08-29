@@ -16,7 +16,14 @@ import type {
 
 const CONNECT_TIMEOUT = 2 * 1000;
 
-export default { connect, disconnect, resize, useTerminal, useTerminalSize };
+export default {
+  connect,
+  disconnect,
+  resize,
+  write,
+  useTerminal,
+  useTerminalSize,
+};
 
 export interface Size {
   rows: number;
@@ -99,6 +106,17 @@ export function resize(params: ResizeParams) {
   const webSocket = g_mountedMap.get(session.sessionName)?.webSocket;
   if (webSocket) {
     _send(webSocket, { type: 'resize' as const, columns, rows });
+  }
+}
+interface WriteParams {
+  session: SessionJson;
+  data: string;
+}
+export function write(params: WriteParams) {
+  const { session, data } = params;
+  const webSocket = g_mountedMap.get(session.sessionName)?.webSocket;
+  if (webSocket) {
+    _send(webSocket, { type: 'write' as const, data });
   }
 }
 async function _create(params: ConnectParams) {

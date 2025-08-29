@@ -1,7 +1,7 @@
 import React, { useSyncExternalStore, useCallback } from 'react';
 import { Terminal } from '@xterm/xterm';
 
-import { Line } from './xterm_line';
+import { Line, EmptyLine } from './xterm_line';
 
 export interface XTermScrollbackProps {
   terminal: Terminal;
@@ -15,6 +15,8 @@ export default function XTermScrollback(props: XTermScrollbackProps) {
     const line = buffer.getLine(i);
     if (line) {
       lines.push(<Line key={`scroll${i}`} line={line} version={0} />);
+    } else {
+      lines.push(<EmptyLine key={`scroll${i}`} />);
     }
   }
 

@@ -29,7 +29,7 @@ export const Line = React.memo(
 );
 
 export function EmptyLine() {
-  return <Text style={styles.line}> </Text>;
+  return <Text style={styles.line}>{' ' /*space */}</Text>;
 }
 
 interface ColorState {
