@@ -295,7 +295,8 @@ function _lineToSpans(line: IBufferLine): React.ReactNode[] {
   let lastNonSpaceIndex = -1;
   for (let i = 0; i < line.length; i++) {
     const cell = line.getCell(i);
-    const chars = cell?.getChars() ?? ' ';
+    const raw_chars = cell?.getChars() ?? '';
+    const chars = raw_chars.length > 0 ? raw_chars : ' ';
     const hasBgColor = cell?.getBgColorMode() !== 0;
 
     // Keep if it's not a space, or if it's a space with background color
@@ -327,7 +328,8 @@ function _lineToSpans(line: IBufferLine): React.ReactNode[] {
 
   for (let i = 0; i <= lastNonSpaceIndex; i++) {
     const cell = line.getCell(i);
-    const chars = cell?.getChars() ?? ' ';
+    const raw_chars = cell?.getChars() ?? '';
+    const chars = raw_chars.length > 0 ? raw_chars : ' ';
     const cellState = cell ? _getCellColorState(cell) : null;
 
     if (
