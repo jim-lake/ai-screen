@@ -72,41 +72,55 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
     }
   }
 
-  function _onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+  function translateKeyToData(e: React.KeyboardEvent<HTMLDivElement>): string {
     const { key, ctrlKey, altKey } = e;
-    let data = '';
 
     // Handle special keys
     if (key === 'ArrowLeft') {
-      data = '\x1b[D';
-    } else if (key === 'ArrowRight') {
-      data = '\x1b[C';
-    } else if (key === 'ArrowUp') {
-      data = '\x1b[A';
-    } else if (key === 'ArrowDown') {
-      data = '\x1b[B';
-    } else if (key === 'Backspace') {
-      data = '\x7f';
-    } else if (key === 'Enter') {
-      data = '\r';
-    } else if (key === 'Tab') {
-      data = '\t';
-    } else if (key === 'Escape') {
-      data = '\x1b';
-    } else if (key === 'Insert') {
-      data = '\x1b[2~';
-    } else if (key === 'Delete') {
-      data = '\x1b[3~';
-    } else if (key === 'Home') {
-      data = '\x1b[H';
-    } else if (key === 'End') {
-      data = '\x1b[F';
-    } else if (key === 'PageUp') {
-      data = '\x1b[5~';
-    } else if (key === 'PageDown') {
-      data = '\x1b[6~';
-    } else if (key.startsWith('F') && key.length <= 3) {
-      // Function keys F1-F12
+      return '\x1b[D';
+    }
+    if (key === 'ArrowRight') {
+      return '\x1b[C';
+    }
+    if (key === 'ArrowUp') {
+      return '\x1b[A';
+    }
+    if (key === 'ArrowDown') {
+      return '\x1b[B';
+    }
+    if (key === 'Backspace') {
+      return '\x7f';
+    }
+    if (key === 'Enter') {
+      return '\r';
+    }
+    if (key === 'Tab') {
+      return '\t';
+    }
+    if (key === 'Escape') {
+      return '\x1b';
+    }
+    if (key === 'Insert') {
+      return '\x1b[2~';
+    }
+    if (key === 'Delete') {
+      return '\x1b[3~';
+    }
+    if (key === 'Home') {
+      return '\x1b[H';
+    }
+    if (key === 'End') {
+      return '\x1b[F';
+    }
+    if (key === 'PageUp') {
+      return '\x1b[5~';
+    }
+    if (key === 'PageDown') {
+      return '\x1b[6~';
+    }
+
+    // Function keys F1-F12
+    if (key.startsWith('F') && key.length <= 3) {
       const fNum = parseInt(key.slice(1));
       if (fNum >= 1 && fNum <= 12) {
         const fKeyCodes = [
@@ -123,32 +137,60 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
           '\x1b[23~',
           '\x1b[24~', // F9-F12
         ];
-        const fKeyCode = fKeyCodes[fNum - 1];
-        if (fKeyCode) {
-          data = fKeyCode;
-        }
+        return fKeyCodes[fNum - 1] ?? '';
       }
-    } else if (ctrlKey && key.length === 1) {
-      // Handle Ctrl+key combinations including []^_?
-      const char = key.toLowerCase();
-      if (char >= 'a' && char <= 'z') {
-        data = String.fromCharCode(char.charCodeAt(0) - 96);
-      } else if (char === '[') {
-        data = '\x1b';
-      } else if (char === ']') {
-        data = '\x1d';
-      } else if (char === '^') {
-        data = '\x1e';
-      } else if (char === '_') {
-        data = '\x1f';
-      } else if (char === '?') {
-        data = '\x7f';
-      }
-    } else if (key.length === 1 && !ctrlKey && !altKey) {
-      // Regular printable characters
-      data = key;
     }
 
+    // Ctrl key combinations
+    if (ctrlKey && key.length === 1) {
+      const char = key.toLowerCase();
+      if (char >= 'a' && char <= 'z') {
+        return String.fromCharCode(char.charCodeAt(0) - 96);
+      }
+      if (char === '[') {
+        return '\x1b';
+      }
+      if (char === ']') {
+        return '\x1d';
+      }
+      if (char === '^') {
+        return '\x1e';
+      }
+      if (char === '_') {
+        return '\x1f';
+      }
+      if (char === '?') {
+        return '\x7f';
+      }
+    }
+
+    // Regular printable characters
+    if (key.length === 1 && !ctrlKey && !altKey) {
+      return key;
+    }
+
+    return '';
+  }
+
+  function _onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const data = translateKeyToData(e);
+    if (data) {
+      write({ session: props.session, data });
+      e.preventDefault();
+    }
+  }
+
+  function _onInput(e: React.FormEvent<HTMLDivElement>) {
+    const target = e.target as HTMLDivElement;
+    const data = target.textContent;
+    if (data) {
+      write({ session: props.session, data });
+      target.textContent = '';
+    }
+  }
+
+  function _onPaste(e: React.ClipboardEvent<HTMLDivElement>) {
+    const data = e.clipboardData.getData('text');
     if (data) {
       write({ session: props.session, data });
       e.preventDefault();
@@ -164,6 +206,8 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
       tabIndex={0}
       onFocus={_onFocus}
       onKeyDown={_onKeyDown}
+      onInput={_onInput}
+      onPaste={_onPaste}
       data-testid='terminal-inner'
     >
       <View style={styles.rows}>
