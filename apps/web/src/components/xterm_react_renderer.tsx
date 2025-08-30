@@ -19,8 +19,9 @@ const styles = StyleSheet.create({
     lineHeight: 'var(--term-line-height)',
     zIndex: 10,
     flexDirection: 'column',
-
     backgroundColor: 'black',
+    cursor: 'none',
+    caretColor: 'transparent',
   },
   rows: {
     width: 'calc(var(--term-columns) * var(--term-cell-width) * 1px)',
@@ -71,129 +72,26 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
       terminal_lines.push(<EmptyLine key={i} />);
     }
   }
-
-  function translateKeyToData(e: React.KeyboardEvent<HTMLDivElement>): string {
-    const { key, ctrlKey, altKey } = e;
-
-    // Handle special keys
-    if (key === 'ArrowLeft') {
-      return '\x1b[D';
-    }
-    if (key === 'ArrowRight') {
-      return '\x1b[C';
-    }
-    if (key === 'ArrowUp') {
-      return '\x1b[A';
-    }
-    if (key === 'ArrowDown') {
-      return '\x1b[B';
-    }
-    if (key === 'Backspace') {
-      return '\x7f';
-    }
-    if (key === 'Enter') {
-      return '\r';
-    }
-    if (key === 'Tab') {
-      return '\t';
-    }
-    if (key === 'Escape') {
-      return '\x1b';
-    }
-    if (key === 'Insert') {
-      return '\x1b[2~';
-    }
-    if (key === 'Delete') {
-      return '\x1b[3~';
-    }
-    if (key === 'Home') {
-      return '\x1b[H';
-    }
-    if (key === 'End') {
-      return '\x1b[F';
-    }
-    if (key === 'PageUp') {
-      return '\x1b[5~';
-    }
-    if (key === 'PageDown') {
-      return '\x1b[6~';
-    }
-
-    // Function keys F1-F12
-    if (key.startsWith('F') && key.length <= 3) {
-      const fNum = parseInt(key.slice(1));
-      if (fNum >= 1 && fNum <= 12) {
-        const fKeyCodes = [
-          '\x1bOP',
-          '\x1bOQ',
-          '\x1bOR',
-          '\x1bOS', // F1-F4
-          '\x1b[15~',
-          '\x1b[17~',
-          '\x1b[18~',
-          '\x1b[19~', // F5-F8
-          '\x1b[20~',
-          '\x1b[21~',
-          '\x1b[23~',
-          '\x1b[24~', // F9-F12
-        ];
-        return fKeyCodes[fNum - 1] ?? '';
-      }
-    }
-
-    // Ctrl key combinations
-    if (ctrlKey && key.length === 1) {
-      const char = key.toLowerCase();
-      if (char >= 'a' && char <= 'z') {
-        return String.fromCharCode(char.charCodeAt(0) - 96);
-      }
-      if (char === '[') {
-        return '\x1b';
-      }
-      if (char === ']') {
-        return '\x1d';
-      }
-      if (char === '^') {
-        return '\x1e';
-      }
-      if (char === '_') {
-        return '\x1f';
-      }
-      if (char === '?') {
-        return '\x7f';
-      }
-    }
-
-    // Regular printable characters
-    if (key.length === 1 && !ctrlKey && !altKey) {
-      return key;
-    }
-
-    return '';
-  }
-
   function _onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    const data = translateKeyToData(e);
+    e.preventDefault();
+    const data = _translateKeyToData(e);
     if (data) {
       write({ session: props.session, data });
-      e.preventDefault();
     }
   }
-
-  function _onInput(e: React.FormEvent<HTMLDivElement>) {
-    const target = e.target as HTMLDivElement;
-    const data = target.textContent;
-    if (data) {
-      write({ session: props.session, data });
-      target.textContent = '';
+  function _onInput(e: React.SyntheticEvent<HTMLDivElement, InputEvent>) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.nativeEvent.data && !e.nativeEvent.isComposing) {
+      write({ session: props.session, data: e.nativeEvent.data });
     }
+    return false;
   }
-
   function _onPaste(e: React.ClipboardEvent<HTMLDivElement>) {
-    const data = e.clipboardData.getData('text');
+    e.preventDefault();
+    const data = e.clipboardData.getData('text/plain');
     if (data) {
       write({ session: props.session, data });
-      e.preventDefault();
     }
   }
   function _onFocus() {
@@ -204,8 +102,15 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
       getDiv={ref}
       style={styles.xtermReactRenderer}
       tabIndex={0}
+      contentEditable
+      spellCheck={false}
+      autoCorrect='off'
+      autoCapitalize='off'
+      autoComplete='off'
+      suppressContentEditableWarning
       onFocus={_onFocus}
       onKeyDown={_onKeyDown}
+      onBeforeInput={_onInput}
       onInput={_onInput}
       onPaste={_onPaste}
       data-testid='terminal-inner'
@@ -217,4 +122,95 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
       </View>
     </View>
   );
+}
+
+function _translateKeyToData(e: React.KeyboardEvent<HTMLDivElement>): string {
+  const { key, ctrlKey, altKey } = e;
+  if (key === 'ArrowLeft') {
+    return '\x1b[D';
+  }
+  if (key === 'ArrowRight') {
+    return '\x1b[C';
+  }
+  if (key === 'ArrowUp') {
+    return '\x1b[A';
+  }
+  if (key === 'ArrowDown') {
+    return '\x1b[B';
+  }
+  if (key === 'Backspace') {
+    return '\x7f';
+  }
+  if (key === 'Enter') {
+    return '\r';
+  }
+  if (key === 'Tab') {
+    return '\t';
+  }
+  if (key === 'Escape') {
+    return '\x1b';
+  }
+  if (key === 'Insert') {
+    return '\x1b[2~';
+  }
+  if (key === 'Delete') {
+    return '\x1b[3~';
+  }
+  if (key === 'Home') {
+    return '\x1b[H';
+  }
+  if (key === 'End') {
+    return '\x1b[F';
+  }
+  if (key === 'PageUp') {
+    return '\x1b[5~';
+  }
+  if (key === 'PageDown') {
+    return '\x1b[6~';
+  }
+  if (key.startsWith('F') && key.length <= 3) {
+    const fNum = parseInt(key.slice(1));
+    if (fNum >= 1 && fNum <= 12) {
+      const fKeyCodes = [
+        '\x1bOP',
+        '\x1bOQ',
+        '\x1bOR',
+        '\x1bOS', // F1-F4
+        '\x1b[15~',
+        '\x1b[17~',
+        '\x1b[18~',
+        '\x1b[19~', // F5-F8
+        '\x1b[20~',
+        '\x1b[21~',
+        '\x1b[23~',
+        '\x1b[24~', // F9-F12
+      ];
+      return fKeyCodes[fNum - 1] ?? '';
+    }
+  }
+  if (ctrlKey && key.length === 1) {
+    const char = key.toLowerCase();
+    if (char >= 'a' && char <= 'z') {
+      return String.fromCharCode(char.charCodeAt(0) - 96);
+    }
+    if (char === '[') {
+      return '\x1b';
+    }
+    if (char === ']') {
+      return '\x1d';
+    }
+    if (char === '^') {
+      return '\x1e';
+    }
+    if (char === '_') {
+      return '\x1f';
+    }
+    if (char === '?') {
+      return '\x7f';
+    }
+  }
+  if (key.length === 1 && !ctrlKey && !altKey) {
+    return key;
+  }
+  return '';
 }

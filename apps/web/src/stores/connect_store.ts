@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import EventEmitter from 'events';
 import { Terminal } from '@xterm/xterm';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { displayStateToAnsi, jsonParse } from '@ai-screen/shared';
 import { ReactRendererAddon } from '../components/xterm_react_renderer_addon';
 
@@ -140,11 +141,14 @@ async function _create(params: ConnectParams) {
           clearTimeout(connect_timeout);
           g_sizeMap.set(sessionName, { rows: obj.rows, columns: obj.columns });
           const opts = {
+            allowProposedApi: true,
             rows: obj.rows,
             cols: obj.columns,
             ...terminalOptions,
           };
           terminal = new Terminal(opts);
+          terminal.loadAddon(new Unicode11Addon());
+          terminal.unicode.activeVersion = '11';
           terminal.loadAddon(new ReactRendererAddon());
           const element = g_elementMap.get(sessionName) ?? null;
           if (element) {
