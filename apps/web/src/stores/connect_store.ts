@@ -154,7 +154,7 @@ async function _create(params: ConnectParams) {
             return;
           }
 
-          data_dispose = terminal.onData(_onData);
+          data_dispose = null; // No longer listening to terminal.onData
           if (obj.normal) {
             terminal.write(obj.normal.buffer.join('\r\n'));
             terminal.write(displayStateToAnsi({ cursor: obj.normal.cursor }));
@@ -182,9 +182,6 @@ async function _create(params: ConnectParams) {
         } else {
           errorLog('connect_store._create: bad message:', data);
         }
-      }
-      function _onData(data: string) {
-        _send(ws, { type: 'write', data });
       }
       function _onClose(): void {
         _cleanup();

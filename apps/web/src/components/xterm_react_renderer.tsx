@@ -6,6 +6,7 @@ import { Line, EmptyLine } from './xterm_line';
 import XTermScrollback from './xterm_scrollback';
 import { useRowVersion } from './xterm_react_renderer_addon';
 import { measureCharSize } from '../tools/measure';
+import { write } from '../stores/connect_store';
 
 import type { SessionJson } from '@ai-screen/shared';
 
@@ -33,14 +34,6 @@ const styles = StyleSheet.create({
   },
 });
 
-interface TerminalCore extends Terminal {
-  _core: {
-    _keyDown: (event: unknown) => boolean;
-    _keyUp: (event: unknown) => boolean;
-    _keyPress: (event: unknown) => boolean;
-    _inputEvent: (event: unknown) => boolean;
-  };
-}
 export interface XTermReactRendererProps {
   terminal: Terminal;
   session: SessionJson;
@@ -52,7 +45,6 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
   const { rows } = terminal;
   const columns = terminal.cols;
   const { fontFamily, fontSize, lineHeight } = terminal.options;
-  const _term = terminal as TerminalCore;
 
   useEffect(() => {
     if (ref.current && fontFamily && fontSize && lineHeight) {
@@ -81,16 +73,86 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
   }
 
   function _onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    return _term._core._keyDown(e.nativeEvent);
-  }
-  function _onKeyUp(e: React.KeyboardEvent<HTMLDivElement>) {
-    return _term._core._keyUp(e.nativeEvent);
-  }
-  function _onKeyPress(e: React.KeyboardEvent<HTMLDivElement>) {
-    return _term._core._keyPress(e.nativeEvent);
-  }
-  function _onInput(e: React.InputEvent<HTMLDivElement>) {
-    return _term._core._inputEvent(e.nativeEvent);
+    const { key, ctrlKey, altKey } = e;
+    let data = '';
+
+    // Handle special keys
+    if (key === 'ArrowLeft') {
+      data = '\x1b[D';
+    } else if (key === 'ArrowRight') {
+      data = '\x1b[C';
+    } else if (key === 'ArrowUp') {
+      data = '\x1b[A';
+    } else if (key === 'ArrowDown') {
+      data = '\x1b[B';
+    } else if (key === 'Backspace') {
+      data = '\x7f';
+    } else if (key === 'Enter') {
+      data = '\r';
+    } else if (key === 'Tab') {
+      data = '\t';
+    } else if (key === 'Escape') {
+      data = '\x1b';
+    } else if (key === 'Insert') {
+      data = '\x1b[2~';
+    } else if (key === 'Delete') {
+      data = '\x1b[3~';
+    } else if (key === 'Home') {
+      data = '\x1b[H';
+    } else if (key === 'End') {
+      data = '\x1b[F';
+    } else if (key === 'PageUp') {
+      data = '\x1b[5~';
+    } else if (key === 'PageDown') {
+      data = '\x1b[6~';
+    } else if (key.startsWith('F') && key.length <= 3) {
+      // Function keys F1-F12
+      const fNum = parseInt(key.slice(1));
+      if (fNum >= 1 && fNum <= 12) {
+        const fKeyCodes = [
+          '\x1bOP',
+          '\x1bOQ',
+          '\x1bOR',
+          '\x1bOS', // F1-F4
+          '\x1b[15~',
+          '\x1b[17~',
+          '\x1b[18~',
+          '\x1b[19~', // F5-F8
+          '\x1b[20~',
+          '\x1b[21~',
+          '\x1b[23~',
+          '\x1b[24~', // F9-F12
+        ];
+        const fKeyCode = fKeyCodes[fNum - 1];
+        if (fKeyCode) {
+          data = fKeyCode;
+        }
+      }
+    } else if (ctrlKey && key.length === 1) {
+      // Handle Ctrl+key combinations including []^_?
+      const char = key.toLowerCase();
+      if (char >= 'a' && char <= 'z') {
+        data = String.fromCharCode(char.charCodeAt(0) - 96);
+      } else if (char === '[') {
+        data = '\x1b';
+      } else if (char === ']') {
+        data = '\x1d';
+      } else if (char === '^') {
+        data = '\x1e';
+      } else if (char === '_') {
+        data = '\x1f';
+      } else if (char === '?') {
+        data = '\x7f';
+      }
+    } else if (key.length === 1 && !ctrlKey && !altKey) {
+      // Regular printable characters
+      data = key;
+    }
+
+    if (data) {
+      write({ session: props.session, data });
+      e.preventDefault();
+    }
   }
   function _onFocus() {
     //terminal.focus();
@@ -102,9 +164,6 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
       tabIndex={0}
       onFocus={_onFocus}
       onKeyDown={_onKeyDown}
-      onKeyUp={_onKeyUp}
-      onKeyPress={_onKeyPress}
-      onInput={_onInput}
       data-testid='terminal-inner'
     >
       <View style={styles.rows}>
