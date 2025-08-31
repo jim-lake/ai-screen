@@ -20,7 +20,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     flexDirection: 'column',
     backgroundColor: 'black',
-    cursor: 'none',
     caretColor: 'transparent',
   },
   rows: {

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { spawn } from 'node-pty';
 import Headless from '@xterm/headless';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { displayStateToAnsi } from '@ai-screen/shared';
 
 import { log, errorLog } from '../tools/log';
@@ -13,7 +14,7 @@ import type {
   TerminalJson,
 } from '@ai-screen/shared';
 import type { IPty } from 'node-pty';
-import type { IBuffer } from '@xterm/headless';
+import type { IBuffer, ITerminalAddon } from '@xterm/headless';
 import type { DeepPartial } from '../tools/util';
 
 const VERY_LARGE = 10 * 1000 * 1000;
@@ -68,6 +69,8 @@ export class Terminal extends EventEmitter {
       allowProposedApi: true,
       scrollback: VERY_LARGE,
     });
+    this._xterm.loadAddon(new Unicode11Addon() as unknown as ITerminalAddon);
+    this._xterm.unicode.activeVersion = '11';
     this._lineFeedDispose = this._xterm.onLineFeed(this._onLineFeed);
 
     if (params.cursor || params.altScreen) {
