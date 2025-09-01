@@ -65,14 +65,7 @@ describe('XTermReactRenderer Input and Paste Events', () => {
 
       const terminalInner = screen.getByTestId('terminal-inner');
       fireEvent.focus(terminalInner);
-
-      // Simulate input event with proper data
-      Object.defineProperty(terminalInner, 'textContent', {
-        value: 'hello',
-        writable: true,
-      });
-
-      fireEvent.input(terminalInner);
+      fireEvent.input(terminalInner, { target: { textContent: 'hello' } });
 
       await waitForTerminalOutput(300);
 
@@ -99,7 +92,6 @@ describe('XTermReactRenderer Input and Paste Events', () => {
       const terminalInner = screen.getByTestId('terminal-inner');
       fireEvent.focus(terminalInner);
 
-      // Simulate paste event
       const pasteData = 'echo "pasted text"';
       fireEvent.paste(terminalInner, {
         clipboardData: { getData: () => pasteData },
@@ -130,7 +122,6 @@ describe('XTermReactRenderer Input and Paste Events', () => {
       const terminalInner = screen.getByTestId('terminal-inner');
       fireEvent.focus(terminalInner);
 
-      // Paste command with newline to execute it
       const pasteData = 'echo "paste works"\n';
       fireEvent.paste(terminalInner, {
         clipboardData: { getData: () => pasteData },
@@ -161,7 +152,6 @@ describe('XTermReactRenderer Input and Paste Events', () => {
       const terminalInner = screen.getByTestId('terminal-inner');
       fireEvent.focus(terminalInner);
 
-      // Paste multi-line content
       const pasteData = 'echo "line1"\necho "line2"\n';
       fireEvent.paste(terminalInner, {
         clipboardData: { getData: () => pasteData },

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from './base_components';
 import XTermReactRenderer from './xterm_react_renderer';
-import '@xterm/xterm/css/xterm.css';
 
 import {
   connect,
@@ -67,27 +66,27 @@ export default function Terminal(props: TerminalProps) {
   const element_ref = useRef<HTMLDivElement>(null);
   const terminal = useTerminal(session.sessionName);
   const fontFamily = useSetting('fontFamily', 'string') ?? DEFAULT_FONT_FAMILY;
-  const fontSize = useSetting('fontSize', 'number') ?? DEFAULT_FONT_SIZE;
+  const settingSize = useSetting('fontSize', 'number') ?? DEFAULT_FONT_SIZE;
+  const [fontSize, setFontSize] = useState(settingSize);
   const [container_ref, container_size] = useComponentSize<HTMLDivElement>();
   const [overflow_x, setOverflowX] = useState('hidden');
 
   useEffect(() => {
-    const element = element_ref.current;
-    if (element) {
-      const terminalOptions = { fontFamily, fontSize };
-      connect({ session, element, terminalOptions });
-      return () => {
-        disconnect({ session, element });
-      };
-    }
-  }, [session, element_ref, fontFamily, fontSize]);
+    connect({ session, terminalOptions: {} });
+    return () => {
+      disconnect({ session });
+    };
+  }, [session, element_ref]);
 
   useEffect(() => {
     if (terminal && container_size) {
       const { rows: old_rows, cols: old_cols } = terminal;
-      terminal.options.fontFamily = fontFamily;
-      const lineHeight = terminal.options.lineHeight ?? 1.0;
-      const char_size = measureCharSize({ fontFamily, fontSize, lineHeight });
+      const lineHeight = 1.0;
+      const char_size = measureCharSize({
+        fontFamily,
+        fontSize: settingSize,
+        lineHeight,
+      });
       const width_ratio = char_size.width / fontSize;
       const height_ratio = char_size.height / fontSize;
       const avail_width = container_size.width - PADDING * 2;
@@ -108,19 +107,19 @@ export default function Terminal(props: TerminalProps) {
           new_font_size--;
         }
 
-        terminal.options.fontSize = new_font_size;
+        setFontSize(new_font_size);
         setOverflowX('hidden');
       } else if (zoom === 'FIT') {
-        terminal.options.fontSize = fontSize;
         const new_columns = Math.floor(avail_width / char_size.width);
         const new_rows = Math.floor(avail_height / char_size.height);
         resize({ session, columns: new_columns, rows: new_rows });
+        setFontSize(settingSize);
         setOverflowX('hidden');
       } else {
         // zoom === 'EXPAND'
-        terminal.options.fontSize = fontSize;
         const delta_w = avail_width - char_size.width * old_cols;
         const newOverflowX = delta_w < 0 ? 'scroll' : 'hidden';
+        setFontSize(settingSize);
         setOverflowX(newOverflowX);
       }
     }
@@ -130,6 +129,7 @@ export default function Terminal(props: TerminalProps) {
     container_size,
     fontFamily,
     fontSize,
+    settingSize,
     setOverflowX,
     session,
   ]);
@@ -141,10 +141,14 @@ export default function Terminal(props: TerminalProps) {
         contentContainerStyle={styles.scrollerInner}
       >
         {terminal ? (
-          <XTermReactRenderer terminal={terminal} session={session} />
+          <XTermReactRenderer
+            terminal={terminal}
+            session={session}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+          />
         ) : null}
       </ScrollView>
-      <View style={styles.inner} getDiv={element_ref}></View>
     </View>
   );
 }

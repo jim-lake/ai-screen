@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text } from './base_components';
-import type { IBufferLine, IBufferCell } from '@xterm/xterm';
+import type { IBufferLine, IBufferCell } from '@xterm/headless';
 
 const styles = StyleSheet.create({
   line: {

@@ -16,7 +16,7 @@
   "dependencies": {
     "@ai-screen/shared": "*",
     "@xterm/addon-unicode11": "^0.8.0",
-    "@xterm/xterm": "^5.5.0",
+    "@xterm/headless": "^5.5.0",
     "aphrodite": "^2.4.0",
     "events": "^3.3.0",
     "luxon": "^3.7.1",

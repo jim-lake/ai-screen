@@ -1,14 +1,17 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import EventEmitter from 'events';
-import { Terminal } from '@xterm/xterm';
+import { Terminal } from '@xterm/headless';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { displayStateToAnsi, jsonParse } from '@ai-screen/shared';
-import { ReactRendererAddon } from '../components/xterm_react_renderer_addon';
 
 import { createWebSocket } from '../tools/api';
 import { log, errorLog } from '../tools/log';
 
-import type { IDisposable, ITerminalOptions } from '@xterm/xterm';
+import type {
+  IDisposable,
+  ITerminalOptions,
+  ITerminalAddon,
+} from '@xterm/headless';
 import type {
   WsClientMessage,
   WsServerMessage,
@@ -33,9 +36,8 @@ export interface Size {
 
 const g_mountedMap = new Map<
   string,
-  { element: HTMLDivElement | null; terminal: Terminal; webSocket: WebSocket }
+  { terminal: Terminal; webSocket: WebSocket }
 >();
-const g_elementMap = new Map<string, HTMLDivElement>();
 const g_sizeMap = new Map<string, Size>();
 const g_eventEmitter = new EventEmitter();
 const CHANGE_EVENT = 'change';
@@ -63,31 +65,19 @@ export function useTerminal(sessionName: string) {
 }
 interface ConnectParams {
   session: SessionJson;
-  element: HTMLDivElement;
   terminalOptions: Partial<ITerminalOptions>;
 }
 export function connect(params: ConnectParams) {
-  const { session, element } = params;
+  const { session } = params;
   const { sessionName } = session;
 
   const mounted = g_mountedMap.get(sessionName);
-  if (mounted) {
-    const { terminal, element: old_element, webSocket } = mounted;
-    old_element?.remove();
-    terminal.open(element);
-    g_mountedMap.set(sessionName, { terminal, element, webSocket });
-    _emit('update');
-  } else if (g_elementMap.has(sessionName)) {
-    g_elementMap.set(sessionName, element);
-    // _create running implicitly
-  } else {
-    g_elementMap.set(sessionName, element);
+  if (!mounted) {
     void _create(params);
   }
 }
 interface DisconnectParams {
   session: SessionJson;
-  element: HTMLDivElement;
 }
 export function disconnect(params: DisconnectParams) {
   const { sessionName } = params.session;
@@ -147,16 +137,9 @@ async function _create(params: ConnectParams) {
             ...terminalOptions,
           };
           terminal = new Terminal(opts);
-          terminal.loadAddon(new Unicode11Addon());
+          terminal.loadAddon(new Unicode11Addon() as unknown as ITerminalAddon);
           terminal.unicode.activeVersion = '11';
-          terminal.loadAddon(new ReactRendererAddon());
-          const element = g_elementMap.get(sessionName) ?? null;
-          if (element) {
-            terminal.open(element);
-          } else {
-            errorLog('connect_store._create: no element!');
-            return;
-          }
+          //terminal.loadAddon(new ReactRendererAddon());
 
           data_dispose = null; // No longer listening to terminal.onData
           if (obj.normal) {
@@ -171,7 +154,7 @@ async function _create(params: ConnectParams) {
             );
           }
           (globalThis as { terminal?: unknown }).terminal = terminal;
-          g_mountedMap.set(sessionName, { element, terminal, webSocket: ws });
+          g_mountedMap.set(sessionName, { terminal, webSocket: ws });
           _emit('update');
           log('connect_store._create: success:', obj.rows, obj.columns);
         } else if (obj?.type === 'data') {
@@ -210,7 +193,6 @@ async function _create(params: ConnectParams) {
   } catch (e) {
     errorLog('connect_store._create error:', e);
   } finally {
-    g_elementMap.delete(sessionName);
     g_mountedMap.delete(sessionName);
   }
 }

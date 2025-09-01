@@ -1,13 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 import { StyleSheet, View } from './base_components';
-import { Terminal } from '@xterm/xterm';
+import { Terminal } from '@xterm/headless';
 
 import { Line, EmptyLine } from './xterm_line';
 import XTermScrollback from './xterm_scrollback';
-import { useRowVersion } from './xterm_react_renderer_addon';
 import { measureCharSize } from '../tools/measure';
 import { write } from '../stores/connect_store';
 
+import type { IEvent } from '@xterm/headless';
 import type { SessionJson } from '@ai-screen/shared';
 
 const styles = StyleSheet.create({
@@ -34,20 +39,26 @@ const styles = StyleSheet.create({
   },
 });
 
+interface TerminalCore extends Terminal {
+  _core: { _inputHandler: { onRequestRefreshRows: IEvent<number, number> } };
+}
+
 export interface XTermReactRendererProps {
   terminal: Terminal;
   session: SessionJson;
+  fontFamily: string;
+  fontSize: number;
 }
 export default function XTermReactRenderer(props: XTermReactRendererProps) {
-  const { terminal } = props;
+  const { terminal, fontFamily, fontSize } = props;
   const ref = useRef<HTMLDivElement>(null);
-  const row_version_list = useRowVersion(terminal) ?? [];
+  const row_version_list = useDirtyRows(terminal) ?? [];
   const { rows } = terminal;
   const columns = terminal.cols;
-  const { fontFamily, fontSize, lineHeight } = terminal.options;
+  const lineHeight = 1.0;
 
   useEffect(() => {
-    if (ref.current && fontFamily && fontSize && lineHeight) {
+    if (ref.current) {
       const size = measureCharSize({ fontFamily, fontSize, lineHeight });
       ref.current.style.setProperty('--term-cell-height', String(size.height));
       ref.current.style.setProperty('--term-cell-width', String(size.width));
@@ -122,7 +133,34 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
     </View>
   );
 }
-
+const g_dirtyMap = new Map<Terminal, number[]>();
+function useDirtyRows(terminal: Terminal) {
+  const _get = useCallback(() => {
+    return g_dirtyMap.get(terminal);
+  }, [terminal]);
+  const _sub = useCallback(
+    (callback: () => void) => {
+      const obj = (
+        terminal as TerminalCore
+      )._core._inputHandler.onRequestRefreshRows(
+        (start: number, end: number) => {
+          const old = g_dirtyMap.get(terminal);
+          const new_list = old ? old.slice() : [];
+          for (let i = start; i <= end; i++) {
+            new_list[i] = (new_list[i] ?? 0) + 1;
+          }
+          g_dirtyMap.set(terminal, new_list);
+          callback();
+        }
+      );
+      return () => {
+        obj.dispose();
+      };
+    },
+    [terminal]
+  );
+  return useSyncExternalStore(_sub, _get);
+}
 function _translateKeyToData(e: React.KeyboardEvent<HTMLDivElement>): string {
   const { key, ctrlKey, altKey } = e;
   if (key === 'ArrowLeft') {

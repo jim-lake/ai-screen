@@ -1,5 +1,5 @@
 import React, { useSyncExternalStore, useCallback } from 'react';
-import { Terminal } from '@xterm/xterm';
+import { Terminal } from '@xterm/headless';
 
 import { Line, EmptyLine } from './xterm_line';
 
