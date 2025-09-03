@@ -94,12 +94,10 @@ export default function Terminal(props: TerminalProps) {
       const height_ratio = char_size.height / settingSize;
       const avail_width = container_size.width - PADDING * 2;
       const avail_height = container_size.height - PADDING;
-      console.log('avail_height:', avail_height, 'avail_width:', avail_width);
 
       if (zoom === 'SHRINK') {
         const size_width = avail_width / old_cols / width_ratio;
         const size_height = avail_height / old_rows / height_ratio;
-        console.log('shrink:', size_width, size_height);
         let new_font_size = Math.floor(Math.min(size_width, size_height));
         const test_size = measureCharSize({
           fontFamily,
@@ -111,7 +109,6 @@ export default function Terminal(props: TerminalProps) {
         if (delta_h < 0 || delta_w < 0) {
           new_font_size--;
         }
-        console.log('new_font_size:', new_font_size);
         setFontSize(new_font_size);
         setOverflowX('hidden');
       } else if (zoom === 'FIT') {

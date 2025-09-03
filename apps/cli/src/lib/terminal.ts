@@ -143,13 +143,7 @@ export class Terminal extends EventEmitter {
     return super.emit(event, ...args);
   }
   public toJSON(): TerminalJson {
-    const buffer = this._xterm.buffer.normal;
-    const scrollback = Math.max(0, buffer.length - this._xterm.rows);
-    return {
-      terminalId: this.id,
-      ...this.getScreenState(),
-      scollbackLines: scrollback + this._trimmedRows.length,
-    };
+    return { terminalId: this.id, ...this.getScreenState() };
   }
   private _bufferState(buffer: IBuffer): BufferState {
     const ret: BufferState = {

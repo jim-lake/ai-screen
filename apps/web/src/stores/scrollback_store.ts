@@ -65,7 +65,6 @@ export function useLines(
   const _get = useCallback(() => {
     const buffer = terminal.buffer.normal;
     const text_end = g_scrollbackStartMap.get(terminalId) ?? 0;
-    //const len = buffer.baseY + text_end;
     let ret: Line[] = [];
     let missing = false;
     for (let i = start; i < end; i++) {
@@ -116,7 +115,6 @@ interface FetchParams {
 }
 export const fetchScrollback = herd(
   async (params: FetchParams): Promise<Error | null> => {
-    console.log('fetchScrollback:', params);
     const opts = {
       url: `/api/1/session/${params.sessionName}/terminal/${params.terminalId}/scrollback`,
     };

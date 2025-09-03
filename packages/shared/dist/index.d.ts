@@ -127,7 +127,7 @@ interface TerminalJson {
     normal: BufferState;
     alternate?: BufferState;
     startY: number;
-    scollbackLines: number;
+    scrollbackLines: number;
 }
 interface SessionListJson {
     sessions: SessionJson[];
