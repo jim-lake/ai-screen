@@ -7,6 +7,7 @@ import React, {
 import { StyleSheet, View } from './base_components';
 import { Terminal } from '@xterm/headless';
 
+import XTermCursor from './xterm_cursor';
 import { Line, EmptyLine } from './xterm_line';
 import XTermScrollback from './xterm_scrollback';
 import { measureCharSize } from '../tools/measure';
@@ -150,6 +151,7 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
           scrollRef={props.scrollRef}
         />
         <View style={styles.extra} />
+        <XTermCursor terminal={terminal} />
       </View>
     </View>
   );

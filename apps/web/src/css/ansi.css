@@ -1,4 +1,6 @@
 :root {
+  --ansi-default-bg: #000000;
+  --ansi-default-fg: #e5e5e5;
   --ansi-black: #000000;
   --ansi-red: #cd0000;
   --ansi-green: #00cd00;
