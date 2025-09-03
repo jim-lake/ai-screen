@@ -15,23 +15,21 @@ interface ColorState {
   strikethrough: boolean;
   overline: boolean;
 }
-function _createDefaultColorState(): ColorState {
-  return {
-    fgColorMode: 0,
-    fgColor: 0,
-    bgColorMode: 0,
-    bgColor: 0,
-    bold: false,
-    italic: false,
-    dim: false,
-    underline: false,
-    blink: false,
-    inverse: false,
-    invisible: false,
-    strikethrough: false,
-    overline: false,
-  };
-}
+const DEFAULT_COLOR_STATE: ColorState = {
+  fgColorMode: 0,
+  fgColor: 0,
+  bgColorMode: 0,
+  bgColor: 0,
+  bold: false,
+  italic: false,
+  dim: false,
+  underline: false,
+  blink: false,
+  inverse: false,
+  invisible: false,
+  strikethrough: false,
+  overline: false,
+};
 function _getCellColorState(cell: IBufferCell): ColorState {
   return {
     fgColorMode: cell.getFgColorMode(),
@@ -66,17 +64,18 @@ function _colorStatesEqual(a: ColorState, b: ColorState): boolean {
     a.overline === b.overline
   );
 }
-
-function _generateColorTransition(from: ColorState, to: ColorState): string {
+function _generateColorTransition(
+  from: ColorState,
+  cell: IBufferCell
+): [string, ColorState] {
+  const to = _getCellColorState(cell);
   if (_colorStatesEqual(from, to)) {
-    return '';
+    return ['', from];
   }
 
   const sequences: string[] = [];
 
   const needs_reset =
-    (to.fgColorMode === 0 && from.fgColorMode !== 0) ||
-    (to.bgColorMode === 0 && from.bgColorMode !== 0) ||
     (!to.bold && from.bold) ||
     (!to.italic && from.italic) ||
     (!to.dim && from.dim) ||
@@ -89,7 +88,7 @@ function _generateColorTransition(from: ColorState, to: ColorState): string {
 
   if (needs_reset) {
     sequences.push('\x1b[0m');
-    from = _createDefaultColorState();
+    from = DEFAULT_COLOR_STATE;
   }
 
   if (to.bold && !from.bold) {
@@ -121,43 +120,12 @@ function _generateColorTransition(from: ColorState, to: ColorState): string {
   }
 
   if (to.fgColorMode !== from.fgColorMode || to.fgColor !== from.fgColor) {
-    if (to.fgColorMode === 0) {
-      sequences.push('\x1b[39m');
-    } else if (to.fgColorMode === 1) {
-      if (to.fgColor < 8) {
-        sequences.push(`\x1b[${30 + to.fgColor}m`);
-      } else if (to.fgColor < 16) {
-        sequences.push(`\x1b[${90 + (to.fgColor - 8)}m`);
-      } else {
-        sequences.push(`\x1b[38;5;${to.fgColor}m`);
-      }
-    } else if (to.fgColorMode === 2) {
-      const r = (to.fgColor >> 16) & 0xff;
-      const g = (to.fgColor >> 8) & 0xff;
-      const b = to.fgColor & 0xff;
-      sequences.push(`\x1b[38;2;${r};${g};${b}m`);
-    }
+    sequences.push(_cellFgToAnsi(cell));
   }
-
   if (to.bgColorMode !== from.bgColorMode || to.bgColor !== from.bgColor) {
-    if (to.bgColorMode === 0) {
-      sequences.push('\x1b[49m');
-    } else if (to.bgColorMode === 1) {
-      if (to.bgColor < 8) {
-        sequences.push(`\x1b[${40 + to.bgColor}m`);
-      } else if (to.bgColor < 16) {
-        sequences.push(`\x1b[${100 + (to.bgColor - 8)}m`);
-      } else {
-        sequences.push(`\x1b[48;5;${to.bgColor}m`);
-      }
-    } else if (to.bgColorMode === 2) {
-      const r = (to.bgColor >> 16) & 0xff;
-      const g = (to.bgColor >> 8) & 0xff;
-      const b = to.bgColor & 0xff;
-      sequences.push(`\x1b[48;2;${r};${g};${b}m`);
-    }
+    sequences.push(_cellBgToAnsi(cell));
   }
-  return sequences.join('');
+  return [sequences.join(''), to];
 }
 export function lineToString(line: IBufferLine): string {
   if (line.length === 0) {
@@ -165,7 +133,7 @@ export function lineToString(line: IBufferLine): string {
   }
 
   let result = '';
-  let current_state = _createDefaultColorState();
+  let current_state = DEFAULT_COLOR_STATE;
   let last_non_space_index = -1;
 
   for (let i = 0; i < line.length; i++) {
@@ -189,22 +157,64 @@ export function lineToString(line: IBufferLine): string {
       result += ' ';
       continue;
     }
-
-    const cell_state = _getCellColorState(cell);
-    const transition = _generateColorTransition(current_state, cell_state);
-
+    const [transition, cell_state] = _generateColorTransition(
+      current_state,
+      cell
+    );
     if (transition) {
       result += transition;
       current_state = cell_state;
     }
-
     const chars = cell.getChars();
     result += chars || ' ';
   }
-
-  if (!_colorStatesEqual(current_state, _createDefaultColorState())) {
+  if (!_colorStatesEqual(current_state, DEFAULT_COLOR_STATE)) {
     result += '\x1b[0m';
   }
 
   return result;
+}
+function _cellFgToAnsi(cell: IBufferCell): string {
+  if (cell.isFgDefault()) {
+    return '\x1b[39m';
+  }
+  const fg = cell.getFgColor() >>> 0;
+  if (cell.isFgRGB()) {
+    const r = (fg >>> 16) & 0xff;
+    const g = (fg >>> 8) & 0xff;
+    const b = fg & 0xff;
+    return `\x1b[38;2;${r};${g};${b}m`;
+  }
+  if (cell.isFgPalette()) {
+    if (fg < 8) {
+      return `\x1b[3${fg}m`;
+    }
+    if (fg < 16) {
+      return `\x1b[9${fg - 8}m`;
+    }
+    return `\x1b[38;5;${fg}m`;
+  }
+  return '';
+}
+function _cellBgToAnsi(cell: IBufferCell): string {
+  if (cell.isBgDefault()) {
+    return '\x1b[49m';
+  }
+  const bg = cell.getBgColor() >>> 0;
+  if (cell.isBgRGB()) {
+    const r = (bg >>> 16) & 0xff;
+    const g = (bg >>> 8) & 0xff;
+    const b = bg & 0xff;
+    return `\x1b[48;2;${r};${g};${b}m`;
+  }
+  if (cell.isBgPalette()) {
+    if (bg < 8) {
+      return `\x1b[4${bg}m`;
+    }
+    if (bg < 16) {
+      return `\x1b[10${bg - 8}m`;
+    }
+    return `\x1b[48;5;${bg}m`;
+  }
+  return '';
 }

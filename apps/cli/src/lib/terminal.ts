@@ -28,6 +28,7 @@ export interface TerminalScreenState {
   normal: BufferState;
   alternate?: BufferState;
   startY: number;
+  scrollbackLines: number;
 }
 export interface TerminalExitEvent extends AnsiDisplayState {
   code: number;
@@ -110,7 +111,8 @@ export class Terminal extends EventEmitter {
       this._xterm.buffer.active.type === 'alternate'
         ? this._bufferState(this._xterm.buffer.active)
         : undefined;
-    return { normal, alternate, startY: this._startY };
+    const count = this.getScrollback().length;
+    return { normal, alternate, startY: this._startY, scrollbackLines: count };
   }
   public getAnsiDisplayState(): AnsiDisplayState {
     return {

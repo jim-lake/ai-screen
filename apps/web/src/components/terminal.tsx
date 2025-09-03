@@ -6,7 +6,7 @@ import {
   connect,
   disconnect,
   resize,
-  useTerminal,
+  useConnectedSession,
 } from '../stores/connect_store';
 import { useSetting } from '../stores/setting_store';
 import { measureCharSize } from '../tools/measure';
@@ -63,20 +63,23 @@ export interface TerminalProps {
 }
 export default function Terminal(props: TerminalProps) {
   const { session, zoom } = props;
-  const element_ref = useRef<HTMLDivElement>(null);
-  const terminal = useTerminal(session.sessionName);
+  const scroll_ref = useRef<HTMLDivElement>(null);
+  const connected_session = useConnectedSession(session.sessionName);
   const fontFamily = useSetting('fontFamily', 'string') ?? DEFAULT_FONT_FAMILY;
   const settingSize = useSetting('fontSize', 'number') ?? DEFAULT_FONT_SIZE;
   const [fontSize, setFontSize] = useState(settingSize);
   const [container_ref, container_size] = useComponentSize<HTMLDivElement>();
   const [overflow_x, setOverflowX] = useState('hidden');
 
+  const terminal = connected_session?.terminal;
+  const terminalId = connected_session?.terminalId;
+
   useEffect(() => {
     connect({ session, terminalOptions: {} });
     return () => {
       disconnect({ session });
     };
-  }, [session, element_ref]);
+  }, [session]);
 
   useEffect(() => {
     if (terminal && container_size) {
@@ -87,14 +90,16 @@ export default function Terminal(props: TerminalProps) {
         fontSize: settingSize,
         lineHeight,
       });
-      const width_ratio = char_size.width / fontSize;
-      const height_ratio = char_size.height / fontSize;
+      const width_ratio = char_size.width / settingSize;
+      const height_ratio = char_size.height / settingSize;
       const avail_width = container_size.width - PADDING * 2;
-      const avail_height = container_size.height - PADDING * 2;
+      const avail_height = container_size.height - PADDING;
+      console.log('avail_height:', avail_height, 'avail_width:', avail_width);
 
       if (zoom === 'SHRINK') {
         const size_width = avail_width / old_cols / width_ratio;
         const size_height = avail_height / old_rows / height_ratio;
+        console.log('shrink:', size_width, size_height);
         let new_font_size = Math.floor(Math.min(size_width, size_height));
         const test_size = measureCharSize({
           fontFamily,
@@ -106,7 +111,7 @@ export default function Terminal(props: TerminalProps) {
         if (delta_h < 0 || delta_w < 0) {
           new_font_size--;
         }
-
+        console.log('new_font_size:', new_font_size);
         setFontSize(new_font_size);
         setOverflowX('hidden');
       } else if (zoom === 'FIT') {
@@ -134,18 +139,24 @@ export default function Terminal(props: TerminalProps) {
     session,
   ]);
 
+  const container_height = container_size?.height ?? 100;
   return (
     <View getDiv={container_ref} style={[styles.terminal, props.style]}>
       <ScrollView
+        getDiv={scroll_ref}
         style={[styles.scroller, { overflowX: overflow_x }]}
         contentContainerStyle={styles.scrollerInner}
       >
-        {terminal ? (
+        {terminal && terminalId ? (
           <XTermReactRenderer
             terminal={terminal}
             session={session}
+            terminalId={terminalId}
             fontFamily={fontFamily}
             fontSize={fontSize}
+            padding={PADDING}
+            containerHeight={container_height}
+            scrollRef={scroll_ref.current}
           />
         ) : null}
       </ScrollView>

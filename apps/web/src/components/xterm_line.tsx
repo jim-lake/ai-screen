@@ -1,6 +1,9 @@
+/* eslint-disable no-control-regex */
 import React, { useMemo } from 'react';
 import { StyleSheet, Text } from './base_components';
 import type { IBufferLine, IBufferCell } from '@xterm/headless';
+
+import '../css/ansi.css';
 
 const styles = StyleSheet.create({
   line: {
@@ -20,6 +23,9 @@ export interface LineProps {
   line: IBufferLine;
   version: number;
 }
+export interface TextLineProps {
+  text: string;
+}
 export const Line = React.memo(
   function Line(props: LineProps) {
     const spans = useMemo(() => _lineToSpans(props.line), [props.line]);
@@ -27,12 +33,23 @@ export const Line = React.memo(
   },
   (old_props, new_props) => old_props.version === new_props.version
 );
-
 export function EmptyLine() {
   return <Text style={styles.line}>{' ' /*space */}</Text>;
 }
+export const TextLine = React.memo(
+  function TextLine(props: TextLineProps) {
+    return (
+      <Text style={styles.line}>
+        {props.text.replace(/\x1B\[[0-9;]*m/g, '')}
+      </Text>
+    );
+  },
+  (old_props, new_props) => old_props.text === new_props.text
+);
 
 interface ColorState {
+  isFgDefault: boolean;
+  isBgDefault: boolean;
   fgColorMode: number;
   fgColor: number;
   bgColorMode: number;
@@ -47,12 +64,30 @@ interface ColorState {
   strikethrough: boolean;
   overline: boolean;
 }
-
+const DEFAULT_STATE: ColorState = {
+  isFgDefault: true,
+  isBgDefault: true,
+  fgColorMode: 0,
+  bgColorMode: 0,
+  fgColor: -1,
+  bgColor: -1,
+  bold: false,
+  italic: false,
+  dim: false,
+  underline: false,
+  blink: false,
+  inverse: false,
+  invisible: false,
+  strikethrough: false,
+  overline: false,
+};
 function _getCellColorState(cell: IBufferCell): ColorState {
   return {
+    isFgDefault: cell.isFgDefault(),
+    isBgDefault: cell.isBgDefault(),
     fgColorMode: cell.getFgColorMode(),
-    fgColor: cell.getFgColor(),
     bgColorMode: cell.getBgColorMode(),
+    fgColor: cell.getFgColor(),
     bgColor: cell.getBgColor(),
     bold: !!cell.isBold(),
     italic: !!cell.isItalic(),
@@ -66,11 +101,15 @@ function _getCellColorState(cell: IBufferCell): ColorState {
   };
 }
 function _colorStatesEqual(a: ColorState, b: ColorState): boolean {
+  const fg_equal =
+    (a.isFgDefault && b.isFgDefault) ||
+    (a.fgColorMode === b.fgColorMode && a.fgColor === b.fgColor);
+  const bg_equal =
+    (a.isBgDefault && b.isBgDefault) ||
+    (a.bgColorMode === b.bgColorMode && a.bgColor === b.bgColor);
   return (
-    a.fgColorMode === b.fgColorMode &&
-    a.fgColor === b.fgColor &&
-    a.bgColorMode === b.bgColorMode &&
-    a.bgColor === b.bgColor &&
+    fg_equal &&
+    bg_equal &&
     a.bold === b.bold &&
     a.italic === b.italic &&
     a.dim === b.dim &&
@@ -82,75 +121,63 @@ function _colorStatesEqual(a: ColorState, b: ColorState): boolean {
     a.overline === b.overline
   );
 }
-function _colorToCSS(colorMode: number, color: number): string {
-  if (colorMode === 0) {
-    return '';
-  }
-  if (colorMode === 1) {
-    if (color < 8) {
-      const colors = [
-        '#000000',
-        '#800000',
-        '#008000',
-        '#808000',
-        '#000080',
-        '#800080',
-        '#008080',
-        '#c0c0c0',
-      ];
-      return colors[color] ?? '';
-    } else if (color < 16) {
-      const colors = [
-        '#808080',
-        '#ff0000',
-        '#00ff00',
-        '#ffff00',
-        '#0000ff',
-        '#ff00ff',
-        '#00ffff',
-        '#ffffff',
-      ];
-      return colors[color - 8] ?? '';
+const PALETTE16_COLORS = [
+  'var(--ansi-black)',
+  'var(--ansi-red)',
+  'var(--ansi-green)',
+  'var(--ansi-yellow)',
+  'var(--ansi-blue)',
+  'var(--ansi-magenta)',
+  'var(--ansi-cyan)',
+  'var(--ansi-white)',
+  'var(--ansi-bright-black)',
+  'var(--ansi-bright-red)',
+  'var(--ansi-bright-green)',
+  'var(--ansi-bright-yellow)',
+  'var(--ansi-bright-blue)',
+  'var(--ansi-bright-magenta)',
+  'var(--ansi-bright-cyan)',
+  'var(--ansi-bright-white)',
+];
+function _colorToCSS(is_palette: boolean, color: number): string {
+  if (is_palette) {
+    if (color < 16) {
+      return PALETTE16_COLORS[color] ?? '';
+    } else if (color >= 232) {
+      const level = 8 + 10 * (color - 232);
+      return `rgb(${level},${level},${level})`;
     } else {
-      return `var(--xterm-color-${color})`;
+      const r = Math.floor((color - 16) / 36);
+      const g = Math.floor((color - 16) / 6) % 6;
+      const b = (color - 16) % 6;
+      return `rgb(${r * 51},${g * 51},${b * 51})`;
     }
-  } else if (colorMode === 2) {
+  } else {
     const r = (color >> 16) & 0xff;
     const g = (color >> 8) & 0xff;
     const b = color & 0xff;
     return `rgb(${r},${g},${b})`;
   }
-  return '';
 }
-function _getSpanStyle(state: ColorState): React.CSSProperties {
+function _getSpanStyle(
+  state: ColorState,
+  cell: IBufferCell
+): React.CSSProperties {
   const style: React.CSSProperties = {};
 
-  const fgColor = _colorToCSS(state.fgColorMode, state.fgColor);
-  const bgColor = _colorToCSS(state.bgColorMode, state.bgColor);
-
   if (state.inverse) {
-    if (fgColor) {
-      style.backgroundColor = fgColor;
-    }
-    if (bgColor) {
-      style.color = bgColor;
-    }
-    if (!fgColor && !bgColor) {
-      style.backgroundColor = '#ffffff';
-      style.color = '#000000';
-    }
-    if (fgColor && !bgColor) {
-      style.color = '#000000';
-    }
-    if (!fgColor && bgColor) {
-      style.backgroundColor = '#ffffff';
-    }
+    style.backgroundColor = cell.isFgDefault()
+      ? 'var(--ansi-default-fg)'
+      : _colorToCSS(cell.isFgPalette(), state.fgColor);
+    style.color = cell.isBgDefault()
+      ? 'var(--ansi-default-bg)'
+      : _colorToCSS(cell.isBgPalette(), state.bgColor);
   } else {
-    if (fgColor) {
-      style.color = fgColor;
+    if (!cell.isFgDefault()) {
+      style.color = _colorToCSS(cell.isFgPalette(), state.fgColor);
     }
-    if (bgColor) {
-      style.backgroundColor = bgColor;
+    if (!cell.isBgDefault()) {
+      style.backgroundColor = _colorToCSS(cell.isBgPalette(), state.bgColor);
     }
   }
 
@@ -184,65 +211,66 @@ function _getSpanStyle(state: ColorState): React.CSSProperties {
   if (state.invisible) {
     style.visibility = 'hidden';
   }
-
   return style;
 }
 function _lineToSpans(line: IBufferLine): React.ReactNode[] {
   if (line.length === 0) {
     return [];
   }
-  let lastNonSpaceIndex = -1;
+  let last_non_space_index = -1;
   for (let i = 0; i < line.length; i++) {
     const cell = line.getCell(i);
     const raw_chars = cell?.getChars() ?? '';
     const chars = raw_chars.length > 0 ? raw_chars : ' ';
-    const bgColorMode = cell?.getBgColorMode() ?? 0;
+    const is_bg_default = cell?.isBgDefault() ?? true;
     const isInverse = cell?.isInverse() ?? 0;
 
-    if (chars !== ' ' || bgColorMode !== 0 || isInverse !== 0) {
-      lastNonSpaceIndex = i;
+    if (chars !== ' ' || !is_bg_default || isInverse !== 0) {
+      last_non_space_index = i;
     }
   }
 
-  if (lastNonSpaceIndex === -1) {
+  if (last_non_space_index === -1) {
     return [];
   }
 
-  const spans: React.ReactNode[] = [];
-  let currentState: ColorState | null = null;
-  let currentText = '';
-  let spanKey = 0;
+  const span_list: React.ReactNode[] = [];
+  let current_state: ColorState = DEFAULT_STATE;
+  let current_text = '';
+  let span_key = 0;
+  let span_style: React.CSSProperties | null = null;
 
-  function _flushSpan() {
-    if (currentText) {
-      const style = currentState ? _getSpanStyle(currentState) : {};
-      spans.push(
-        <span key={spanKey++} style={style}>
-          {currentText}
+  for (let i = 0; i <= last_non_space_index; i++) {
+    const cell = line.getCell(i);
+    if (cell) {
+      const raw_chars = cell.getChars();
+      const chars = raw_chars.length > 0 ? raw_chars : ' ';
+      const new_state = _getCellColorState(cell);
+      if (!_colorStatesEqual(current_state, new_state)) {
+        if (current_text.length > 0) {
+          span_list.push(
+            <span key={String(span_key++)} style={span_style ?? undefined}>
+              {current_text}
+            </span>
+          );
+          current_text = '';
+        }
+        span_style = _getSpanStyle(new_state, cell);
+        current_state = new_state;
+      }
+      current_text += chars;
+    }
+  }
+  if (current_text.length > 0) {
+    if (span_key === 0 && span_style === null) {
+      span_list.push(current_text);
+    } else {
+      span_list.push(
+        <span key={String(span_key++)} style={span_style ?? undefined}>
+          {current_text}
         </span>
       );
-      currentText = '';
     }
   }
-
-  for (let i = 0; i <= lastNonSpaceIndex; i++) {
-    const cell = line.getCell(i);
-    const raw_chars = cell?.getChars() ?? '';
-    const chars = raw_chars.length > 0 ? raw_chars : ' ';
-    const cellState = cell ? _getCellColorState(cell) : null;
-
-    if (
-      !currentState ||
-      !cellState ||
-      !_colorStatesEqual(currentState, cellState)
-    ) {
-      _flushSpan();
-      currentState = cellState;
-    }
-
-    currentText += chars;
-  }
-
-  _flushSpan();
-  return spans;
+  return span_list;
 }

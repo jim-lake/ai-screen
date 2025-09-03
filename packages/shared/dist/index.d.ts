@@ -34,10 +34,12 @@ type DisconnectMessage = {
 } & AnsiDisplayJson;
 type WsServerMessage = {
     type: 'connect_success';
+    terminalId: number;
     rows: number;
     columns: number;
     normal?: BufferState;
     alternate?: BufferState;
+    scrollbackLines?: number;
 } | {
     type: 'error';
     err: string;

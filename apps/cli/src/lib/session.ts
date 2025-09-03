@@ -23,6 +23,7 @@ export interface ConnectResult {
   client: Client;
   state: TerminalScreenState | null;
   created: boolean;
+  terminal: Terminal | null;
 }
 const g_sessionMap = new Map<string, Session>();
 
@@ -79,7 +80,7 @@ export class Session {
     }
     const state = this.activeTerminal?.getScreenState() ?? null;
     this.clients.push(client);
-    return { client, state, created };
+    return { client, state, created, terminal: this.activeTerminal };
   }
   public resize(params: Size) {
     for (const terminal of this.terminals) {

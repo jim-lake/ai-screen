@@ -87,7 +87,10 @@ function _onMessage(this: WebSocket, raw_data: Buffer) {
       const session = getSession(obj.name);
       if (session) {
         try {
-          const { client, state } = session.connectClient({ path, ...obj });
+          const { client, state, terminal } = session.connectClient({
+            path,
+            ...obj,
+          });
           g_socketMap.set(this, { session, client });
           client.on('disconnect', (event) => {
             _send(this, { type: 'disconnect' as const, ...event });
@@ -102,6 +105,7 @@ function _onMessage(this: WebSocket, raw_data: Buffer) {
           const { rows, columns } = session.terminalParams;
           _send(this, {
             type: 'connect_success',
+            terminalId: terminal?.id ?? 0,
             rows,
             columns,
             ...(state ?? {}),

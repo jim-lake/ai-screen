@@ -2,21 +2,6 @@ import React from 'react';
 import { resolveStyle, StyleSheet } from './styles';
 import type { StyleInput } from './styles';
 
-interface ViewProps {
-  style?: StyleInput;
-  children?: React.ReactNode;
-  className?: string;
-  pointerEvents?: string;
-  getDiv?: React.RefObject<HTMLDivElement | null>;
-  [key: string]: unknown;
-}
-
-interface ScrollViewProps extends ViewProps {
-  contentContainerStyle?: StyleInput;
-  horizontal?: boolean;
-  onScroll?: (event: React.UIEvent<HTMLDivElement>) => void;
-}
-
 const styles = StyleSheet.create({
   scrollerStyle: {
     overflowX: 'hidden',
@@ -32,6 +17,14 @@ const styles = StyleSheet.create({
   pointerBoxNone: { pointerEvents: 'none' },
 });
 
+export interface ViewProps {
+  style?: StyleInput;
+  children?: React.ReactNode;
+  className?: string;
+  pointerEvents?: string;
+  getDiv?: React.RefObject<HTMLDivElement | null>;
+  [key: string]: unknown;
+}
 export function View({
   style,
   children,
@@ -58,12 +51,19 @@ export function View({
     </div>
   );
 }
+export interface ScrollViewProps extends ViewProps {
+  contentContainerStyle?: StyleInput;
+  contentContainerProps?: ViewProps;
+  horizontal?: boolean;
+  onScroll?: (event: React.UIEvent<HTMLDivElement>) => void;
+}
 export function ScrollView({
   style,
   contentContainerStyle,
   horizontal,
   children,
   onScroll,
+  contentContainerProps,
   ...other_props
 }: ScrollViewProps) {
   const base_style = horizontal
@@ -71,20 +71,13 @@ export function ScrollView({
     : styles.scrollerStyle;
 
   return (
-    <View style={[base_style, style]} {...other_props}>
-      <div
-        style={{
-          ...resolveStyle([styles.contentContainerStyle, contentContainerStyle])
-            .inlineStyle,
-        }}
-        className={
-          resolveStyle([styles.contentContainerStyle, contentContainerStyle])
-            .className
-        }
-        onScroll={onScroll}
+    <View style={[base_style, style]} onScroll={onScroll} {...other_props}>
+      <View
+        style={[styles.contentContainerStyle, contentContainerStyle]}
+        {...(contentContainerProps ?? {})}
       >
         {children}
-      </div>
+      </View>
     </View>
   );
 }

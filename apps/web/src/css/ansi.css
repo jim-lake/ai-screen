@@ -1,0 +1,18 @@
+:root {
+  --ansi-black: #000000;
+  --ansi-red: #cd0000;
+  --ansi-green: #00cd00;
+  --ansi-yellow: #cdcd00;
+  --ansi-blue: #0000ee;
+  --ansi-magenta: #cd00cd;
+  --ansi-cyan: #00cdcd;
+  --ansi-white: #e5e5e5;
+  --ansi-bright-black: #7f7f7f;
+  --ansi-bright-red: #ff0000;
+  --ansi-bright-green: #00ff00;
+  --ansi-bright-yellow: #ffff00;
+  --ansi-bright-blue: #5c5cff;
+  --ansi-bright-magenta: #ff00ff;
+  --ansi-bright-cyan: #00ffff;
+  --ansi-bright-white: #ffffff;
+}

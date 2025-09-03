@@ -17,8 +17,10 @@ import type { SessionJson } from '@ai-screen/shared';
 
 const styles = StyleSheet.create({
   xtermReactRenderer: {
+    paddingBottom: 'calc(var(--term-padding) * 1px)',
     minHeight: 'calc(var(--term-rows) * var(--term-cell-height) * 1px)',
-    width: 'calc(var(--term-columns) * var(--term-cell-width) * 1px)',
+    width:
+      'calc(var(--term-columns) * var(--term-cell-width) * 1px + var(--term-padding) * 2px)',
     fontFamily: 'var(--term-font)',
     fontSize: 'calc(var(--term-font-size) * 1px)',
     lineHeight: 'var(--term-line-height)',
@@ -28,6 +30,8 @@ const styles = StyleSheet.create({
     caretColor: 'transparent',
   },
   rows: {
+    marginLeft: 'calc(var(--term-padding) * 1px)',
+    marginRight: 'calc(var(--term-padding) * 1px)',
     width: 'calc(var(--term-columns) * var(--term-cell-width) * 1px)',
     fontFamily: 'inherit',
     fontSize: 'inherit',
@@ -36,6 +40,8 @@ const styles = StyleSheet.create({
   },
   extra: {
     height: 'calc(110vh - (var(--term-rows) * var(--term-cell-height) * 1px))',
+    width: 'calc(var(--term-columns) * var(--term-cell-width) * 1px)',
+    backgroundColor: '#222',
   },
 });
 
@@ -46,11 +52,15 @@ interface TerminalCore extends Terminal {
 export interface XTermReactRendererProps {
   terminal: Terminal;
   session: SessionJson;
+  terminalId: number;
   fontFamily: string;
   fontSize: number;
+  containerHeight: number;
+  padding: number;
+  scrollRef: HTMLDivElement | null;
 }
 export default function XTermReactRenderer(props: XTermReactRendererProps) {
-  const { terminal, fontFamily, fontSize } = props;
+  const { session, terminal, fontFamily, fontSize, padding } = props;
   const ref = useRef<HTMLDivElement>(null);
   const row_version_list = useDirtyRows(terminal) ?? [];
   const { rows } = terminal;
@@ -67,8 +77,9 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
       ref.current.style.setProperty('--term-line-height', String(lineHeight));
       ref.current.style.setProperty('--term-rows', String(rows));
       ref.current.style.setProperty('--term-columns', String(columns));
+      ref.current.style.setProperty('--term-padding', String(padding));
     }
-  }, [rows, columns, fontFamily, fontSize, lineHeight]);
+  }, [rows, columns, fontFamily, fontSize, lineHeight, padding]);
 
   const terminal_lines: React.ReactNode[] = [];
   const buffer = terminal.buffer.active;
@@ -127,7 +138,17 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
     >
       <View style={styles.rows}>
         {terminal_lines}
-        <XTermScrollback terminal={terminal} />
+        <XTermScrollback
+          session={session}
+          terminal={terminal}
+          terminalId={props.terminalId}
+          fontSize={fontSize}
+          fontFamily={fontFamily}
+          lineHeight={lineHeight}
+          padding={padding}
+          containerHeight={props.containerHeight}
+          scrollRef={props.scrollRef}
+        />
         <View style={styles.extra} />
       </View>
     </View>

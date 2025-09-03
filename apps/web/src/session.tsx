@@ -7,7 +7,7 @@ import ImageButton from './components/buttons/image_button';
 import SettingsDialog from './components/overlays/settings_dialog';
 
 import SessionStore from './stores/session_store';
-import { useTerminalSize } from './stores/connect_store';
+import { useConnectedSession } from './stores/connect_store';
 import { useLocalState } from './tools/local_state';
 
 import SETTINGS from './assets/img/settings_black.svg';
@@ -103,13 +103,12 @@ interface SessionTopBarProps {
 }
 function SessionTopBar(props: SessionTopBarProps) {
   const { session, zoom, onZoomChange, onSettings } = props;
-  const size = useTerminalSize(session.sessionName);
+  const data = useConnectedSession(session.sessionName);
 
-  return (
+  return data ? (
     <View style={styles.topBar}>
       <Text style={styles.text}>
-        Session: {session.sessionName}{' '}
-        {size ? `- ${size.columns}x${size.rows}` : ''}
+        Session: {session.sessionName} - {data.columns}x{data.rows}
       </Text>
       <View style={styles.spacer} />
       <ImageButton
@@ -137,5 +136,5 @@ function SessionTopBar(props: SessionTopBarProps) {
         onPress={() => onSettings()}
       />
     </View>
-  );
+  ) : null;
 }
