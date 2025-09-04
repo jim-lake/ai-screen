@@ -13,7 +13,8 @@
   "dependencies": {
     "react": "^19.1.1",
     "react-native": "0.81.1",
-    "react-native-safe-area-context": "^5.5.2"
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-ssh-sftp": "github:jim-lake/react-native-ssh-sftp#1f9106fe4d3c6251ba5c0f53e666906492d6885b"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

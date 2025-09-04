@@ -15,6 +15,7 @@ if linkage != nil
 end
 
 target 'AiScreen' do
+  pod 'NMSSH', :git => 'https://github.com/jim-lake/NMSSH.git'
   config = use_native_modules!
 
   use_react_native!(
