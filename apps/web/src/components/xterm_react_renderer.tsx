@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useRef,
+  useState,
   useSyncExternalStore,
 } from 'react';
 import { StyleSheet, View } from './base_components';
@@ -67,7 +68,13 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
   const { rows } = terminal;
   const columns = terminal.cols;
   const lineHeight = 1.0;
+  const [is_focused, setIsFocused] = useState(
+    document.activeElement === ref.current
+  );
 
+  useEffect(() => {
+    ref.current?.focus();
+  }, []);
   useEffect(() => {
     if (ref.current) {
       const size = measureCharSize({ fontFamily, fontSize, lineHeight });
@@ -117,7 +124,10 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
     }
   }
   function _onFocus() {
-    //terminal.focus();
+    setIsFocused(true);
+  }
+  function _onBlur() {
+    setIsFocused(false);
   }
   return (
     <View
@@ -131,6 +141,7 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
       autoComplete='off'
       suppressContentEditableWarning
       onFocus={_onFocus}
+      onBlur={_onBlur}
       onKeyDown={_onKeyDown}
       onBeforeInput={_onInput}
       onInput={_onInput}
@@ -151,7 +162,7 @@ export default function XTermReactRenderer(props: XTermReactRendererProps) {
           scrollRef={props.scrollRef}
         />
         <View style={styles.extra} />
-        <XTermCursor terminal={terminal} />
+        <XTermCursor terminal={terminal} isFocused={is_focused} />
       </View>
     </View>
   );

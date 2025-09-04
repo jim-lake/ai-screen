@@ -114,7 +114,9 @@ export default function Terminal(props: TerminalProps) {
       } else if (zoom === 'FIT') {
         const new_columns = Math.floor(avail_width / char_size.width);
         const new_rows = Math.floor(avail_height / char_size.height);
-        resize({ session, columns: new_columns, rows: new_rows });
+        if (new_rows !== old_rows || new_columns !== old_cols) {
+          resize({ session, columns: new_columns, rows: new_rows });
+        }
         setFontSize(settingSize);
         setOverflowX('hidden');
       } else {

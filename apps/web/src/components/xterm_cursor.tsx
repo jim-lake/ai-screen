@@ -7,11 +7,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 'calc(var(--term-cell-width) * 1px)',
     height: 'calc(var(--term-cell-height) * 1px)',
-    backgroundColor: 'rgba(255,255,255,0.5)',
+    backgroundColor: 'rgba(255,255,255,0.7)',
   },
 });
 export interface XTermCursorProps {
   terminal: Terminal;
+  isFocused: boolean;
 }
 export default function XTermCursor(props: XTermCursorProps) {
   const { x, y } = useCursorPosition(props.terminal);
@@ -19,7 +20,7 @@ export default function XTermCursor(props: XTermCursorProps) {
     left: `calc(var(--term-cell-width) * ${x} * 1px)`,
     bottom: `calc(var(--term-cell-height) * calc(var(--term-rows) - ${y} - 1) * 1px)`,
   };
-  return <View style={[styles.cursor, extra]} />;
+  return props.isFocused ? <View style={[styles.cursor, extra]} /> : null;
 }
 
 interface Position {
