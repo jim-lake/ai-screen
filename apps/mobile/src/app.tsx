@@ -1,30 +1,16 @@
-import { NewAppScreen } from '@react-native/new-app-screen';
-import {
-  StatusBar,
-  StyleSheet,
-  useColorScheme,
-  Text,
-  View,
-} from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { createStaticNavigation } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { color: 'black', fontSize: 20 },
+import HomeScreen from './home_screen';
+import KeyScreen from './key_screen';
+
+const RootStack = createNativeStackNavigator({
+  screens: {
+    Home: HomeScreen,
+    Key: KeyScreen,
+  },
 });
-
+const Navigation = createStaticNavigation(RootStack);
 export default function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <View style={styles.container}>
-        <Text style={styles.text}>Foobar2</Text>
-      </View>
-    </SafeAreaProvider>
-  );
+  return <Navigation />;
 }
