@@ -3,20 +3,25 @@ import type { ViewStyle, ImageStyle, TextStyle } from 'react-native';
 
 type VarRef = `var(--${string})`;
 type StylePropValue<T> = T | (T extends number ? VarRef : never);
-type StyleValue<P> =
-  P extends number ? number | VarRef :
-  P extends string ? string | VarRef :
-  P;
+type StyleValue<P> = P extends number
+  ? number | VarRef
+  : P extends string
+    ? string | VarRef
+    : P;
 
 type BaseStyleMap<T = object> = {
   [K in keyof T]: {
-    [P in keyof (ViewStyle & TextStyle & ImageStyle)]?: StyleValue<(ViewStyle & TextStyle & ImageStyle)[P]>
-  }
+    [P in keyof (ViewStyle & TextStyle & ImageStyle)]?: StyleValue<
+      (ViewStyle & TextStyle & ImageStyle)[P]
+    >;
+  };
 };
 type OutputStyleMap<T = object> = {
   [K in keyof T]: {
-    [P in keyof (ViewStyle & TextStyle & ImageStyle)]?: (ViewStyle & TextStyle & ImageStyle)[P]
-  }
+    [P in keyof (ViewStyle & TextStyle & ImageStyle)]?: (ViewStyle &
+      TextStyle &
+      ImageStyle)[P];
+  };
 };
 
 interface SchemeStyles<T = object> {

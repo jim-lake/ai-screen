@@ -1,4 +1,4 @@
-import { StatusBar, useColorScheme } from 'react-native';
+import { Button, StatusBar, useColorScheme } from 'react-native';
 import {
   DarkTheme,
   DefaultTheme,
@@ -8,13 +8,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import './theme/colors';
 
-import HomeScreen from './home_screen';
-import KeyScreen from './key_screen';
+import { StackNavigator } from './router';
 
-const RootStack = createNativeStackNavigator({
-  screens: { Home: HomeScreen, Key: KeyScreen },
-});
-const Navigation = createStaticNavigation(RootStack);
+const Navigation = createStaticNavigation(StackNavigator);
 export default function App() {
   const scheme = useColorScheme();
   return (

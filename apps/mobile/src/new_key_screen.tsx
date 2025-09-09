@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  Button,
   ScrollView,
   Text,
   TouchableHighlight,
@@ -9,19 +11,29 @@ import {
 import { StyleSheet, useStyles } from './components/theme_style';
 import KeyStore from './stores/key_store';
 import type { ReactNode } from 'react';
-
 import type { StackScreenProps } from './router';
 
 const rawStyles = StyleSheet.create({
-  keyScreen: { flex: 1 },
+  newKeyScreen: { flex: 1 },
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   text: { color: 'var(--text-color)', fontSize: 'var(--text-size)' },
   noKeys: { color: 'var(--text-color)' },
-  buttonText: { color: 'var(--text-color)', fontSize: 20 },
+  buttonText: { color: 'black', fontSize: 20 },
 });
 
-export default function KeyScreen() {
-  const navigation = useNavigation<StackScreenProps<'Key'>>();
+export default function NewKeyScreen() {
+  const navigation = useNavigation<StackScreenProps<'NewKey'>>();
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <Button title='Cancel' onPress={() => navigation.goBack()} />
+      ),
+      headerRight: () => (
+        <Button title='Save' onPress={() => navigation.goBack()} />
+      ),
+    });
+  }, [navigation]);
+
   const styles = useStyles(rawStyles);
   const list = KeyStore.useList();
   useEffect(() => {
@@ -39,22 +51,14 @@ export default function KeyScreen() {
   }
 
   return (
-    <ScrollView
-      style={styles.keyScreen}
-      contentInsetAdjustmentBehavior='automatic'
-    >
-      <Text style={styles.text}>Key Screen</Text>
+    <SafeAreaView style={styles.newKeyScreen}>
+      <Text style={styles.text}>New Key Screen</Text>
       {keys}
       <TouchableHighlight onPress={() => navigation.goBack()}>
         <View style={{ height: 40, width: 40 }}>
-          <Text style={styles.buttonText}>Home</Text>
+          <Text style={styles.buttonText}>Dismiss</Text>
         </View>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => navigation.navigate('NewKey')}>
-        <View style={{ height: 40, width: 40 }}>
-          <Text style={styles.buttonText}>New Key</Text>
-        </View>
-      </TouchableHighlight>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
