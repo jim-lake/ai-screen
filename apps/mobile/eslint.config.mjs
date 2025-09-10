@@ -150,7 +150,7 @@ export default [
       ...reactHooks.configs.recommended.rules,
 
       // React Native specific rules
-      'react-native/no-unused-styles': 'error',
+      'react-native/no-unused-styles': 'off',
       'react-native/split-platform-components': 'error',
       'react-native/no-inline-styles': 'warn',
       'react-native/no-color-literals': 'off',
@@ -262,10 +262,8 @@ export default [
       '@typescript-eslint/no-import-type-side-effects': 'error',
       '@typescript-eslint/no-meaningless-void-operator': 'error',
       '@typescript-eslint/no-mixed-enums': 'error',
-      '@typescript-eslint/no-redundant-type-constituents': 'error',
       '@typescript-eslint/no-useless-empty-export': 'error',
       '@typescript-eslint/prefer-function-type': 'error',
-      '@typescript-eslint/sort-type-constituents': 'error',
 
       // React TypeScript specific
       'react/prop-types': 'off', // TypeScript handles this

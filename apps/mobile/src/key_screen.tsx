@@ -13,8 +13,8 @@ import type { StackScreenProps } from './router';
 import KeyStore from './stores/key_store';
 
 const rawStyles = StyleSheet.create({
+  button: { height: 40, width: 40 },
   buttonText: { color: 'var(--text-color)', fontSize: 20 },
-  container: { alignItems: 'center', flex: 1, justifyContent: 'center' },
   keyScreen: { flex: 1 },
   noKeys: { color: 'var(--text-color)' },
   text: { color: 'var(--text-color)', fontSize: 'var(--text-size)' },
@@ -50,7 +50,7 @@ export default function KeyScreen() {
           navigation.goBack();
         }}
       >
-        <View style={{ height: 40, width: 40 }}>
+        <View style={styles.button}>
           <Text style={styles.buttonText}>Home</Text>
         </View>
       </TouchableHighlight>
@@ -59,7 +59,7 @@ export default function KeyScreen() {
           navigation.navigate('NewKey');
         }}
       >
-        <View style={{ height: 40, width: 40 }}>
+        <View style={styles.button}>
           <Text style={styles.buttonText}>New Key</Text>
         </View>
       </TouchableHighlight>

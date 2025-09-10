@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   Button,
-  ScrollView,
   Text,
   TouchableHighlight,
   View,
@@ -15,8 +14,8 @@ import type { StackScreenProps } from './router';
 import KeyStore from './stores/key_store';
 
 const rawStyles = StyleSheet.create({
+  button: { height: 40, width: 40 },
   buttonText: { color: 'black', fontSize: 20 },
-  container: { alignItems: 'center', flex: 1, justifyContent: 'center' },
   newKeyScreen: { flex: 1 },
   noKeys: { color: 'var(--text-color)' },
   text: { color: 'var(--text-color)', fontSize: 'var(--text-size)' },
@@ -70,7 +69,7 @@ export default function NewKeyScreen() {
           navigation.goBack();
         }}
       >
-        <View style={{ height: 40, width: 40 }}>
+        <View style={styles.button}>
           <Text style={styles.buttonText}>Dismiss</Text>
         </View>
       </TouchableHighlight>

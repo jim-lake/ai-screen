@@ -3,8 +3,7 @@ import {
   DefaultTheme,
   createStaticNavigation,
 } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Button, StatusBar, useColorScheme } from 'react-native';
+import { StatusBar, useColorScheme } from 'react-native';
 
 import './theme/colors';
 

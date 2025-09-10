@@ -2,11 +2,10 @@ import { useColorScheme, StyleSheet as BaseStyleSheet } from 'react-native';
 import type { ViewStyle, ImageStyle, TextStyle } from 'react-native';
 
 type VarRef = `var(--${string})`;
-type StylePropValue<T> = T | (T extends number ? VarRef : never);
 type StyleValue<P> = P extends number
-  ? VarRef | number
+  ? number | VarRef
   : P extends string
-    ? VarRef | string
+    ? string | VarRef
     : P;
 
 type BaseStyleMap<T = object> = {

@@ -1,10 +1,5 @@
-import type { RouteProp, Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type {
-  NativeStackNavigationOptions,
-  NativeStackNavigationProp,
-} from '@react-navigation/native-stack';
-import { Button, useColorScheme } from 'react-native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import HomeScreen from './home_screen';
 import KeyScreen from './key_screen';
