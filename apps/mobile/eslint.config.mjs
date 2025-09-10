@@ -50,11 +50,7 @@ export default [
         module: 'readonly',
         exports: 'readonly',
       },
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
+      parserOptions: { ecmaFeatures: { jsx: true } },
     },
     plugins: {
       react,
@@ -64,18 +60,11 @@ export default [
       'jsx-a11y': a11y,
     },
     settings: {
-      react: {
-        version: 'detect',
-      },
+      react: { version: 'detect' },
       'import/resolver': {
-        node: {
-          extensions: ['.js', '.jsx', '.ts', '.tsx'],
-        },
+        node: { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
       },
-      'import/ignore': [
-        'node_modules',
-        '\\.(css|less|scss|sass|styl)$',
-      ],
+      'import/ignore': ['node_modules', '\\.(css|less|scss|sass|styl)$'],
     },
     rules: {
       // Strict JavaScript rules
@@ -85,11 +74,11 @@ export default [
       'no-undef': 'error',
       'no-var': 'error',
       'prefer-const': 'error',
-      'no-duplicate-imports': 'error',
+      'no-duplicate-imports': ['error', { allowSeparateTypeImports: true }],
       'no-unreachable': 'error',
       'no-unused-expressions': 'error',
-      'eqeqeq': ['error', 'always'],
-      'curly': ['error', 'all'],
+      eqeqeq: ['error', 'always'],
+      curly: ['error', 'all'],
       'no-implicit-globals': 'error',
       'no-eval': 'error',
       'no-implied-eval': 'error',
@@ -98,8 +87,8 @@ export default [
       'no-script-url': 'error',
       'no-sequences': 'error',
       'no-throw-literal': 'error',
-      'radix': 'error',
-      'yoda': 'error',
+      radix: 'error',
+      yoda: 'error',
 
       // React rules
       ...react.configs.recommended.rules,
@@ -131,19 +120,31 @@ export default [
       'react/jsx-first-prop-new-line': ['error', 'multiline-multiprop'],
       'react/jsx-indent': ['error', 2],
       'react/jsx-indent-props': ['error', 2],
-      'react/jsx-max-props-per-line': ['error', { maximum: 1, when: 'multiline' }],
-      'react/jsx-no-bind': ['error', { allowArrowFunctions: true, allowFunctions: false, allowBind: false }],
+      'react/jsx-max-props-per-line': [
+        'error',
+        { maximum: 1, when: 'multiline' },
+      ],
+      'react/jsx-no-bind': [
+        'error',
+        { allowArrowFunctions: true, allowFunctions: false, allowBind: false },
+      ],
       'react/jsx-no-literals': 'off', // Can be too strict for RN
       'react/jsx-pascal-case': 'error',
-      'react/jsx-tag-spacing': ['error', { closingSlash: 'never', beforeSelfClosing: 'always' }],
-      'react/jsx-wrap-multilines': ['error', {
-        declaration: 'parens-new-line',
-        assignment: 'parens-new-line',
-        return: 'parens-new-line',
-        arrow: 'parens-new-line',
-        condition: 'parens-new-line',
-        logical: 'parens-new-line',
-      }],
+      'react/jsx-tag-spacing': [
+        'error',
+        { closingSlash: 'never', beforeSelfClosing: 'always' },
+      ],
+      'react/jsx-wrap-multilines': [
+        'error',
+        {
+          declaration: 'parens-new-line',
+          assignment: 'parens-new-line',
+          return: 'parens-new-line',
+          arrow: 'parens-new-line',
+          condition: 'parens-new-line',
+          logical: 'parens-new-line',
+        },
+      ],
 
       // React Hooks rules
       ...reactHooks.configs.recommended.rules,
@@ -152,25 +153,26 @@ export default [
       'react-native/no-unused-styles': 'error',
       'react-native/split-platform-components': 'error',
       'react-native/no-inline-styles': 'warn',
-      'react-native/no-color-literals': 'warn',
-      'react-native/no-raw-text': ['error', {
-        skip: ['CustomText', 'Text'],
-      }],
+      'react-native/no-color-literals': 'off',
+      'react-native/no-raw-text': ['error', { skip: ['CustomText', 'Text'] }],
       'react-native/sort-styles': 'warn',
 
       // Import rules
-      'import/order': ['error', {
-        groups: [
-          'builtin',
-          'external',
-          'internal',
-          'parent',
-          'sibling',
-          'index',
-        ],
-        'newlines-between': 'always',
-        alphabetize: { order: 'asc', caseInsensitive: true },
-      }],
+      'import/order': [
+        'error',
+        {
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index',
+          ],
+          'newlines-between': 'always',
+          alphabetize: { order: 'asc', caseInsensitive: true },
+        },
+      ],
       'import/no-duplicates': 'error',
       'import/no-useless-path-segments': 'error',
       'import/no-cycle': 'error',
@@ -210,17 +212,14 @@ export default [
       parserOptions: {
         ecmaVersion: 2024,
         sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
+        ecmaFeatures: { jsx: true },
         project: './tsconfig.json',
       },
     },
-    plugins: {
-      '@typescript-eslint': typescript,
-    },
+    plugins: { '@typescript-eslint': typescript },
     rules: {
       // Disable base rules that are handled by TypeScript
+      'no-redeclare': 'off',
       'no-unused-vars': 'off',
       'no-undef': 'off',
       'import/named': 'off',
@@ -229,7 +228,10 @@ export default [
       'import/no-named-as-default-member': 'off',
 
       // TypeScript specific rules
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/prefer-as-const': 'error',
@@ -247,7 +249,10 @@ export default [
       '@typescript-eslint/restrict-template-expressions': 'error',
       '@typescript-eslint/prefer-readonly': 'error',
       '@typescript-eslint/prefer-reduce-type-parameter': 'error',
-      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports' },
+      ],
       '@typescript-eslint/consistent-type-exports': 'error',
       '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
@@ -299,15 +304,11 @@ export default [
       'jest.config.*',
       'detox.config.*',
     ],
-    languageOptions: {
-      globals: {
-        ...globals.node,
-      },
-    },
+    languageOptions: { globals: { ...globals.node } },
     rules: {
       'no-console': 'off',
       '@typescript-eslint/no-var-requires': 'off',
       'import/no-extraneous-dependencies': 'off',
     },
   },
-]
+];

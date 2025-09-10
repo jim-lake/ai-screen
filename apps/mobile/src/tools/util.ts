@@ -23,7 +23,7 @@ export default {
 export function noop(): void {
   /* intentionally empty */
 }
-export function getEnvironment(): 'prod' | 'dev' {
+export function getEnvironment(): 'dev' | 'prod' {
   return 'dev' as const;
 }
 export function getVersion(): string {
@@ -115,8 +115,8 @@ export type HerdFunction<T extends unknown[], S, A extends boolean> = ((
   ...args: T
 ) => Promise<S>) &
   (A extends true
-    ? { isRunning(...args: T): Promise<boolean> }
-    : { isRunning(...args: T): boolean });
+    ? { isRunning: (...args: T) => Promise<boolean> }
+    : { isRunning: (...args: T) => boolean });
 
 export function herd<T extends unknown[], S>(
   func: (...args: T) => Promise<S>,
@@ -190,8 +190,8 @@ export function canonicalJson(obj: unknown): string {
 export function shuffle<T>(array: T[]): T[] {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    const temp = array[i] as T;
-    array[i] = array[j] as T;
+    const temp = array[i];
+    array[i] = array[j];
     array[j] = temp;
   }
   return array;
@@ -277,17 +277,17 @@ export async function retry<T>(
     }
   }
 }
-export function parallel<T extends readonly (() => Promise<unknown>)[]>(
+export function parallel<T extends ReadonlyArray<() => Promise<unknown>>>(
   ...funcs: T
 ): Promise<{ [K in keyof T]: T[K] extends () => Promise<infer R> ? R : never }>;
-export function parallel<T extends readonly (() => Promise<unknown>)[]>(
+export function parallel<T extends ReadonlyArray<() => Promise<unknown>>>(
   funcs: T
 ): Promise<{ [K in keyof T]: T[K] extends () => Promise<infer R> ? R : never }>;
-export function parallel<T extends readonly (() => Promise<unknown>)[]>(
-  ...args: [T] | T
+export function parallel<T extends ReadonlyArray<() => Promise<unknown>>>(
+  ...args: T | [T]
 ): Promise<{ [K in keyof T]: Awaited<ReturnType<T[K]>> }> {
   const funcs = Array.isArray(args[0]) ? args[0] : args;
-  const funcsArray = funcs as readonly T[number][];
+  const funcsArray = funcs as ReadonlyArray<T[number]>;
   const promises = funcsArray.map((fn) => fn());
   return Promise.all(promises) as Promise<{
     [K in keyof T]: Awaited<ReturnType<T[K]>>;

@@ -1,6 +1,8 @@
-import { useEffect, useLayoutEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { useEffect, useLayoutEffect } from 'react';
+import type { ReactNode } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import {
   Button,
   ScrollView,
@@ -9,16 +11,15 @@ import {
   View,
 } from './components/base_components';
 import { StyleSheet, useStyles } from './components/theme_style';
-import KeyStore from './stores/key_store';
-import type { ReactNode } from 'react';
 import type { StackScreenProps } from './router';
+import KeyStore from './stores/key_store';
 
 const rawStyles = StyleSheet.create({
-  newKeyScreen: { flex: 1 },
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { color: 'var(--text-color)', fontSize: 'var(--text-size)' },
-  noKeys: { color: 'var(--text-color)' },
   buttonText: { color: 'black', fontSize: 20 },
+  container: { alignItems: 'center', flex: 1, justifyContent: 'center' },
+  newKeyScreen: { flex: 1 },
+  noKeys: { color: 'var(--text-color)' },
+  text: { color: 'var(--text-color)', fontSize: 'var(--text-size)' },
 });
 
 export default function NewKeyScreen() {
@@ -26,10 +27,20 @@ export default function NewKeyScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
-        <Button title='Cancel' onPress={() => navigation.goBack()} />
+        <Button
+          title='Cancel'
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
       ),
       headerRight: () => (
-        <Button title='Save' onPress={() => navigation.goBack()} />
+        <Button
+          title='Save'
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
       ),
     });
   }, [navigation]);
@@ -54,7 +65,11 @@ export default function NewKeyScreen() {
     <SafeAreaView style={styles.newKeyScreen}>
       <Text style={styles.text}>New Key Screen</Text>
       {keys}
-      <TouchableHighlight onPress={() => navigation.goBack()}>
+      <TouchableHighlight
+        onPress={() => {
+          navigation.goBack();
+        }}
+      >
         <View style={{ height: 40, width: 40 }}>
           <Text style={styles.buttonText}>Dismiss</Text>
         </View>

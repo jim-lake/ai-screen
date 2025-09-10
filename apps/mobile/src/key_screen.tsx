@@ -1,5 +1,7 @@
-import { useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { useEffect } from 'react';
+import type { ReactNode } from 'react';
+
 import {
   ScrollView,
   Text,
@@ -7,17 +9,15 @@ import {
   View,
 } from './components/base_components';
 import { StyleSheet, useStyles } from './components/theme_style';
-import KeyStore from './stores/key_store';
-import type { ReactNode } from 'react';
-
 import type { StackScreenProps } from './router';
+import KeyStore from './stores/key_store';
 
 const rawStyles = StyleSheet.create({
-  keyScreen: { flex: 1 },
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { color: 'var(--text-color)', fontSize: 'var(--text-size)' },
-  noKeys: { color: 'var(--text-color)' },
   buttonText: { color: 'var(--text-color)', fontSize: 20 },
+  container: { alignItems: 'center', flex: 1, justifyContent: 'center' },
+  keyScreen: { flex: 1 },
+  noKeys: { color: 'var(--text-color)' },
+  text: { color: 'var(--text-color)', fontSize: 'var(--text-size)' },
 });
 
 export default function KeyScreen() {
@@ -45,12 +45,20 @@ export default function KeyScreen() {
     >
       <Text style={styles.text}>Key Screen</Text>
       {keys}
-      <TouchableHighlight onPress={() => navigation.goBack()}>
+      <TouchableHighlight
+        onPress={() => {
+          navigation.goBack();
+        }}
+      >
         <View style={{ height: 40, width: 40 }}>
           <Text style={styles.buttonText}>Home</Text>
         </View>
       </TouchableHighlight>
-      <TouchableHighlight onPress={() => navigation.navigate('NewKey')}>
+      <TouchableHighlight
+        onPress={() => {
+          navigation.navigate('NewKey');
+        }}
+      >
         <View style={{ height: 40, width: 40 }}>
           <Text style={styles.buttonText}>New Key</Text>
         </View>

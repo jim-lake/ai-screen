@@ -1,11 +1,11 @@
-import { useSyncExternalStore } from 'react';
 import { EventEmitter } from 'events';
+
+import { useSyncExternalStore } from 'react';
 import { RSAKeychain } from 'react-native-rsa-native';
-
-import { deepEqual, herd } from '../tools/util';
-import { errorLog } from '../tools/log';
-
 import type { KeychainItem } from 'react-native-rsa-native';
+
+import { errorLog } from '../tools/log';
+import { deepEqual, herd } from '../tools/util';
 
 let g_list: KeychainItem[] = [];
 
