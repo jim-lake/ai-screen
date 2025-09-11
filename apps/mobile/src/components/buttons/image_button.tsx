@@ -1,7 +1,12 @@
 import React from 'react';
 import { Image, StyleSheet, TouchableHighlight, View } from 'react-native';
 
-import type { ViewStyle } from 'react-native';
+import type {
+  ViewStyle,
+  ImageStyle,
+  ImageSourcePropType,
+  ImageResizeMode,
+} from 'react-native';
 
 const styles = StyleSheet.create({
   image: { height: '100%', width: '100%' },
@@ -15,11 +20,11 @@ const styles = StyleSheet.create({
 
 interface Props {
   style?: ViewStyle;
-  imageStyle?: ViewStyle;
-  source?: { uri: string } | string;
+  imageStyle?: ImageStyle;
+  source?: ImageSourcePropType;
   children?: React.ReactNode;
   onPress: () => void | Promise<void>;
-  resizeMode?: string;
+  resizeMode?: ImageResizeMode;
   underlayColor?: string;
   title?: string;
 }

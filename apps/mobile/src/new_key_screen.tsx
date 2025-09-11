@@ -4,6 +4,7 @@ import { useDeviceName } from 'react-native-device-info';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Alert, Button } from './components/base_components';
+import BusyOverlay from './components/busy_overlay';
 import { FormBox, FormInput, FormSelect, FormSwitch } from './components/form';
 import { StyleSheet, useStyles, useColor } from './components/theme_style';
 import KeyStore from './stores/key_store';
@@ -12,13 +13,7 @@ import { useBusy, useLatestCallback } from './tools/util';
 import type { StackScreenProps } from './router';
 import type { KeyType } from './stores/key_store';
 
-const rawStyles = StyleSheet.create({
-  button: { height: 40, width: 40 },
-  buttonText: { color: 'black', fontSize: 20 },
-  newKeyScreen: { flex: 1 },
-  noKeys: { color: 'var(--text-color)' },
-  text: { color: 'var(--text-color)', fontSize: 'var(--text-size)' },
-});
+const rawStyles = StyleSheet.create({ newKeyScreen: { flex: 1 } });
 
 const TYPE_OPTS = ['ECDSA P-256', 'ED25519', 'RSA 2048', 'RSA 4096'];
 const KEY_MAP: Record<string, { type: KeyType; size: number }> = {
@@ -40,7 +35,6 @@ export default function NewKeyScreen() {
   const key_name = name ?? device_name.result ?? '';
 
   const _onSave = useLatestCallback(async () => {
-    console.log('_onSave2:', key_name, type);
     if (key_name && type && setBusy()) {
       const mapped = KEY_MAP[type];
       if (mapped) {
@@ -64,7 +58,6 @@ export default function NewKeyScreen() {
     void KeyStore.fetch();
   }, []);
   useLayoutEffect(() => {
-    console.log('useLayoutEffect');
     navigation.setOptions({
       contentStyle: { backgroundColor: modal_color },
       headerLeft: () => <Button title='Cancel' onPress={navigation.goBack} />,
@@ -94,6 +87,7 @@ export default function NewKeyScreen() {
           last
         />
       </FormBox>
+      <BusyOverlay isBusy={is_busy} />
     </SafeAreaView>
   );
 }

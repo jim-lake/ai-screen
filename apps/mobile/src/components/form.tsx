@@ -114,12 +114,14 @@ export function FormSelect(props: FormSelectProps) {
   const styles = useStyles(baseStyles);
   const ref = useRef<PickerSelect>(null);
   const scheme = useColorScheme() ?? 'light';
-  function _onPress() {
-    ref.current?.togglePicker(true);
-  }
   const items = options.map((s) => ({ label: s, value: s, key: s }));
   return (
-    <FormInputBase style={style} label={label} last={last} onPress={_onPress}>
+    <FormInputBase
+      style={style}
+      label={label}
+      last={last}
+      onPress={() => ref.current?.togglePicker(true)}
+    >
       <PickerSelect
         ref={ref}
         style={{ inputIOS: { width: 0, height: 0 } }}

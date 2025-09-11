@@ -43,7 +43,7 @@ export default function TextButton(props: Props) {
         <TouchableHighlight
           style={styles.highlight}
           underlayColor={underlayColor ?? 'rgba(0,0,0,0.2)'}
-          onPress={() => void onPress()}
+          onPress={() => void onPress?.()}
         >
           <View style={StyleSheet.absoluteFill} />
         </TouchableHighlight>
