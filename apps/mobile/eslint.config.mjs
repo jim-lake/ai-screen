@@ -168,6 +168,7 @@ export default [
             'parent',
             'sibling',
             'index',
+            'type',
           ],
           'newlines-between': 'always',
           alphabetize: { order: 'asc', caseInsensitive: true },

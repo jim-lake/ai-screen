@@ -1,5 +1,12 @@
 import { useColorScheme, StyleSheet as BaseStyleSheet } from 'react-native';
-import type { ViewStyle, ImageStyle, TextStyle } from 'react-native';
+
+import type {
+  ColorValue,
+  ImageStyle,
+  OpaqueColorValue,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
 
 type VarRef = `var(--${string})`;
 type StyleValue<P> = P extends number
@@ -33,14 +40,12 @@ type Opaque<T, Name> = T & { readonly [_opaque]: Name };
 export type ThemedStyles<T> = Opaque<SchemeStyles, T>;
 
 type ColorScheme = 'dark' | 'light';
-type StyleVariableMap = Record<string, number | string>;
+type VariableValue = number | string | OpaqueColorValue;
+type StyleVariableMap = Record<string, VariableValue>;
 
 const g_transformList: SchemeStyles[] = [];
-const g_variableMap = new Map<string, number | string>();
-const g_schemeVariableMap = new Map<
-  ColorScheme,
-  Map<string, number | string>
->();
+const g_variableMap = new Map<string, VariableValue>();
+const g_schemeVariableMap = new Map<ColorScheme, Map<string, VariableValue>>();
 
 function create<T extends BaseStyleMap<T>>(base: T): ThemedStyles<T> {
   const obj = { base };
@@ -60,6 +65,14 @@ export function useStyles<T>(obj: ThemedStyles<T>): OutputStyleMap<T> {
   _initThemes();
   const scheme = useColorScheme() ?? 'light';
   return obj[scheme] as OutputStyleMap<T>;
+}
+export function useColor(name: string): ColorValue {
+  const var_name = `var(--${name})`;
+  const scheme = useColorScheme() ?? 'light';
+  const scheme_map = g_schemeVariableMap.get(scheme);
+  return (scheme_map?.get(var_name) ??
+    g_variableMap.get(var_name) ??
+    'transparent') as ColorValue;
 }
 export function setSchemeVariables(
   scheme: ColorScheme,
@@ -85,7 +98,7 @@ function _makeStyleSheet<T extends BaseStyleMap>(
 ) {
   const style_map = { ...input } as Record<
     string,
-    Record<string, number | string>
+    Record<string, number | string | OpaqueColorValue>
   >;
   const scheme_map =
     g_schemeVariableMap.get(scheme) ?? new Map<string, number | string>();

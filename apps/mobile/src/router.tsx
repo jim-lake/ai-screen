@@ -1,9 +1,11 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { PlatformColor } from 'react-native';
 
 import HomeScreen from './home_screen';
 import KeyScreen from './key_screen';
 import NewKeyScreen from './new_key_screen';
+
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export const screens = {
   Home: HomeScreen,
@@ -32,6 +34,6 @@ export const StackNavigator = createNativeStackNavigator({
     headerTransparent: true,
     headerBlurEffect: 'systemUltraThinMaterial',
     headerLargeStyle: { backgroundColor: 'transparent' },
-    contentStyle: { backgroundColor: 'systemDefault' },
+    contentStyle: { backgroundColor: PlatformColor('systemBackgroundColor') },
   },
 });

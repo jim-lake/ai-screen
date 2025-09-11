@@ -1,6 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
 import { useEffect } from 'react';
-import type { ReactNode } from 'react';
 
 import {
   ScrollView,
@@ -9,8 +8,10 @@ import {
   View,
 } from './components/base_components';
 import { StyleSheet, useStyles } from './components/theme_style';
-import type { StackScreenProps } from './router';
 import KeyStore from './stores/key_store';
+
+import type { StackScreenProps } from './router';
+import type { ReactNode } from 'react';
 
 const rawStyles = StyleSheet.create({
   button: { height: 40, width: 40 },

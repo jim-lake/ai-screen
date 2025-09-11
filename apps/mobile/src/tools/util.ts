@@ -293,3 +293,16 @@ export function parallel<T extends ReadonlyArray<() => Promise<unknown>>>(
     [K in keyof T]: Awaited<ReturnType<T[K]>>;
   }>;
 }
+export function useLatestCallback<T extends (...args: unknown[]) => unknown>(
+  handler: T
+): T {
+  const handlerRef = useRef<T>(handler);
+  handlerRef.current = handler;
+
+  return useCallback(
+    ((...args: unknown[]) => {
+      return handlerRef.current(...args);
+    }) as T,
+    []
+  );
+}

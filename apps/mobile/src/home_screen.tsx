@@ -2,13 +2,17 @@ import { useNavigation } from '@react-navigation/native';
 import { ScrollView, Text, TouchableHighlight, View } from 'react-native';
 
 import { StyleSheet, useStyles } from './components/theme_style';
+
 import type { StackScreenProps } from './router';
 
 const baseStyles = StyleSheet.create({
-  button: { height: 40, width: 40 },
+  button: { backgroundColor: 'red', height: 40, width: 40 },
   homeScreen: { flex: 1 },
   padBottom: { height: 1000 },
+  padTop: { height: 200 },
   text: { color: 'var(--text-color)', fontSize: 20 },
+  touchable: { backgroundColor: 'green' },
+  touchablePicker: { height: 100 },
 });
 
 export default function HomeScreen() {
@@ -21,6 +25,7 @@ export default function HomeScreen() {
     >
       <Text style={styles.text}>Home Screen</Text>
       <TouchableHighlight
+        style={styles.touchable}
         onPress={() => {
           navigation.navigate('Key');
         }}
