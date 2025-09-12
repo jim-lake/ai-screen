@@ -25,6 +25,7 @@ const baseStyles = StyleSheet.create({
     flexDirection: 'column',
   },
   right: {
+    paddingRight: 10,
     flex: 6,
     alignSelf: 'stretch',
     flexDirection: 'column',
@@ -40,8 +41,11 @@ const baseStyles = StyleSheet.create({
     fontSize: 17,
   },
   subtext: {
+    paddingTop: 5,
     color: 'var(--secondary-text-color)',
     fontSize: 17,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
   },
 });
 
@@ -79,7 +83,7 @@ function Item(props: ItemProps) {
       </View>
       <View style={[styles.right, last]}>
         <Text style={styles.text}>{text}</Text>
-        {subtext ? <Text style={styles.subtext}>{subtext}</Text> : null}
+        {subtext ? <Text style={styles.subtext} numberOfLines={1} ellipsizeMode="end">{subtext}</Text> : null}
       </View>
       <TouchableHighlight
         style={StyleSheet.absoluteFill}

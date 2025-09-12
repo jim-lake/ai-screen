@@ -11,6 +11,7 @@ import {
   View,
 } from './components/base_components';
 import { StyleSheet, useStyles } from './components/theme_style';
+import BarButton from './components/buttons/bar_button';
 import { FormBox, FormText } from './components/form';
 import KeyStore from './stores/key_store';
 
@@ -39,7 +40,10 @@ export default function KeyScreen(props: StackScreenProps<'Key'>) {
   }, []);
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => <Button title='Edit' onPress={() => navigation.goBack()} />,
+      headerRight: () => <>
+        <BarButton text='Edit' onPress={() => console.log('edit2')} />
+        <Button title='Edit' onPress={() => console.log('edit')} />
+      </>,
     });
   }, [navigation]);
 
