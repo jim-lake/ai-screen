@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import { useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { RSAKeychain } from 'react-native-rsa-native';
 import { v4 as uuid } from 'uuid';
 
@@ -11,7 +11,9 @@ import type { KeychainItem } from 'react-native-rsa-native';
 
 export type KeyType = 'rsa' | 'ec' | 'ed';
 
-let g_list: KeychainItem[] = [];
+export interface SshKey extends KeychainItem { sshPublicKey: string };
+
+let g_list: SshKey[] = [];
 
 const g_eventEmitter = new EventEmitter();
 const CHANGE_EVENT = 'change';
@@ -33,9 +35,18 @@ function _getList() {
 export function useList() {
   return useSyncExternalStore(_subscribe, _getList);
 }
+export function useKey(tag: string) {
+  const _get = useCallback(() => {
+    return g_list.find(k => k.tag === tag);
+  }, [tag]);
+  return useSyncExternalStore(_subscribe, _get);
+}
 export const fetch = herd(async (): Promise<void> => {
   try {
     const list = await RSAKeychain.getAllKeys();
+    if (list) {
+      list.forEach(_transformKey);
+    }
     if (!deepEqual(g_list, list)) {
       g_list = list;
       _emit('fetch');
@@ -72,4 +83,18 @@ export async function createKey(
     return err as Error;
   }
 }
-export default { init, useList, fetch, createKey };
+function _transformKey(item: KeychainItem): SshKey {
+  console.log(item);
+  if (item.tag?.startsWith('ed')) {
+    item.sshPublicKey = `ssh-ed25519 ${item.publicEd}`;
+  } else if (item.tag?.startsWith('ec')) {
+    item.sshPublicKey = `ecdsa-sha2-nistp256 ${item.public}`;
+  } else {
+    item.sshPublicKey = `ssh-rsa ${item.public}`;
+  }
+  if (item.label) {
+    item.sshPublicKey += " " + item.label;
+  }
+  return item;
+}
+export default { init, useList, useKey, fetch, createKey };

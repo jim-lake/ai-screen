@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PlatformColor } from 'react-native';
 
 import HomeScreen from './home_screen';
+import KeyListScreen from './key_list_screen';
 import KeyScreen from './key_screen';
 import NewKeyScreen from './new_key_screen';
 
@@ -9,7 +10,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export const screens = {
   Home: HomeScreen,
-  Key: { screen: KeyScreen, options: { title: 'SSH Keys' } },
+  KeyList: { screen: KeyListScreen, options: { title: 'SSH Keys' } },
+  Key: { screen: KeyScreen, options: { title: '', headerLargeTitle: false } },
   NewKey: {
     screen: NewKeyScreen,
     options: {

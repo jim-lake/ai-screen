@@ -39,6 +39,12 @@ const baseStyles = StyleSheet.create({
     paddingVertical: 12,
   },
   formSwitch: {},
+  value: {
+    flexShrink: 1,
+    color: 'var(--text-color)',
+    fontSize: 17,
+    textAlign: 'right',
+  },
   input: {
     color: 'var(--text-color)',
     flex: 1,
@@ -89,6 +95,16 @@ export function FormInputBase(props: FormInputBaseProps) {
         </TouchableHighlight>
       ) : null}
     </View>
+  );
+}
+export interface FormTextProps extends FormBaseProps { value: string }
+export function FormText(props: FormTextProps) {
+  const { style, label, last } = props;
+  const styles = useStyles(baseStyles);
+  return (
+    <FormInputBase style={style} label={label} last={last}>
+      <Text style={styles.value}>{props.value}</Text>
+    </FormInputBase>
   );
 }
 export type FormInputProps = {

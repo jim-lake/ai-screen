@@ -27,7 +27,7 @@ export default function HomeScreen() {
       <TouchableHighlight
         style={styles.touchable}
         onPress={() => {
-          navigation.navigate('Key');
+          navigation.navigate('KeyList');
         }}
       >
         <View style={styles.button}>

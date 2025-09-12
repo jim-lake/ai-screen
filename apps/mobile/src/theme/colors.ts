@@ -4,6 +4,7 @@ import { setVariables, setSchemeVariables } from '../components/theme_style';
 
 setVariables({
   'text-color': 'black',
+  'secondary-text-color': '#8a898d',
   'text-size': 10,
   'light-underlay': 'rgba(0,0,0,0.1)',
   modal: '#f3f2f7',
@@ -13,6 +14,7 @@ setVariables({
 
 setSchemeVariables('dark', {
   'text-color': 'white',
+  'secondary-text-color': '#8e8d94',
   'light-underlay': 'rgba(255,255,255,0.1)',
   modal: '#1c1c1e',
   'form-box-bg': PlatformColor('secondarySystemGroupedBackground'),
