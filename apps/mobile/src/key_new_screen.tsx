@@ -13,7 +13,7 @@ import { useBusy, useLatestCallback } from './tools/util';
 import type { StackScreenProps } from './router';
 import type { KeyType } from './stores/key_store';
 
-const rawStyles = StyleSheet.create({ newKeyScreen: { flex: 1 } });
+const baseStyles = StyleSheet.create({ keyNewScreen: { flex: 1 } });
 
 const TYPE_OPTS = ['ECDSA P-256', 'ED25519', 'RSA 2048', 'RSA 4096'];
 const KEY_MAP: Record<string, { type: KeyType; size: number }> = {
@@ -23,9 +23,9 @@ const KEY_MAP: Record<string, { type: KeyType; size: number }> = {
   'RSA 4096': { type: 'rsa' as const, size: 4096 },
 };
 
-export default function NewKeyScreen() {
-  const navigation = useNavigation<StackScreenProps<'NewKey'>>();
-  const styles = useStyles(rawStyles);
+export default function KeyNewScreen() {
+  const navigation = useNavigation<StackScreenProps<'KeyNew'>>();
+  const styles = useStyles(baseStyles);
   const device_name = useDeviceName();
   const [name, setName] = useState<string | null>(null);
   const [type, setType] = useState('ECDSA P-256');
@@ -38,16 +38,17 @@ export default function NewKeyScreen() {
     if (key_name && type && setBusy()) {
       const mapped = KEY_MAP[type];
       if (mapped) {
-        const err = await KeyStore.createKey({
+        const key_tag = await KeyStore.createKey({
           label: key_name,
           type: mapped.type,
           size: mapped.size,
           synchronized,
         });
-        if (err) {
-          Alert.alert('Failed to create key, please try again.');
-        } else {
+        if (typeof key_tag === 'string') {
           navigation.goBack();
+          navigation.navigate('Key', { key_tag });
+        } else {
+          Alert.alert('Failed to create key, please try again.');
         }
       }
       clearBusy();
@@ -66,7 +67,7 @@ export default function NewKeyScreen() {
   }, [navigation, modal_color, _onSave]);
 
   return (
-    <SafeAreaView style={styles.newKeyScreen}>
+    <SafeAreaView style={styles.keyNewScreen}>
       <FormBox>
         <FormInput
           label='Key Name'

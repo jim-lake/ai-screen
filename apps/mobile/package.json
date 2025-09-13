@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@react-native-picker/picker": "^2.11.2",
+    "@react-native-vector-icons/ionicons": "^12.3.0",
     "@react-navigation/native": "^7.1.17",
     "@react-navigation/native-stack": "^7.3.26",
     "events": "^3.3.0",
@@ -22,7 +23,7 @@
     "react-native-get-random-values": "^1.11.0",
     "react-native-picker-select": "^9.3.1",
     "react-native-qrcode-svg": "^6.3.15",
-    "react-native-rsa-native": "https://github.com/jim-lake/react-native-rsa-native.git#2d17f0fe40c873aae021ace1e72d6399612719c8",
+    "react-native-rsa-native": "https://github.com/jim-lake/react-native-rsa-native.git#2b4a921cea329e7eb79d9182d0765ff858e399ef",
     "react-native-safe-area-context": "^5.6.1",
     "react-native-screens": "^4.16.0",
     "react-native-ssh-sftp": "https://github.com/jim-lake/react-native-ssh-sftp.git#b6f13c53b1b2cbf6e27d3bea0ad8ecb5966c560a",

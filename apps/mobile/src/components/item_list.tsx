@@ -12,23 +12,27 @@ import {
 import { StyleSheet, useStyles, useColor } from './theme_style';
 
 const baseStyles = StyleSheet.create({
-  itemList: {
-    flexDirection: 'column',
-  },
-  item: {
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-  },
+  itemList: { flexDirection: 'column' },
+  item: { alignSelf: 'stretch', height: 70, flexDirection: 'row' },
   left: {
-    flex: 1,
+    width: 76,
     alignSelf: 'stretch',
     flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  leftBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#8e8f95',
   },
   right: {
     paddingRight: 10,
-    flex: 6,
+    flex: 1,
     alignSelf: 'stretch',
     flexDirection: 'column',
+    justifyContent: 'center',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'var(--form-box-border)',
   },
@@ -36,10 +40,7 @@ const baseStyles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'var(--form-box-border)',
   },
-  text: {
-    color: 'var(--text-color)',
-    fontSize: 17,
-  },
+  text: { color: 'var(--text-color)', fontSize: 17 },
   subtext: {
     paddingTop: 5,
     color: 'var(--secondary-text-color)',
@@ -63,15 +64,19 @@ export interface ItemListProps {
 export function ItemList(props: ItemListProps) {
   const styles = useStyles(baseStyles);
   const items = props.list.map((item, i) => {
-    return <Item key={i} last={i === props.list.length -1 } {...item} />;
+    return <Item key={i} last={i === props.list.length - 1} {...item} />;
   });
-  return <View style={[styles.itemList, props.style]}>
-    {items}
-    {props.children}
-  </View>;
+  return (
+    <View style={[styles.itemList, props.style]}>
+      {items}
+      {props.children}
+    </View>
+  );
 }
 export default ItemList;
-interface ItemProps extends Items { last?: boolean; }
+interface ItemProps extends Items {
+  last?: boolean;
+}
 function Item(props: ItemProps) {
   const { text, subtext, screen, args } = props;
   const styles = useStyles(baseStyles);
@@ -80,13 +85,19 @@ function Item(props: ItemProps) {
   return (
     <View style={styles.item}>
       <View style={styles.left}>
+        <View style={styles.leftBox} />
       </View>
       <View style={[styles.right, last]}>
         <Text style={styles.text}>{text}</Text>
-        {subtext ? <Text style={styles.subtext} numberOfLines={1} ellipsizeMode="end">{subtext}</Text> : null}
+        {subtext ? (
+          <Text style={styles.subtext} numberOfLines={1} ellipsizeMode='end'>
+            {subtext}
+          </Text>
+        ) : null}
       </View>
       <TouchableHighlight
         style={StyleSheet.absoluteFill}
+        underlayColor='rgba(255,255,255,0.1)'
         onPress={() => {
           if (screen) {
             navigation.navigate(screen, args);
@@ -94,7 +105,7 @@ function Item(props: ItemProps) {
         }}
       >
         <View style={StyleSheet.absoluteFill} />
-    </TouchableHighlight>
+      </TouchableHighlight>
     </View>
   );
 }

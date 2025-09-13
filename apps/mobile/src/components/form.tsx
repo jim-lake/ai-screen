@@ -97,7 +97,9 @@ export function FormInputBase(props: FormInputBaseProps) {
     </View>
   );
 }
-export interface FormTextProps extends FormBaseProps { value: string }
+export interface FormTextProps extends FormBaseProps {
+  value: string;
+}
 export function FormText(props: FormTextProps) {
   const { style, label, last } = props;
   const styles = useStyles(baseStyles);

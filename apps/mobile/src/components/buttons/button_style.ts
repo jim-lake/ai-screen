@@ -1,6 +1,6 @@
-import { StyleSheet } from '../base_components';
+import { StyleSheet, useStyles } from '../theme_style';
 
-export const styles = StyleSheet.create({
+export const baseStyles = StyleSheet.create({
   blueButton: {
     backgroundColor: 'var(--button-blue-bg)',
     borderColor: 'var(--button-blue-border)',
@@ -49,22 +49,19 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingLeft: 15,
-    paddingRight: 15,
   },
   invertedButton: {
     backgroundColor: 'var(--button-inverted-bg)',
     borderColor: 'var(--button-inverted-border)',
   },
   invertedText: { color: 'var(--button-inverted-text)' },
-  text: { color: 'var(--button-text)', fontSize: 14, fontWeight: '600' },
+  text: { color: 'var(--text-color)', fontSize: 17 },
   textButton: {
     alignItems: 'center',
     backgroundColor: 'var(--button-bg)',
     borderRadius: 10,
-    borderWidth: 1,
     flexDirection: 'row',
-    height: 32,
+    height: 44,
     justifyContent: 'center',
     overflow: 'visible',
   },
@@ -81,7 +78,8 @@ export interface StyleProps {
     | 'blue'
     | 'default';
 }
-export function getButtonStyles(props: StyleProps) {
+export function useButtonStyles(props: StyleProps) {
+  const styles = useStyles(baseStyles);
   const { disabled, type } = props;
   let button_extra = styles.defaultButton;
   let text_extra = styles.defaultText;

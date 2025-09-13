@@ -2,7 +2,8 @@ import React from 'react';
 
 import { StyleSheet, View, Text, TouchableHighlight } from '../base_components';
 
-import { styles, getButtonStyles } from './button_style';
+import { baseStyles, useButtonStyles } from './button_style';
+import { useStyles } from '../theme_style';
 
 import type { ViewStyle, TextStyle } from '../base_components';
 import type { StyleProps } from './button_style';
@@ -10,7 +11,6 @@ import type { StyleProps } from './button_style';
 interface Props extends StyleProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
-  // type is inherited from StyleProps
   text: string;
   disabled?: boolean;
   onPress?: () => void | Promise<void>;
@@ -30,7 +30,8 @@ export default function TextButton(props: Props) {
     beforeText,
     afterText,
   }: Props = props;
-  const { button_extra, text_extra } = getButtonStyles(props);
+  const styles = useStyles(baseStyles);
+  const { button_extra, text_extra } = useButtonStyles(props);
 
   return (
     <View style={[styles.textButton, button_extra, style]}>
