@@ -29,9 +29,6 @@ export default function KeyListScreen() {
   const navigation = useNavigation<StackScreenProps<'Key'>>();
   const styles = useStyles(baseStyles);
   const list = KeyStore.useList();
-  useEffect(() => {
-    void KeyStore.fetch();
-  }, []);
   let keys: Item[] = [];
   if (list.length > 0) {
     keys = list

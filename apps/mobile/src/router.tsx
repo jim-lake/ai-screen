@@ -6,11 +6,13 @@ import KeyListScreen from './key_list_screen';
 import KeyScreen from './key_screen';
 import KeyEditScreen from './key_edit_screen';
 import KeyNewScreen from './key_new_screen';
+import ServerScreen from './server_screen';
+import ServerNewScreen from './server_new_screen';
 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export const screens = {
-  Home: HomeScreen,
+  Home: { screen: HomeScreen, options: { title: 'AI Screen'}},
   KeyList: { screen: KeyListScreen, options: { title: 'SSH Keys' } },
   Key: { screen: KeyScreen, options: { title: '', headerLargeTitle: false } },
   KeyEdit: {
@@ -26,6 +28,20 @@ export const screens = {
       headerLargeTitle: false,
       headerTitle: 'New SSH Key',
     },
+  },
+  ServerNew: {
+    screen: ServerNewScreen,
+    options: {
+      presentation: 'modal' as const,
+      animation: 'slide_from_bottom' as const,
+      gestureEnabled: true,
+      headerLargeTitle: false,
+      headerTitle: 'New SSH Server',
+    },
+  },
+  Server: {
+    screen: ServerScreen,
+    options: { title: '', headerLargeTitle: false, headerBackTitle: "Home", },
   },
 } as const;
 

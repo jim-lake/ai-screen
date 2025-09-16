@@ -123,7 +123,6 @@ function _transformKey(item: KeychainItem): SshKey {
   if (item.label) {
     sshPublicKey += ' ' + item.label;
   }
-  console.log(item);
   return Object.assign({}, item, { sshPublicKey });
 }
 export default {
