@@ -1,15 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useLayoutEffect } from 'react';
+import { useLayoutEffect } from 'react';
 
-import {
-  Alert,
-  Button,
-  ScrollView,
-  Share,
-  Text,
-  TouchableHighlight,
-  View,
-} from './components/base_components';
+import { Alert, ScrollView } from './components/base_components';
 import BarButton from './components/buttons/bar_button';
 import TextButton from './components/buttons/text_button';
 import { FormBox, FormText } from './components/form';
@@ -18,7 +10,6 @@ import ServerStore from './stores/server_store';
 import { useLatestCallback } from './tools/util';
 
 import type { StackScreenProps, StackNavigation } from './router';
-import type { ReactNode } from 'react';
 
 const rawStyles = StyleSheet.create({
   button: { margin: 12 },
@@ -45,7 +36,7 @@ export default function ServerScreen(props: StackScreenProps<'Server'>) {
         </>
       ),
     });
-  }, [navigation, edit_bg_color]);
+  }, [navigation, edit_bg_color, route.params]);
   const _onConnectPress = useLatestCallback(() => {
     Alert.alert('Would connect');
   });

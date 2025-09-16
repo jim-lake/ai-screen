@@ -3,11 +3,10 @@ import { ScrollView, Text, TouchableHighlight, View } from 'react-native';
 
 import { ItemList } from './components/item_list';
 import { StyleSheet, useStyles } from './components/theme_style';
-import KeyStore from './stores/key_store';
 import ServerStore from './stores/server_store';
 
 import type { Item } from './components/item_list';
-import type { StackScreenProps, StackNavigation } from './router';
+import type { StackNavigation } from './router';
 
 const baseStyles = StyleSheet.create({
   button: { backgroundColor: 'red', height: 40 },
@@ -23,12 +22,11 @@ const baseStyles = StyleSheet.create({
 export default function HomeScreen() {
   const navigation = useNavigation<StackNavigation<'Home'>>();
   const styles = useStyles(baseStyles);
-  const key_list = KeyStore.useList();
   const server_list = ServerStore.useList();
 
   let servers: Item[] = [];
   if (server_list.length > 0) {
-    servers = server_list.map((item, i) => ({
+    servers = server_list.map((item) => ({
       text: item.hostname,
       subtext: item.username,
       screen: 'Server' as const,

@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native';
-import { useEffect } from 'react';
 
 import {
   ScrollView,
@@ -12,9 +11,8 @@ import { StyleSheet, useStyles } from './components/theme_style';
 import KeyStore from './stores/key_store';
 
 import type { Item } from './components/item_list';
-import type { StackScreenProps, StackNavigation } from './router';
+import type { StackNavigation } from './router';
 import type { SshKey } from './stores/key_store';
-import type { ReactNode } from 'react';
 
 const baseStyles = StyleSheet.create({
   button: { height: 40, marginTop: 10, width: 200 },
@@ -33,7 +31,7 @@ export default function KeyListScreen() {
   if (list.length > 0) {
     keys = list
       .filter(_filterPrivate)
-      .map((item, i) => ({
+      .map((item) => ({
         text: item.label,
         subtext: _type(item),
         screen: 'Key' as const,

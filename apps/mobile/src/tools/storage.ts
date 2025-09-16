@@ -12,15 +12,11 @@ export async function getItem<T = unknown>(
   let err: null | Error = null;
   let value: T | undefined;
   try {
-    console.log('key:', key);
     const val = await AsyncStorage.getItem(key);
-    console.log('val:', val);
     if (val !== null) {
       value = JSON.parse(val) as T;
-      console.log('value:', value);
     }
   } catch (e) {
-    console.log('e:', e);
     err = e as Error;
   }
   return { err, value };

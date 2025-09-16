@@ -1,20 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { useDeviceName } from 'react-native-device-info';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Alert, ScrollView } from './components/base_components';
 import BusyOverlay from './components/busy_overlay';
 import BarButton from './components/buttons/bar_button';
 import TextButton from './components/buttons/text_button';
-import { FormBox, FormInput, FormSelect, FormSwitch } from './components/form';
+import { FormBox, FormInput } from './components/form';
 import BottomAlert from './components/overlays/bottom_alert';
 import { StyleSheet, useStyles, useColor } from './components/theme_style';
 import KeyStore from './stores/key_store';
 import { useBusy, useLatestCallback } from './tools/util';
 
 import type { StackScreenProps, StackNavigation } from './router';
-import type { KeyType } from './stores/key_store';
 
 const baseStyles = StyleSheet.create({
   button: {
@@ -76,7 +73,7 @@ export default function KeyEditScreen(props: StackScreenProps<'KeyEdit'>) {
         <BarButton text='Save' onPress={() => void _onSave()} />
       ),
     });
-  }, [navigation, _onSave]);
+  }, [navigation, _onSave, edit_bg_color]);
 
   return (
     <ScrollView

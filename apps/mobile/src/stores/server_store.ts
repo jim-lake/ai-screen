@@ -1,14 +1,10 @@
 import { EventEmitter } from 'events';
 
 import { useCallback, useSyncExternalStore } from 'react';
-import { RSAKeychain } from 'react-native-rsa-native';
 import { v4 as uuid } from 'uuid';
 
 import { errorLog } from '../tools/log';
 import { setItem, getItem } from '../tools/storage';
-import { deepEqual, herd } from '../tools/util';
-
-import type { KeychainItem } from 'react-native-rsa-native';
 
 const SERVER_LIST_KEY = 'server_list';
 
@@ -34,7 +30,6 @@ function _subscribe(callback: (reason: string) => void) {
   };
 }
 export async function init() {
-  console.log('init:', g_initRun);
   if (!g_initRun) {
     g_initRun = true;
     await _load();
@@ -53,9 +48,7 @@ export function useServer(server_id: string) {
   return useSyncExternalStore(_subscribe, _get);
 }
 async function _load() {
-  console.log('_load');
   const { err, value } = (await getItem<Server[]>(SERVER_LIST_KEY)) ?? [];
-  console.log(err, value);
   if (err) {
     errorLog('ServerStore._load: err:', err);
     g_list = [];

@@ -1,11 +1,10 @@
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useLayoutEffect, useState } from 'react';
-import { useDeviceName } from 'react-native-device-info';
+import { useLayoutEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Alert, Button } from './components/base_components';
 import BusyOverlay from './components/busy_overlay';
-import { FormBox, FormInput, FormSelect, FormSwitch } from './components/form';
+import { FormBox, FormInput } from './components/form';
 import { StyleSheet, useStyles, useColor } from './components/theme_style';
 import ServerStore from './stores/server_store';
 import { useBusy, useLatestCallback } from './tools/util';
@@ -69,7 +68,7 @@ export default function ServerNewScreen() {
           maxLength={5}
           placeholder='port'
           onChange={(n) => {
-            setPort(n ? parseInt(n) : 0);
+            setPort(n ? parseInt(n, 10) : 0);
           }}
         />
         <FormInput

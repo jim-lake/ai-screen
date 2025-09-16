@@ -1,13 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useLayoutEffect, useState } from 'react';
-import { useDeviceName } from 'react-native-device-info';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLayoutEffect, useState } from 'react';
 
-import { Alert, ScrollView } from './components/base_components';
+import { ScrollView } from './components/base_components';
 import BusyOverlay from './components/busy_overlay';
 import BarButton from './components/buttons/bar_button';
 import TextButton from './components/buttons/text_button';
-import { FormBox, FormInput, FormSelect, FormSwitch } from './components/form';
+import { FormBox, FormInput } from './components/form';
 import BottomAlert from './components/overlays/bottom_alert';
 import { StyleSheet, useStyles, useColor } from './components/theme_style';
 import ServerStore from './stores/server_store';
@@ -37,7 +35,7 @@ export default function ServerEditScreen(
   const [show_delete, setShowDelete] = useState(false);
   const [is_busy, setBusy, clearBusy] = useBusy();
 
-  const _onSave = useLatestCallback(async () => {
+  const _onSave = useLatestCallback(() => {
     navigation.goBack();
   });
   const _onDeletePress = useLatestCallback(() => {
@@ -58,10 +56,15 @@ export default function ServerEditScreen(
       contentStyle: { backgroundColor: edit_bg_color },
       headerLeft: () => <BarButton text='Cancel' onPress={navigation.goBack} />,
       headerRight: () => (
-        <BarButton text='Save' onPress={() => void _onSave()} />
+        <BarButton
+          text='Save'
+          onPress={() => {
+            _onSave();
+          }}
+        />
       ),
     });
-  }, [navigation, _onSave]);
+  }, [navigation, _onSave, edit_bg_color]);
 
   return (
     <ScrollView

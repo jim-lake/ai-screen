@@ -10,7 +10,7 @@ import { StyleSheet, useStyles, useColor } from './components/theme_style';
 import KeyStore from './stores/key_store';
 import { useBusy, useLatestCallback } from './tools/util';
 
-import type { StackScreenProps, StackNavigation } from './router';
+import type { StackNavigation } from './router';
 import type { KeyType } from './stores/key_store';
 
 const baseStyles = StyleSheet.create({ keyNewScreen: { flex: 1 } });

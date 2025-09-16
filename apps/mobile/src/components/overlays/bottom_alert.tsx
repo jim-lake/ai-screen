@@ -87,15 +87,19 @@ export default function BottomAlert(props: Props) {
         setVisible(false);
       });
     }
-  }, [props.visible, panel_height]);
+  }, [props.visible, panel_height, translateY]);
 
   return (
     <>
-      <Modal transparent visible={visible} onRequestClose={props.onCancel}>
+      <Modal
+        transparent
+        visible={visible}
+        onRequestClose={() => void props.onCancel()}
+      >
         <View style={styles.overlay}>
           <TouchableWithoutFeedback
             style={styles.touchCover}
-            onPress={props.onCancel}
+            onPress={() => void props.onCancel()}
           >
             <View style={styles.touchCover} />
           </TouchableWithoutFeedback>

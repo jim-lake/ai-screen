@@ -1,12 +1,6 @@
 import React from 'react';
 
-import {
-  PlatformColor,
-  StyleSheet,
-  View,
-  Text,
-  Pressable,
-} from '../base_components';
+import { PlatformColor, StyleSheet, Text, Pressable } from '../base_components';
 
 import type { ViewStyle, TextStyle } from '../base_components';
 

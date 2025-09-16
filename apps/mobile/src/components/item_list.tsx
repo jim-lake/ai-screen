@@ -1,22 +1,10 @@
 import { useNavigation } from '@react-navigation/native';
-import { useCallback, useRef } from 'react';
 
-import {
-  useColorScheme,
-  Switch,
-  Text,
-  TextInput,
-  TouchableHighlight,
-  View,
-} from './base_components';
-import { StyleSheet, useStyles, useColor } from './theme_style';
+import { Text, TouchableHighlight, View } from './base_components';
+import { StyleSheet, useStyles } from './theme_style';
 
 import type { StyleProp, ViewStyle } from './base_components';
-import type {
-  StackNavigation,
-  RootStackParamList,
-  RootNavigationProp,
-} from '../router';
+import type { RootStackParamList, RootNavigationProp } from '../router';
 import type { ReactNode } from 'react';
 
 const baseStyles = StyleSheet.create({

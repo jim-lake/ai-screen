@@ -16,7 +16,6 @@ const Navigation = createStaticNavigation(StackNavigator);
 export default function App() {
   const scheme = useColorScheme();
   useEffect(() => {
-    console.log('App.useEffect');
     void KeyStore.fetch();
     void ServerStore.init();
   }, []);

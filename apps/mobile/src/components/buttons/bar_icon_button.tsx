@@ -1,13 +1,7 @@
 import IonIcons from '@react-native-vector-icons/ionicons';
 import React from 'react';
 
-import {
-  PlatformColor,
-  StyleSheet,
-  View,
-  Text,
-  Pressable,
-} from '../base_components';
+import { PlatformColor, StyleSheet, Pressable } from '../base_components';
 
 import type { ViewStyle, TextStyle } from '../base_components';
 import type { IoniconsIconName } from '@react-native-vector-icons/ionicons';
@@ -31,7 +25,7 @@ export default function BarIconButton(props: Props) {
     <Pressable
       style={[styles.barIconButton, style]}
       disabled={disabled}
-      onPress={onPress}
+      onPress={onPress ? () => void onPress() : undefined}
     >
       {({ pressed }) => (
         <IonIcons

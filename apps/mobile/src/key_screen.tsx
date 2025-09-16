@@ -4,11 +4,8 @@ import QRCode from 'react-native-qrcode-svg';
 
 import {
   useWindowDimensions,
-  Button,
   ScrollView,
   Share,
-  Text,
-  TouchableHighlight,
   View,
 } from './components/base_components';
 import BarButton from './components/buttons/bar_button';
@@ -19,7 +16,6 @@ import KeyStore from './stores/key_store';
 import { useLatestCallback } from './tools/util';
 
 import type { StackScreenProps, StackNavigation } from './router';
-import type { ReactNode } from 'react';
 
 const rawStyles = StyleSheet.create({
   barIconButton: { marginRight: 12 },
@@ -45,7 +41,7 @@ export default function KeyScreen(props: StackScreenProps<'Key'>) {
   const key = KeyStore.useKey(route.params?.key_tag ?? '');
   const { width } = useWindowDimensions();
   const _onShare = useLatestCallback(() => {
-    Share.share({ message: key?.sshPublicKey ?? '' });
+    void Share.share({ message: key?.sshPublicKey ?? '' });
   });
   useEffect(() => {
     void KeyStore.fetch();
@@ -69,7 +65,7 @@ export default function KeyScreen(props: StackScreenProps<'Key'>) {
         </>
       ),
     });
-  }, [navigation, styles]);
+  }, [navigation, styles, _onShare, edit_bg_color, route.params]);
 
   const size = width - 40 - 24;
   let type = '';
