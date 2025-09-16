@@ -17,9 +17,9 @@ const baseStyles = StyleSheet.create({ serverNewScreen: { flex: 1 } });
 export default function ServerNewScreen() {
   const navigation = useNavigation<StackScreenProps<'HostNew'>>();
   const styles = useStyles(baseStyles);
-  const [hostname, setHostname] = useState("");
+  const [hostname, setHostname] = useState('');
   const [port, setPort] = useState(22);
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState('');
   const modal_color = useColor('modal');
   const [is_busy, setBusy, clearBusy] = useBusy();
 
@@ -50,23 +50,23 @@ export default function ServerNewScreen() {
         <FormInput
           label='SSH Server'
           value={hostname}
-          autoCapitalize="none"
-          autoComplete="off"
+          autoCapitalize='none'
+          autoComplete='off'
           autoCorrect={false}
           autoFocus={true}
-          keyboardType="url"
+          keyboardType='url'
           placeholder='host or ip'
           onChange={setHostname}
         />
         <FormInput
           label='Server Port'
           value={port ? String(port) : ''}
-          autoCapitalize="none"
-          autoComplete="off"
+          autoCapitalize='none'
+          autoComplete='off'
           autoCorrect={false}
-          inputMode="number"
-          keyboardType="numeric"
-          autoComplete="off"
+          inputMode='number'
+          keyboardType='numeric'
+          autoComplete='off'
           maxLength={5}
           placeholder='port'
           onChange={(n) => setPort(n ? parseInt(n) : 0)}
@@ -74,11 +74,11 @@ export default function ServerNewScreen() {
         <FormInput
           label='Username'
           value={username}
-          autoCapitalize="none"
-          autoComplete="off"
+          autoCapitalize='none'
+          autoComplete='off'
           autoCorrect={false}
           placeholder='user'
-          keyboardType="email-address"
+          keyboardType='email-address'
           onChange={setUsername}
         />
       </FormBox>

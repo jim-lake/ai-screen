@@ -34,7 +34,7 @@ function _subscribe(callback: (reason: string) => void) {
   };
 }
 export async function init() {
-  console.log("init:", g_initRun);
+  console.log('init:', g_initRun);
   if (!g_initRun) {
     g_initRun = true;
     await _load();
@@ -53,8 +53,8 @@ export function useServer(server_id: string) {
   return useSyncExternalStore(_subscribe, _get);
 }
 async function _load() {
-  console.log("_load");
-  const { err, value } = await getItem<Server[]>(SERVER_LIST_KEY) ?? [];
+  console.log('_load');
+  const { err, value } = (await getItem<Server[]>(SERVER_LIST_KEY)) ?? [];
   console.log(err, value);
   if (err) {
     errorLog('ServerStore._load: err:', err);
@@ -81,10 +81,7 @@ export async function createServer(
 ): Promise<Error | string> {
   try {
     const server_id = uuid();
-    g_list.push({
-      server_id,
-      ...params,
-    });
+    g_list.push({ server_id, ...params });
     await _save();
     _emit('update');
     return server_id;
@@ -103,7 +100,7 @@ export async function updateServer(
   params: UpdateServerParams
 ): Promise<Error | null> {
   try {
-    const index = g_list.findIndex(s => s.server_id === server_id);
+    const index = g_list.findIndex((s) => s.server_id === server_id);
     if (index !== -1) {
       g_list.splice(index, 1);
     }
@@ -118,7 +115,7 @@ export async function updateServer(
 }
 export async function deleteServer(server_id: string) {
   try {
-    const index = g_list.findIndex(s => s.server_id === server_id);
+    const index = g_list.findIndex((s) => s.server_id === server_id);
     if (index !== -1) {
       g_list.splice(index, 1);
     }

@@ -12,7 +12,7 @@ import type { StackScreenProps } from './router';
 const baseStyles = StyleSheet.create({
   homeScreen: { flex: 1 },
   list: { marginTop: 10 },
-  button: { backgroundColor: 'red', height: 40,  },
+  button: { backgroundColor: 'red', height: 40 },
   padBottom: { height: 1000 },
   padTop: { height: 200 },
   text: { color: 'var(--text-color)', fontSize: 20 },
@@ -28,13 +28,12 @@ export default function HomeScreen() {
 
   let servers: Item[] = [];
   if (server_list.length > 0) {
-    servers = server_list
-      .map((item, i) => ({
-        text: item.hostname,
-        subtext: item.username,
-        screen: 'Server' as const,
-        args: { server_id: item.server_id },
-      }));
+    servers = server_list.map((item, i) => ({
+      text: item.hostname,
+      subtext: item.username,
+      screen: 'Server' as const,
+      args: { server_id: item.server_id },
+    }));
   }
 
   return (

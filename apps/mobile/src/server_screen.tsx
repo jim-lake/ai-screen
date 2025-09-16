@@ -22,7 +22,7 @@ import type { ReactNode } from 'react';
 
 const rawStyles = StyleSheet.create({
   serverScreen: { flex: 1 },
-  button: { margin: 12, },
+  button: { margin: 12 },
 });
 
 export default function ServerScreen(props: StackScreenProps<'Server'>) {
@@ -45,7 +45,7 @@ export default function ServerScreen(props: StackScreenProps<'Server'>) {
     });
   }, [navigation, edit_bg_color]);
   const _onConnectPress = useLatestCallback(() => {
-    Alert.alert("Would connect");
+    Alert.alert('Would connect');
   });
 
   return (
@@ -58,7 +58,11 @@ export default function ServerScreen(props: StackScreenProps<'Server'>) {
         <FormText label='Port' value={String(server?.port ?? '')} />
         <FormText label='Username' value={server?.username} />
       </FormBox>
-      <TextButton style={styles.button} text="Connect" onPress={_onConnectPress} />
+      <TextButton
+        style={styles.button}
+        text='Connect'
+        onPress={_onConnectPress}
+      />
     </ScrollView>
   );
 }

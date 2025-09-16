@@ -12,7 +12,7 @@ import ServerNewScreen from './server_new_screen';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export const screens = {
-  Home: { screen: HomeScreen, options: { title: 'AI Screen'}},
+  Home: { screen: HomeScreen, options: { title: 'AI Screen' } },
   KeyList: { screen: KeyListScreen, options: { title: 'SSH Keys' } },
   Key: { screen: KeyScreen, options: { title: '', headerLargeTitle: false } },
   KeyEdit: {
@@ -41,7 +41,7 @@ export const screens = {
   },
   Server: {
     screen: ServerScreen,
-    options: { title: '', headerLargeTitle: false, headerBackTitle: "Home", },
+    options: { title: '', headerLargeTitle: false, headerBackTitle: 'Home' },
   },
 } as const;
 
