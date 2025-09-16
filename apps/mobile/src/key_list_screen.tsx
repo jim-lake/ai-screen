@@ -11,13 +11,13 @@ import { ItemList } from './components/item_list';
 import { StyleSheet, useStyles } from './components/theme_style';
 import KeyStore from './stores/key_store';
 
-import type { StackScreenProps } from './router';
-import type { ReactNode } from 'react';
 import type { Item } from './components/item_list';
+import type { StackScreenProps, StackNavigation } from './router';
 import type { SshKey } from './stores/key_store';
+import type { ReactNode } from 'react';
 
 const baseStyles = StyleSheet.create({
-  button: { marginTop: 10, height: 40, width: 200 },
+  button: { height: 40, marginTop: 10, width: 200 },
   buttonText: { color: 'var(--text-color)', fontSize: 20 },
   keyListScreen: { flex: 1 },
   list: { marginTop: 10 },
@@ -26,7 +26,7 @@ const baseStyles = StyleSheet.create({
 });
 
 export default function KeyListScreen() {
-  const navigation = useNavigation<StackScreenProps<'Key'>>();
+  const navigation = useNavigation<StackNavigation<'Key'>>();
   const styles = useStyles(baseStyles);
   const list = KeyStore.useList();
   let keys: Item[] = [];

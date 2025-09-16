@@ -10,24 +10,24 @@ import {
   TouchableHighlight,
   View,
 } from './components/base_components';
-import { StyleSheet, useColor, useStyles } from './components/theme_style';
 import BarButton from './components/buttons/bar_button';
-import { FormBox, FormText } from './components/form';
 import TextButton from './components/buttons/text_button';
+import { FormBox, FormText } from './components/form';
+import { StyleSheet, useColor, useStyles } from './components/theme_style';
 import ServerStore from './stores/server_store';
 import { useLatestCallback } from './tools/util';
 
-import type { StackScreenProps } from './router';
+import type { StackScreenProps, StackNavigation } from './router';
 import type { ReactNode } from 'react';
 
 const rawStyles = StyleSheet.create({
-  serverScreen: { flex: 1 },
   button: { margin: 12 },
+  serverScreen: { flex: 1 },
 });
 
 export default function ServerScreen(props: StackScreenProps<'Server'>) {
   const { route } = props;
-  const navigation = useNavigation<StackScreenProps<'Server'>>();
+  const navigation = useNavigation<StackNavigation<'Server'>>();
   const styles = useStyles(rawStyles);
   const edit_bg_color = useColor('edit-bg');
   const server = ServerStore.useServer(route.params?.server_id ?? '');
@@ -38,7 +38,9 @@ export default function ServerScreen(props: StackScreenProps<'Server'>) {
         <>
           <BarButton
             text='Edit'
-            onPress={() => navigation.navigate('ServerEdit', route.params)}
+            onPress={() => {
+              navigation.navigate('ServerEdit', route.params);
+            }}
           />
         </>
       ),
@@ -54,9 +56,9 @@ export default function ServerScreen(props: StackScreenProps<'Server'>) {
       contentInsetAdjustmentBehavior='automatic'
     >
       <FormBox>
-        <FormText label='Server' value={server?.hostname} />
+        <FormText label='Server' value={server?.hostname ?? ''} />
         <FormText label='Port' value={String(server?.port ?? '')} />
-        <FormText label='Username' value={server?.username} />
+        <FormText label='Username' value={server?.username ?? ''} />
       </FormBox>
       <TextButton
         style={styles.button}

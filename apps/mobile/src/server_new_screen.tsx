@@ -10,12 +10,12 @@ import { StyleSheet, useStyles, useColor } from './components/theme_style';
 import ServerStore from './stores/server_store';
 import { useBusy, useLatestCallback } from './tools/util';
 
-import type { StackScreenProps } from './router';
+import type { StackNavigation } from './router';
 
 const baseStyles = StyleSheet.create({ serverNewScreen: { flex: 1 } });
 
 export default function ServerNewScreen() {
-  const navigation = useNavigation<StackScreenProps<'HostNew'>>();
+  const navigation = useNavigation<StackNavigation<'ServerNew'>>();
   const styles = useStyles(baseStyles);
   const [hostname, setHostname] = useState('');
   const [port, setPort] = useState(22);
@@ -53,7 +53,7 @@ export default function ServerNewScreen() {
           autoCapitalize='none'
           autoComplete='off'
           autoCorrect={false}
-          autoFocus={true}
+          autoFocus
           keyboardType='url'
           placeholder='host or ip'
           onChange={setHostname}
@@ -64,12 +64,13 @@ export default function ServerNewScreen() {
           autoCapitalize='none'
           autoComplete='off'
           autoCorrect={false}
-          inputMode='number'
+          inputMode='numeric'
           keyboardType='numeric'
-          autoComplete='off'
           maxLength={5}
           placeholder='port'
-          onChange={(n) => setPort(n ? parseInt(n) : 0)}
+          onChange={(n) => {
+            setPort(n ? parseInt(n) : 0);
+          }}
         />
         <FormInput
           label='Username'

@@ -1,5 +1,5 @@
-import { useCallback, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { useCallback, useRef } from 'react';
 
 import {
   useColorScheme,
@@ -11,51 +11,53 @@ import {
 } from './base_components';
 import { StyleSheet, useStyles, useColor } from './theme_style';
 
+import type { StyleProp, ViewStyle } from './base_components';
+import type {
+  StackNavigation,
+  RootStackParamList,
+  RootNavigationProp,
+} from '../router';
+import type { ReactNode } from 'react';
+
 const baseStyles = StyleSheet.create({
+  item: { alignSelf: 'stretch', flexDirection: 'row', height: 70 },
   itemList: { flexDirection: 'column' },
-  item: { alignSelf: 'stretch', height: 70, flexDirection: 'row' },
+  last: {
+    borderBottomColor: 'var(--form-box-border)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   left: {
-    width: 76,
+    alignItems: 'center',
     alignSelf: 'stretch',
     flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'center',
+    width: 76,
   },
   leftBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
     backgroundColor: '#8e8f95',
+    borderRadius: 10,
+    height: 44,
+    width: 44,
   },
   right: {
-    paddingRight: 10,
-    flex: 1,
     alignSelf: 'stretch',
+    borderTopColor: 'var(--form-box-border)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    flex: 1,
     flexDirection: 'column',
     justifyContent: 'center',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'var(--form-box-border)',
+    paddingRight: 10,
   },
-  last: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'var(--form-box-border)',
-  },
-  text: { color: 'var(--text-color)', fontSize: 17 },
   subtext: {
-    paddingTop: 5,
     color: 'var(--secondary-text-color)',
     fontSize: 17,
-    whiteSpace: 'nowrap',
     overflow: 'hidden',
+    paddingTop: 5,
+    whiteSpace: 'nowrap',
   },
+  text: { color: 'var(--text-color)', fontSize: 17 },
 });
 
-export interface Item {
-  text: string;
-  subtext?: string;
-  screen?: string;
-  args?: unknown;
-}
 export interface ItemListProps {
   style?: StyleProp<ViewStyle>;
   list: Item[];
@@ -74,13 +76,25 @@ export function ItemList(props: ItemListProps) {
   );
 }
 export default ItemList;
-interface ItemProps extends Items {
-  last?: boolean;
-}
-function Item(props: ItemProps) {
+
+//export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+export type Item<
+  K extends keyof RootStackParamList = keyof RootStackParamList,
+> = {
+  text: string;
+  subtext?: string;
+  screen?: K;
+} & (RootStackParamList[K] extends undefined
+  ? { args?: undefined }
+  : { args: RootStackParamList[K] });
+
+type ItemProps<K extends keyof RootStackParamList = keyof RootStackParamList> =
+  Item<K> & { last?: boolean };
+
+function Item<K extends keyof RootStackParamList>(props: ItemProps<K>) {
   const { text, subtext, screen, args } = props;
   const styles = useStyles(baseStyles);
-  const navigation = useNavigation();
+  const navigation = useNavigation<RootNavigationProp>();
   const last = props.last ? styles.last : null;
   return (
     <View style={styles.item}>
@@ -90,7 +104,7 @@ function Item(props: ItemProps) {
       <View style={[styles.right, last]}>
         <Text style={styles.text}>{text}</Text>
         {subtext ? (
-          <Text style={styles.subtext} numberOfLines={1} ellipsizeMode='end'>
+          <Text style={styles.subtext} numberOfLines={1} ellipsizeMode='tail'>
             {subtext}
           </Text>
         ) : null}
@@ -100,7 +114,8 @@ function Item(props: ItemProps) {
         underlayColor='rgba(255,255,255,0.1)'
         onPress={() => {
           if (screen) {
-            navigation.navigate(screen, args);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            navigation.navigate(screen as any, args as any);
           }
         }}
       >

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+
 import {
   Animated,
   PlatformColor,
@@ -7,56 +8,57 @@ import {
   TouchableWithoutFeedback,
   View,
 } from '../base_components';
-import { StyleSheet, useStyles } from '../theme_style';
 import TextButton from '../buttons/text_button';
+import { StyleSheet, useStyles } from '../theme_style';
 
 import type { LayoutChangeEvent } from '../base_components';
+import type { ButtonType } from '../buttons/button_style';
 
 const baseStyles = StyleSheet.create({
+  button: { backgroundColor: 'transparent', borderRadius: 0, height: 57 },
+  buttonText: { fontSize: 20 },
+  cancel: {
+    backgroundColor: PlatformColor('tertiarySystemBackground'),
+    height: 57,
+    marginBottom: 34,
+    marginLeft: 8,
+    marginRight: 8,
+    marginTop: 8,
+  },
+  cancelText: { color: PlatformColor('link'), fontSize: 20 },
   overlay: {
-    flex: 1,
     alignSelf: 'stretch',
-    justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.2)',
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   panel: { flexDirection: 'column' },
   panelInner: {
-    marginLeft: 8,
-    marginRight: 8,
     backgroundColor: PlatformColor('secondarySystemBackground'),
     borderRadius: 16,
+    marginLeft: 8,
+    marginRight: 8,
     overflow: 'hidden',
-  },
-  touchCover: { flex: 1, alignSelf: 'stretch' },
-  text: {
-    padding: 16,
-    color: PlatformColor('secondaryLabel'),
-    fontSize: 15,
-    textAlign: 'center',
   },
   sep: {
     alignSelf: 'stretch',
-    height: StyleSheet.hairlineWidth,
     backgroundColor: 'var(--bottom-alert-sep)',
+    height: StyleSheet.hairlineWidth,
   },
-  button: { height: 57, borderRadius: 0, backgroundColor: 'transparent' },
-  buttonText: { fontSize: 20 },
-  cancel: {
-    marginTop: 8,
-    marginLeft: 8,
-    marginRight: 8,
-    marginBottom: 34,
-    height: 57,
-    backgroundColor: PlatformColor('tertiarySystemBackground'),
+  text: {
+    color: PlatformColor('secondaryLabel'),
+    fontSize: 15,
+    padding: 16,
+    textAlign: 'center',
   },
-  cancelText: { fontSize: 20, color: PlatformColor('link') },
+  touchCover: { alignSelf: 'stretch', flex: 1 },
 });
 
 export interface Props {
   visible: boolean;
   text: string;
   buttonText: string;
-  buttonType?: string;
+  buttonType?: ButtonType;
   onPress: () => void | Promise<void>;
   onCancel: () => void | Promise<void>;
 }
@@ -67,14 +69,13 @@ export default function BottomAlert(props: Props) {
   const [visible, setVisible] = useState(props.visible);
   const _onLayout = useCallback((e: LayoutChangeEvent) => {
     setPanelHeight(e.nativeEvent.layout.height);
-  });
+  }, []);
   useEffect(() => {
     if (props.visible) {
       setVisible(true);
       translateY.setValue(panel_height);
       Animated.spring(translateY, {
         toValue: 0,
-        duration: 100,
         useNativeDriver: true,
       }).start();
     } else {
@@ -82,7 +83,9 @@ export default function BottomAlert(props: Props) {
         toValue: panel_height,
         duration: 200,
         useNativeDriver: true,
-      }).start(() => setVisible(false));
+      }).start(() => {
+        setVisible(false);
+      });
     }
   }, [props.visible, panel_height]);
 
@@ -107,7 +110,7 @@ export default function BottomAlert(props: Props) {
                 style={styles.button}
                 textStyle={styles.buttonText}
                 text={props.buttonText}
-                type={props.buttonType ?? 'default'}
+                type={props.buttonType ?? ('default' as const)}
                 onPress={() => void props.onPress()}
               />
             </View>

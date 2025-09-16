@@ -1,5 +1,5 @@
-import React from 'react';
 import IonIcons from '@react-native-vector-icons/ionicons';
+import React from 'react';
 
 import {
   PlatformColor,
@@ -13,9 +13,9 @@ import type { ViewStyle, TextStyle } from '../base_components';
 import type { IoniconsIconName } from '@react-native-vector-icons/ionicons';
 
 const styles = StyleSheet.create({
-  barIconButton: { padding: 6, alignSelf: 'center' },
-  text: { color: PlatformColor('link'), fontSize: 25 },
+  barIconButton: { alignSelf: 'center', padding: 6 },
   pressed: { opacity: 0.5 },
+  text: { color: PlatformColor('link'), fontSize: 25 },
 });
 
 interface Props {

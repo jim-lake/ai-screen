@@ -5,7 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint src",
+    "lint": "eslint src --fix",
     "ts-check": "tsc --noEmit",
     "pretty": "prettier -u --write \"**/*\" --log-level warn",
     "start": "react-native start --client-logs",

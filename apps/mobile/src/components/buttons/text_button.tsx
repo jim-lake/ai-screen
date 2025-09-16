@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { StyleSheet, View, Text, TouchableHighlight } from '../base_components';
+import { useStyles } from '../theme_style';
 
 import { baseStyles, useButtonStyles } from './button_style';
-import { useStyles } from '../theme_style';
 
 import type { ViewStyle, TextStyle } from '../base_components';
 import type { StyleProps } from './button_style';

@@ -10,7 +10,7 @@ import { StyleSheet, useStyles, useColor } from './components/theme_style';
 import KeyStore from './stores/key_store';
 import { useBusy, useLatestCallback } from './tools/util';
 
-import type { StackScreenProps } from './router';
+import type { StackScreenProps, StackNavigation } from './router';
 import type { KeyType } from './stores/key_store';
 
 const baseStyles = StyleSheet.create({ keyNewScreen: { flex: 1 } });
@@ -24,7 +24,7 @@ const KEY_MAP: Record<string, { type: KeyType; size: number }> = {
 };
 
 export default function KeyNewScreen() {
-  const navigation = useNavigation<StackScreenProps<'KeyNew'>>();
+  const navigation = useNavigation<StackNavigation<'KeyNew'>>();
   const styles = useStyles(baseStyles);
   const device_name = useDeviceName();
   const [name, setName] = useState<string | null>(null);

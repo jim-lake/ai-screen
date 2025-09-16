@@ -39,12 +39,6 @@ const baseStyles = StyleSheet.create({
     paddingVertical: 12,
   },
   formSwitch: {},
-  value: {
-    flexShrink: 1,
-    color: 'var(--text-color)',
-    fontSize: 17,
-    textAlign: 'right',
-  },
   input: {
     color: 'var(--text-color)',
     flex: 1,
@@ -55,6 +49,12 @@ const baseStyles = StyleSheet.create({
   lastInputBase: { borderBottomColor: 'transparent', borderBottomWidth: 0 },
   pickerItem: { color: 'var(--text-color)', fontSize: 16 },
   switch: {},
+  value: {
+    color: 'var(--text-color)',
+    flexShrink: 1,
+    fontSize: 17,
+    textAlign: 'right',
+  },
 });
 
 export interface FormBoxProps {

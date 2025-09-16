@@ -67,16 +67,18 @@ export const baseStyles = StyleSheet.create({
   },
 });
 
+export type ButtonType =
+  | 'ghost'
+  | 'ghost-inverted'
+  | 'empty'
+  | 'inverted'
+  | 'danger'
+  | 'blue'
+  | 'default';
+
 export interface StyleProps {
   disabled?: boolean;
-  type?:
-    | 'ghost'
-    | 'ghost-inverted'
-    | 'empty'
-    | 'inverted'
-    | 'danger'
-    | 'blue'
-    | 'default';
+  type?: ButtonType;
 }
 export function useButtonStyles(props: StyleProps) {
   const styles = useStyles(baseStyles);

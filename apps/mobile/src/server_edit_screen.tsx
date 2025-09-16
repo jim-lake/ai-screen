@@ -10,11 +10,10 @@ import TextButton from './components/buttons/text_button';
 import { FormBox, FormInput, FormSelect, FormSwitch } from './components/form';
 import BottomAlert from './components/overlays/bottom_alert';
 import { StyleSheet, useStyles, useColor } from './components/theme_style';
-import KeyStore from './stores/key_store';
+import ServerStore from './stores/server_store';
 import { useBusy, useLatestCallback } from './tools/util';
 
 import type { StackScreenProps, StackNavigation } from './router';
-import type { KeyType } from './stores/key_store';
 
 const baseStyles = StyleSheet.create({
   button: {
@@ -23,34 +22,23 @@ const baseStyles = StyleSheet.create({
     margin: 12,
   },
   inner: { flex: 1 },
-  keyEditScreen: { alignSelf: 'stretch', flex: 1 },
+  serverEditScreen: { alignSelf: 'stretch', flex: 1 },
 });
 
-export default function KeyEditScreen(props: StackScreenProps<'KeyEdit'>) {
+export default function ServerEditScreen(
+  props: StackScreenProps<'ServerEdit'>
+) {
   const { route } = props;
-  const navigation = useNavigation<StackNavigation<'KeyEdit'>>();
+  const navigation = useNavigation<StackNavigation<'ServerEdit'>>();
   const styles = useStyles(baseStyles);
   const edit_bg_color = useColor('edit-bg');
-  const key = KeyStore.useKey(route.params?.key_tag ?? '');
-  const [name, setName] = useState(key?.label ?? '');
+  const server = ServerStore.useServer(route.params?.server_id ?? '');
+  const [name, setName] = useState(server?.hostname ?? '');
   const [show_delete, setShowDelete] = useState(false);
   const [is_busy, setBusy, clearBusy] = useBusy();
 
   const _onSave = useLatestCallback(async () => {
-    if (name === key?.label) {
-      navigation.goBack();
-    } else if (name && setBusy()) {
-      const err = await KeyStore.updateKey({
-        tag: key?.tag ?? '',
-        label: name,
-      });
-      if (err) {
-        Alert.alert('Failed to update key, please try again.');
-      } else {
-        navigation.goBack();
-      }
-      clearBusy();
-    }
+    navigation.goBack();
   });
   const _onDeletePress = useLatestCallback(() => {
     setShowDelete(true);
@@ -60,14 +48,11 @@ export default function KeyEditScreen(props: StackScreenProps<'KeyEdit'>) {
   });
   const _onConfirmPress = useLatestCallback(async () => {
     if (setBusy()) {
-      await KeyStore.deleteKey(key?.tag ?? '');
+      await ServerStore.deleteServer(server?.server_id ?? '');
       navigation.pop(2);
       clearBusy();
     }
   });
-  useEffect(() => {
-    void KeyStore.fetch();
-  }, []);
   useLayoutEffect(() => {
     navigation.setOptions({
       contentStyle: { backgroundColor: edit_bg_color },
@@ -80,12 +65,12 @@ export default function KeyEditScreen(props: StackScreenProps<'KeyEdit'>) {
 
   return (
     <ScrollView
-      style={styles.keyEditScreen}
+      style={styles.serverEditScreen}
       contentInsetAdjustmentBehavior='automatic'
     >
       <FormBox>
         <FormInput
-          label='Key Name'
+          label='Server Address'
           value={name}
           placeholder='description'
           onChange={setName}
@@ -99,8 +84,8 @@ export default function KeyEditScreen(props: StackScreenProps<'KeyEdit'>) {
       />
       <BottomAlert
         visible={show_delete}
-        text='This will perminently delete the key.  The key will not be recoverable after deletion.'
-        buttonText='Delete SSH Key'
+        text='This will perminently delete the server.  The server will not be recoverable after deletion.'
+        buttonText='Delete Server'
         buttonType='danger'
         onPress={_onConfirmPress}
         onCancel={_onDenyPress}

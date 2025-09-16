@@ -5,8 +5,8 @@ import { RSAKeychain } from 'react-native-rsa-native';
 import { v4 as uuid } from 'uuid';
 
 import { errorLog } from '../tools/log';
-import { deepEqual, herd } from '../tools/util';
 import { setItem, getItem } from '../tools/storage';
+import { deepEqual, herd } from '../tools/util';
 
 import type { KeychainItem } from 'react-native-rsa-native';
 
@@ -100,7 +100,7 @@ export async function updateServer(
   params: UpdateServerParams
 ): Promise<Error | null> {
   try {
-    const index = g_list.findIndex((s) => s.server_id === server_id);
+    const index = g_list.findIndex((s) => s.server_id === params.server_id);
     if (index !== -1) {
       g_list.splice(index, 1);
     }

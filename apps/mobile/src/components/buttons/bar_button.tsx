@@ -11,9 +11,9 @@ import {
 import type { ViewStyle, TextStyle } from '../base_components';
 
 const styles = StyleSheet.create({
-  barButton: { padding: 8, alignSelf: 'center' },
-  text: { color: PlatformColor('link'), fontSize: 18 },
+  barButton: { alignSelf: 'center', padding: 8 },
   pressed: { opacity: 0.5 },
+  text: { color: PlatformColor('link'), fontSize: 18 },
 });
 
 interface Props {
@@ -21,7 +21,7 @@ interface Props {
   textStyle?: TextStyle;
   text: string;
   disabled?: boolean;
-  onPress?: () => void | Promise<void>;
+  onPress: () => void | Promise<void>;
 }
 export default function BarButton(props: Props) {
   const { style, textStyle, text, disabled, onPress } = props;
@@ -29,7 +29,7 @@ export default function BarButton(props: Props) {
     <Pressable
       style={[styles.barButton, style]}
       disabled={disabled}
-      onPress={onPress}
+      onPress={() => void onPress()}
     >
       {({ pressed }) => (
         <Text style={[styles.text, textStyle, pressed ? styles.pressed : null]}>

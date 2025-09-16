@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
 import {
   DarkTheme,
   DefaultTheme,
   createStaticNavigation,
 } from '@react-navigation/native';
+import { useEffect } from 'react';
 import { StatusBar, useColorScheme } from 'react-native';
 
 import { StackNavigator } from './router';
