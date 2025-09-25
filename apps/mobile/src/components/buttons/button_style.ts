@@ -55,7 +55,7 @@ export const baseStyles = StyleSheet.create({
     borderColor: 'var(--button-inverted-border)',
   },
   invertedText: { color: 'var(--button-inverted-text)' },
-  text: { color: 'var(--text-color)', fontSize: 17 },
+  text: { color: 'var(--button-text-color)', fontSize: 17 },
   textButton: {
     alignItems: 'center',
     backgroundColor: 'var(--button-bg)',

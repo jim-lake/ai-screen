@@ -99,13 +99,16 @@ export function FormInputBase(props: FormInputBaseProps) {
 }
 export interface FormTextProps extends FormBaseProps {
   value: string;
+  numberOfLines?: number;
 }
 export function FormText(props: FormTextProps) {
-  const { style, label, last } = props;
+  const { style, label, last, numberOfLines } = props;
   const styles = useStyles(baseStyles);
   return (
     <FormInputBase style={style} label={label} last={last}>
-      <Text style={styles.value}>{props.value}</Text>
+      <Text style={styles.value} numberOfLines={numberOfLines}>
+        {props.value}
+      </Text>
     </FormInputBase>
   );
 }

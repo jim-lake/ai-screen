@@ -5,14 +5,22 @@ import { RSAKeychain } from 'react-native-rsa-native';
 import { v4 as uuid } from 'uuid';
 
 import { errorLog } from '../tools/log';
+import {
+  fromBase64,
+  toBase64,
+  makeSSHPublicKey,
+  makeSSHWireKey,
+} from '../tools/ssh_helper';
 import { deepEqual, herd } from '../tools/util';
 
-import type { KeychainItem } from 'react-native-rsa-native';
+import type { SSHKeyType } from '../tools/ssh_helper';
+import type { KeychainItem, TypeCrypto } from 'react-native-rsa-native';
 
 export type KeyType = 'rsa' | 'ec' | 'ed';
 
 export interface SshKey extends KeychainItem {
   sshPublicKey: string;
+  sshWriteKey: string;
 }
 
 let g_list: SshKey[] = [];
@@ -31,11 +39,11 @@ function _subscribe(callback: (reason: string) => void) {
 export async function init() {
   return fetch();
 }
-function _getList() {
+export function getList() {
   return g_list;
 }
 export function useList() {
-  return useSyncExternalStore(_subscribe, _getList);
+  return useSyncExternalStore(_subscribe, getList);
 }
 export function useKey(tag: string) {
   const _get = useCallback(() => {
@@ -110,27 +118,52 @@ export async function deleteKey(tag: string): Promise<Error | null> {
     return err as Error;
   }
 }
+interface SignParams {
+  key: SshKey;
+  data: string;
+}
+export async function sign(params: SignParams): Promise<string> {
+  const { data } = params;
+  const { tag, type } = params.key;
+  if (type === 'ED') {
+    return toBase64(await RSAKeychain.signEd(data, tag));
+  } else {
+    let signature: TypeCrypto;
+    if (tag?.startsWith('ec')) {
+      signature = 'SHA256withECDSA' as const;
+    } else {
+      signature = 'SHA256withRSA' as const;
+    }
+    return await RSAKeychain.sign64WithAlgorithm(data, tag, signature);
+  }
+}
 function _transformKey(item: KeychainItem): SshKey {
-  let sshPublicKey = '';
+  let type: SSHKeyType;
+  let key: Uint8Array;
   if (item.tag?.startsWith('ed')) {
     item.type = 'ED';
-    sshPublicKey = `ssh-ed25519 ${item.publicEd25519}`;
+    type = 'ssh-ed25519' as const;
+    key = fromBase64(item.publicEd25519);
   } else if (item.tag?.startsWith('ec')) {
-    sshPublicKey = `ecdsa-sha2-nistp256 ${item.public}`;
+    type = 'ecdsa-sha2-nistp256' as const;
+    key = fromBase64(item.public);
   } else {
-    sshPublicKey = `ssh-rsa ${item.public}`;
+    type = 'rsa-sha2-256' as const;
+    key = fromBase64(item.public);
   }
-  if (item.label) {
-    sshPublicKey += ' ' + item.label;
-  }
-  return Object.assign({}, item, { sshPublicKey });
+  return Object.assign({}, item, {
+    sshPublicKey: makeSSHPublicKey(type, key, item.label),
+    sshWireKey: makeSSHWireKey(type, key),
+  });
 }
 export default {
   init,
+  getList,
   useList,
   useKey,
   fetch,
   createKey,
   updateKey,
   deleteKey,
+  sign,
 };

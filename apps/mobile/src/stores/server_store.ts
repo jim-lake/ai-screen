@@ -75,6 +75,7 @@ export async function createServer(
   try {
     const server_id = uuid();
     g_list.push({ server_id, ...params });
+    g_list = g_list.slice();
     await _save();
     _emit('update');
     return server_id;
@@ -98,6 +99,7 @@ export async function updateServer(
       g_list.splice(index, 1);
     }
     g_list.push(params);
+    g_list = g_list.slice();
     await _save();
     _emit('update');
     return null;
@@ -111,6 +113,7 @@ export async function deleteServer(server_id: string) {
     const index = g_list.findIndex((s) => s.server_id === server_id);
     if (index !== -1) {
       g_list.splice(index, 1);
+      g_list = g_list.slice();
     }
     await _save();
     _emit('delete');

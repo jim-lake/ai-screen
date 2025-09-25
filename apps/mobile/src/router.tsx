@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PlatformColor } from 'react-native';
 
+import ConnectScreen from './connect_screen';
 import HomeScreen from './home_screen';
 import KeyEditScreen from './key_edit_screen';
 import KeyListScreen from './key_list_screen';
@@ -51,6 +52,10 @@ export const screens = {
     screen: ServerEditScreen,
     options: { title: '', headerLargeTitle: false },
   },
+  Connect: {
+    screen: ConnectScreen,
+    options: { title: '', headerLargeTitle: false, headerBackTitle: 'Home' },
+  },
 } as const;
 
 type RootStack = typeof screens;
@@ -60,6 +65,7 @@ interface StackParamList {
   KeyEdit: { key_tag: string };
   Server: { server_id: string };
   ServerEdit: { server_id: string };
+  Connect: { server_id: string };
 }
 export type RootStackParamList = {
   [K in keyof RootStack]: K extends keyof StackParamList

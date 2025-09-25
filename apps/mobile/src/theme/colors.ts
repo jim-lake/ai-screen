@@ -12,6 +12,7 @@ setVariables({
   'form-box-border': '#c6c5c9',
   'button-danger-text': '#fe4538',
   'button-bg': PlatformColor('link'),
+  'button-text-color': 'white',
   'bottom-alert-sep': '#b1b0b4',
   'edit-bg': '#f3f2f7',
 });
@@ -23,6 +24,7 @@ setSchemeVariables('dark', {
   modal: '#1c1c1e',
   'form-box-bg': PlatformColor('secondarySystemGroupedBackground'),
   'form-box-border': '#44434a',
+  'button-text-color': 'black',
   'bottom-alert-sep': '#606060',
   'edit-bg': 'black',
 });

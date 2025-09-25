@@ -31,12 +31,30 @@ export default function ServerEditScreen(
   const styles = useStyles(baseStyles);
   const edit_bg_color = useColor('edit-bg');
   const server = ServerStore.useServer(route.params?.server_id ?? '');
-  const [name, setName] = useState(server?.hostname ?? '');
+  const [hostname, setHostname] = useState(server?.hostname ?? '');
+  const [port, setPort] = useState(server?.port ?? 22);
+  const [username, setUsername] = useState(server?.username ?? '');
   const [show_delete, setShowDelete] = useState(false);
   const [is_busy, setBusy, clearBusy] = useBusy();
 
-  const _onSave = useLatestCallback(() => {
-    navigation.goBack();
+  const _onSave = useLatestCallback(async () => {
+    if (
+      hostname === server?.hostname &&
+      port === server?.port &&
+      username === server?.username
+    ) {
+      navigation.goBack();
+    } else if (setBusy()) {
+      const opts = {
+        server_id: server?.server_id ?? '',
+        hostname,
+        port,
+        username,
+      };
+      await ServerStore.updateServer(opts);
+      clearBusy();
+      navigation.goBack();
+    }
   });
   const _onDeletePress = useLatestCallback(() => {
     setShowDelete(true);
@@ -73,10 +91,39 @@ export default function ServerEditScreen(
     >
       <FormBox>
         <FormInput
-          label='Server Address'
-          value={name}
-          placeholder='description'
-          onChange={setName}
+          label='SSH Server'
+          value={hostname}
+          autoCapitalize='none'
+          autoComplete='off'
+          autoCorrect={false}
+          autoFocus
+          keyboardType='url'
+          placeholder='host or ip'
+          onChange={setHostname}
+        />
+        <FormInput
+          label='Server Port'
+          value={port ? String(port) : ''}
+          autoCapitalize='none'
+          autoComplete='off'
+          autoCorrect={false}
+          inputMode='numeric'
+          keyboardType='numeric'
+          maxLength={5}
+          placeholder='port'
+          onChange={(n) => {
+            setPort(n ? parseInt(n, 10) : 0);
+          }}
+        />
+        <FormInput
+          label='Username'
+          value={username}
+          autoCapitalize='none'
+          autoComplete='off'
+          autoCorrect={false}
+          placeholder='user'
+          keyboardType='email-address'
+          onChange={setUsername}
         />
       </FormBox>
       <TextButton

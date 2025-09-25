@@ -78,6 +78,8 @@ export default function KeyScreen(props: StackScreenProps<'Key'>) {
   } else {
     type = 'RSA 2048';
   }
+  console.log('key.sshPublicKey:', key?.sshPublicKey);
+  console.log('key.public:', key?.public);
 
   return (
     <ScrollView
@@ -87,7 +89,12 @@ export default function KeyScreen(props: StackScreenProps<'Key'>) {
       <FormBox>
         <FormText label='Name' value={key?.label ?? ''} />
         <FormText label='Type' value={type} />
-        <FormText label='Public Key' last value={key?.public ?? ''} />
+        <FormText
+          label='Public Key'
+          last
+          numberOfLines={1}
+          value={key?.sshPublicKey ?? ''}
+        />
       </FormBox>
       <View style={styles.qrView}>
         <QRCode size={size} value={key?.sshPublicKey ?? ' '} />
